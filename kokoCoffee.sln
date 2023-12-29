@@ -5,6 +5,11 @@ VisualStudioVersion = 17.7.34221.43
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BowlFrame", "BowlFrame\BowlFrame.csproj", "{9D55220C-C9A3-41E9-9842-9F247BFB6A0C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CocoaFunc", "CocoaFunc\CocoaFunc.csproj", "{E32BC48A-C1AA-4BF3-8A8B-7797FEEBA3E8}"
+	ProjectSection(ProjectDependencies) = postProject
+		{9D55220C-C9A3-41E9-9842-9F247BFB6A0C} = {9D55220C-C9A3-41E9-9842-9F247BFB6A0C}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +20,10 @@ Global
 		{9D55220C-C9A3-41E9-9842-9F247BFB6A0C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9D55220C-C9A3-41E9-9842-9F247BFB6A0C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9D55220C-C9A3-41E9-9842-9F247BFB6A0C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E32BC48A-C1AA-4BF3-8A8B-7797FEEBA3E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E32BC48A-C1AA-4BF3-8A8B-7797FEEBA3E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E32BC48A-C1AA-4BF3-8A8B-7797FEEBA3E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E32BC48A-C1AA-4BF3-8A8B-7797FEEBA3E8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
