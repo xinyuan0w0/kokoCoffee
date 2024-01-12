@@ -1,10 +1,12 @@
-﻿namespace CocoaFunc
+﻿using BowlFrame;
+
+namespace CocoaFunc
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
-            Console.WriteLine("Hello, World!");
+            BowlService.Initialization();
         }
     }
 }
