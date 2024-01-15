@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace BowlFrame.Adapter
 {
-    public interface IAdapter
+    public interface IAdapter : IDisposable
     {
         AdapterInfo AdapterInfo { get; }
         bool IsConnected { get; }
