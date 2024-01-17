@@ -18,7 +18,7 @@ namespace BowlFrame.Net.WebSocket
         //属性
         private Uri uri;
 
-        private Uri Uri
+        public Uri Uri
         {
             get => uri;
             set
@@ -28,6 +28,7 @@ namespace BowlFrame.Net.WebSocket
                 if (socket.State <= WebSocketState.Open)
                 {
                     //重连
+                    ReconnectAsync().Start();
                 }
             }
         }
@@ -96,21 +97,32 @@ namespace BowlFrame.Net.WebSocket
 
         public async Task SendAsync(ArraySegment<byte> buffer, WebSocketMessageType webSocketMessageType, bool endOfMessage)
         {
-            short count = 0;
-
-        Retry:
             try
             {
                 await socket.SendAsync(buffer, webSocketMessageType, endOfMessage, CancellationToken.None);
             }
             catch (Exception e)
             {
-                count++;
-                Logger.Log.Warn(e, $"当前已重试: {e} 次");
-                if (count >= RetryCount)
-                    throw;
-                goto Retry;
+                Logger.Log.Warn(e);
             }
+
+            //没这个必要
+
+            //    short count = 0;
+
+            //Retry:
+            //    try
+            //    {
+            //        await socket.SendAsync(buffer, webSocketMessageType, endOfMessage, CancellationToken.None);
+            //    }
+            //    catch (Exception e)
+            //    {
+            //        count++;
+            //        Logger.Log.Warn(e, $"当前已重试: {e} 次");
+            //        if (count >= RetryCount)
+            //            throw;
+            //        goto Retry;
+            //    }
         }
 
         public async Task Receive()

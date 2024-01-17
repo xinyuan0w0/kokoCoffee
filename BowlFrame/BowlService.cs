@@ -2,12 +2,14 @@
 using static BowlFrame.Tools.Logger;
 using NLog;
 using BowlFrame.Adapter;
+using BowlFrame.Net.WebSocket;
+using System.Net.WebSockets;
 
 namespace BowlFrame
 {
     public class BowlService
     {
-        public static void Initialization()
+        public static async void Initialization()
         {
             Console.WriteLine(PathConfig.Path);
             LogManager.Configuration = new NLog.Config.XmlLoggingConfiguration(Path.Combine(PathConfig.ConfigPath, "nlog.config"));
@@ -15,21 +17,25 @@ namespace BowlFrame
             Console.WriteLine(" ___  __    ________  ___  __    ________  ________  ________  _________   \r\n|\\  \\|\\  \\ |\\   __  \\|\\  \\|\\  \\ |\\   __  \\|\\   __  \\|\\   __  \\|\\___   ___\\ \r\n\\ \\  \\/  /|\\ \\  \\|\\  \\ \\  \\/  /|\\ \\  \\|\\  \\ \\  \\|\\ /\\ \\  \\|\\  \\|___ \\  \\_| \r\n \\ \\   ___  \\ \\  \\\\\\  \\ \\   ___  \\ \\  \\\\\\  \\ \\   __  \\ \\  \\\\\\  \\   \\ \\  \\  \r\n  \\ \\  \\\\ \\  \\ \\  \\\\\\  \\ \\  \\\\ \\  \\ \\  \\\\\\  \\ \\  \\|\\  \\ \\  \\\\\\  \\   \\ \\  \\ \r\n   \\ \\__\\\\ \\__\\ \\_______\\ \\__\\\\ \\__\\ \\_______\\ \\_______\\ \\_______\\   \\ \\__\\\r\n    \\|__| \\|__|\\|_______|\\|__| \\|__|\\|_______|\\|_______|\\|_______|    \\|__|\r\n                                                                           \r\n                                                                           \r\n                                                                           ");
             Log.Info("Hello, I'm kokoBot!");
 
-            string conn_1 = AdapterManager.CreateAdapter(typeof(AdapterSample).FullName) ?? throw new NullReferenceException();
-            string conn_2 = AdapterManager.CreateAdapter(typeof(AdapterSample)) ?? throw new NullReferenceException();
+            WSClient client = new(new Uri("wss://api.botfan.cn"));
 
-            AdapterManager.StartAdapter(conn_1);
-            AdapterManager.StartAdapter(conn_2);
+            client.ReceiveEvent += (WSClient client, byte[] bytes, WebSocketReceiveResult receiveResult) => { Console.WriteLine(bytes.ToString()); };
 
-            AdapterManager.StopAdapter(conn_1);
-            AdapterManager.StopAdapter(conn_2);
+            await client.ConnectAsync();
 
-            AdapterManager.StartAdapter(conn_1);
+            string? input;
 
-            //AdapterManager.DisposeAdapter(conn_1);
-            AdapterManager.DisposeAdapter(conn_2);
-
-            AdapterManager.Dispose();
+            while (true)
+            {
+                input = Console.ReadLine();
+                if (input == "stop")
+                {
+                    await client.CloseAsync();
+                    break;
+                }
+                else
+                    await client.SendAsync(input ?? "Null");
+            }
         }
     }
 }
