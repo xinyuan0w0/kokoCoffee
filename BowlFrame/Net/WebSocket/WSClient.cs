@@ -1,4 +1,5 @@
-﻿using BowlFrame.Tools;
+﻿using BowlFrame.Adapter;
+using BowlFrame.Tools;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +13,7 @@ namespace BowlFrame.Net.WebSocket
 {
     internal class WSClient : IDisposable
     {
-        protected ClientWebSocket socket = new();
+        protected readonly ClientWebSocket socket = new();
         protected Task? ReceiveTask;
 
         //属性
@@ -33,15 +34,18 @@ namespace BowlFrame.Net.WebSocket
             }
         }
 
-        private short RetryCount { get; set; }
+        private string? connectID;
+        public string ConnectID { get => connectID ?? "Null"; set => connectID = value; }
+
+        //private short RetryCount { get; set; }
 
         public delegate void ReceiveHandler(WSClient client, byte[] bytes, WebSocketReceiveResult receiveResult);
 
         public event ReceiveHandler? ReceiveEvent;
 
-        public delegate void ConnectHandler(WSClient client);
+        public delegate void ConnectedHandler(WSClient client);
 
-        public event ConnectHandler? ConnectEvent;
+        public event ConnectedHandler? ConnectedEvent;
 
         public delegate void DisconnectHandler(WSClient client, WebSocketCloseStatus closeStatus);
 
@@ -68,14 +72,19 @@ namespace BowlFrame.Net.WebSocket
             if (!ReceiveTask?.IsCompleted == true)
                 ReceiveTask?.Dispose();
             ReceiveTask = Receive();
-            ReceiveTask.Start();
-
             return true;
         }
 
         public async Task CloseAsync()
         {
-            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+            try
+            {
+                await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+            }
+            catch (Exception e)
+            {
+                Logger.Log.Warn(e);
+            }
         }
 
         public async Task ReconnectAsync()
@@ -132,7 +141,7 @@ namespace BowlFrame.Net.WebSocket
                 if (socket.State <= WebSocketState.Open)
                 {
                     //触发连接事件
-                    ConnectEvent?.Invoke(this);
+                    ConnectedEvent?.Invoke(this);
                     break;
                 }
                 else if (socket.State >= WebSocketState.CloseSent)
@@ -144,13 +153,12 @@ namespace BowlFrame.Net.WebSocket
             }
 
             List<byte> bytes = new();
-            int bytesLength = 0;
             while (true)
             {
                 byte[] buffer = new byte[1024];
                 WebSocketReceiveResult receiveResult = await socket.ReceiveAsync(buffer, CancellationToken.None);
 
-                if (receiveResult.CloseStatus != WebSocketCloseStatus.Empty)
+                if (receiveResult.CloseStatus is not null)
                 {
                     //触发断开连接事件
                     DisconnectEvent?.Invoke(this, receiveResult.CloseStatus ?? WebSocketCloseStatus.Empty);
@@ -158,12 +166,13 @@ namespace BowlFrame.Net.WebSocket
                 }
 
                 bytes.AddRange(buffer.ToList());
-                bytesLength += receiveResult.Count;
                 if (!receiveResult.EndOfMessage)
                     continue;
 
                 //触发接收事件
                 ReceiveEvent?.Invoke(this, bytes.ToArray(), receiveResult);
+
+                bytes.Clear();
             }
         }
 

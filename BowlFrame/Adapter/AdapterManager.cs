@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using NanoidDotNet;
 using static BowlFrame.Tools.Logger;
+using BowlFrame.Net.WebSocket;
 
 namespace BowlFrame.Adapter
 {
@@ -30,38 +31,28 @@ namespace BowlFrame.Adapter
             if (!typeof(IAdapter).IsAssignableFrom(adapter))
                 return null;
 
-            IAdapter adapter1 = (IAdapter)(adapter.Assembly.CreateInstance(adapter.FullName ?? throw new NullReferenceException()) ?? throw new NullReferenceException());
+            IAdapter adapter1 = (adapter.Assembly.CreateInstance(adapter.FullName ?? throw new NullReferenceException())
+                as IAdapter ?? throw new NullReferenceException());
 
-            adapter1.ConnectID = Nanoid.Generate(size: 8);
+            return CreateAdapter(adapter1);
+        }
+
+        public static string? CreateAdapter(IAdapter adapter)
+        {
+            adapter.ConnectID = Nanoid.Generate(size: 8);
 
             //注册事件
-            adapter1.ConnectedEvent += ConnectedEvent;
-            adapter1.DisconnectEvent += DisconnectEvent;
-            adapter1.ErrorEvent += ErrorEvent;
+            adapter.ConnectedEvent += ConnectedEvent;
+            adapter.DisconnectEvent += DisconnectEvent;
+            adapter.ErrorEvent += ErrorEvent;
 
-            if (!adapterDictionary.TryAdd(adapter1.ConnectID, adapter1))
+            if (!adapterDictionary.TryAdd(adapter.ConnectID, adapter))
             {
-                adapter1.Dispose();
+                adapter.Dispose();
                 return null;
             }
 
-            return adapter1.ConnectID;
-        }
-
-        public static bool StartAdapter(string connectID)
-        {
-            adapterDictionary.TryGetValue(connectID, out IAdapter? adapter);
-            if (adapter is null)
-                return false;
-            return adapter.Start().Result;
-        }
-
-        public static bool StopAdapter(string connectID)
-        {
-            adapterDictionary.TryGetValue(connectID, out IAdapter? adapter);
-            if (adapter is null)
-                return false;
-            return adapter.Stop().Result;
+            return adapter.ConnectID;
         }
 
         public static bool DisposeAdapter(string connectID)
@@ -83,6 +74,22 @@ namespace BowlFrame.Adapter
         {
             foreach (string connectID in adapterDictionary.Keys)
                 _ = DisposeAdapter(connectID);
+        }
+
+        public static bool StartAdapter(string connectID)
+        {
+            adapterDictionary.TryGetValue(connectID, out IAdapter? adapter);
+            if (adapter is null)
+                return false;
+            return adapter.Start().Result;
+        }
+
+        public static bool StopAdapter(string connectID)
+        {
+            adapterDictionary.TryGetValue(connectID, out IAdapter? adapter);
+            if (adapter is null)
+                return false;
+            return adapter.Stop().Result;
         }
 
         private static void ConnectedEvent(string connectID, AdapterInfo adapterInfo)
