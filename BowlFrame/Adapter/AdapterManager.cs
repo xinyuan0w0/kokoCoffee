@@ -8,12 +8,13 @@ using NanoidDotNet;
 using static BowlFrame.Tools.Logger;
 using BowlFrame.Net.WebSocket;
 using System.Reflection;
+using BowlFrame.Tools;
 
 namespace BowlFrame.Adapter
 {
     public static class AdapterManager
     {
-        private static readonly ConcurrentDictionary<string, IAdapter> adapterDictionary = new();
+        public static readonly ConcurrentDictionary<string, IAdapter> adapterDictionary = new();
 
         public static IAdapter? GetAdapter(string connectID)
         {
@@ -22,7 +23,7 @@ namespace BowlFrame.Adapter
             return adapter;
         }
 
-        public static string? CreateAdapter(string name, object[]? args)
+        public static string? CreateAdapter(string name, params object[]? args)
         {
             Type? adapter = Type.GetType(name);
 
@@ -33,14 +34,24 @@ namespace BowlFrame.Adapter
             return CreateAdapter(adapter, args);
         }
 
-        public static string? CreateAdapter(Type adapter, object[]? args)
+        public static string? CreateAdapter(Type adapter, params object[]? args)
         {
             //判断是否支持接口
             if (!typeof(IAdapter).IsAssignableFrom(adapter))
                 return null;
 
-            IAdapter adapter1 = (adapter.Assembly.CreateInstance(adapter.FullName ?? throw new NullReferenceException(), false, BindingFlags.Default, null, args, null, null)
-                as IAdapter ?? throw new NullReferenceException());
+            //创建对象
+            IAdapter adapter1;
+            try
+            {
+                adapter1 = (adapter.Assembly.CreateInstance(adapter.FullName ?? throw new NullReferenceException(), false, BindingFlags.Default, null, args, null, null)
+                    as IAdapter ?? throw new NullReferenceException());
+            }
+            catch (Exception e)
+            {
+                Log.Warn(e, $"创建 {adapter.FullName} 适配器时发送错误");
+                return null;
+            }
 
             return CreateAdapter(adapter1);
         }

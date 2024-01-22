@@ -7,6 +7,10 @@ namespace CocoaFunc
         private static void Main(string[] args)
         {
             BowlService.Initialization();
+            BowlService.Start();
+
+            EventWaitHandle _waitHandle = new AutoResetEvent(false);
+            _waitHandle.WaitOne();
         }
     }
 }

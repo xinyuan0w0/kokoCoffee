@@ -22,6 +22,8 @@ namespace BowlFrame
 
         public static void Start()
         {
+            AdapterManagerEx.CreateAdapterFromFile(Path.Combine(PathConfig.ConfigPath, "Adapter.json"));
+            AdapterManagerEx.StartAllAdapter().Wait();
         }
     }
 }

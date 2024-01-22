@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.WebSockets;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using static BowlFrame.Tools.Logger;
@@ -29,7 +30,7 @@ namespace BowlFrame.Net.WebSocket
             }
         }
 
-        public string? CreateClient(string name)
+        public string? CreateClient(string name, params object[]? args)
         {
             //取类型
             Type? client = Type.GetType(name);
@@ -37,18 +38,28 @@ namespace BowlFrame.Net.WebSocket
             if (client is null)
                 return null;
 
-            return CreateClient(client);
+            return CreateClient(client, args);
         }
 
-        public string? CreateClient(Type client)
+        public string? CreateClient(Type client, params object[]? args)
         {
             //判断是否为WSClient的衍生类
             if (!client.IsSubclassOf(typeof(WSClient)))
                 return null;
 
             //创建对象
-            WSClient client1 = client.GetType().Assembly.CreateInstance(client.GetType().FullName ?? throw new NullReferenceException())
-                as WSClient ?? throw new NullReferenceException();
+            WSClient client1;
+            try
+            {
+                client1 = client.GetType().Assembly.CreateInstance(client.GetType().FullName ?? throw new NullReferenceException())
+                    as WSClient ?? throw new NullReferenceException();
+            }
+            catch (Exception e)
+            {
+                Log.Warn(e, $"创建 {client.FullName} WSClient时发送错误");
+                return null;
+            }
+
             return CreateClient(client1);
         }
 
