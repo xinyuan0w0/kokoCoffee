@@ -8,16 +8,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Adapter\Manager\" />
-    <Folder Include="kokoBot\Config\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Nanoid" Version="3.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="NLog" Version="5.2.8" />
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="kokoBot\Config\Adapter.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="kokoBot\Config\nlog.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

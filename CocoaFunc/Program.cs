@@ -4,9 +4,9 @@ namespace CocoaFunc
 {
     internal class Program
     {
-        private static async Task Main(string[] args)
+        private static void Main(string[] args)
         {
-            await BowlService.Initialization();
+            BowlService.Initialization();
         }
     }
 }

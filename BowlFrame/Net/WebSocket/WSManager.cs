@@ -19,11 +19,11 @@ namespace BowlFrame.Net.WebSocket
 
         public event ReceiveHandler? ReceiveEvent;
 
-        public WSClient? this[string connentID]
+        public WSClient? this[string connectID]
         {
             get
             {
-                if (!websocketDictionary.TryGetValue(connentID, out WSClient? client))
+                if (!websocketDictionary.TryGetValue(connectID, out WSClient? client))
                     return null;
                 return client;
             }
