@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using NanoidDotNet;
 using static BowlFrame.Tools.Logger;
 using BowlFrame.Net.WebSocket;
+using System.Reflection;
 
 namespace BowlFrame.Adapter
 {
@@ -14,7 +15,14 @@ namespace BowlFrame.Adapter
     {
         private static readonly ConcurrentDictionary<string, IAdapter> adapterDictionary = new();
 
-        public static string? CreateAdapter(string name)
+        public static IAdapter? GetAdapter(string connectID)
+        {
+            if (!adapterDictionary.TryGetValue(connectID, out IAdapter? adapter))
+                return null;
+            return adapter;
+        }
+
+        public static string? CreateAdapter(string name, object[]? args)
         {
             Type? adapter = Type.GetType(name);
 
@@ -22,16 +30,16 @@ namespace BowlFrame.Adapter
             if (adapter is null)
                 return null;
 
-            return CreateAdapter(adapter);
+            return CreateAdapter(adapter, args);
         }
 
-        public static string? CreateAdapter(Type adapter)
+        public static string? CreateAdapter(Type adapter, object[]? args)
         {
             //判断是否支持接口
             if (!typeof(IAdapter).IsAssignableFrom(adapter))
                 return null;
 
-            IAdapter adapter1 = (adapter.Assembly.CreateInstance(adapter.FullName ?? throw new NullReferenceException())
+            IAdapter adapter1 = (adapter.Assembly.CreateInstance(adapter.FullName ?? throw new NullReferenceException(), false, BindingFlags.Default, null, args, null, null)
                 as IAdapter ?? throw new NullReferenceException());
 
             return CreateAdapter(adapter1);
@@ -76,6 +84,7 @@ namespace BowlFrame.Adapter
                 _ = DisposeAdapter(connectID);
         }
 
+        //ValueTask不规范用法可能有问题
         public static bool StartAdapter(string connectID)
         {
             adapterDictionary.TryGetValue(connectID, out IAdapter? adapter);
@@ -84,6 +93,7 @@ namespace BowlFrame.Adapter
             return adapter.Start().Result;
         }
 
+        //ValueTask不规范用法可能有问题
         public static bool StopAdapter(string connectID)
         {
             adapterDictionary.TryGetValue(connectID, out IAdapter? adapter);

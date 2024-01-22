@@ -1,0 +1,11 @@
+﻿[
+  {
+    "BowlFrame.Adapter.TencentQQAdapter.TencentQQ": {
+      "Account": "3889000963",
+      "AppID": "102073087",
+      "Token": "nD4MtYNdrBwAFAO3kCVNNoPGPAgAwPFG",
+      "AppSecret": "lU1JMAj280d4HG0X",
+      "Sandbox": false
+    }
+  }
+]

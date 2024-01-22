@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace BowlFrame.Adapter
 {
-    internal class AdapterSample : IAdapter
+    internal class AdapterBase : IAdapter
     {
-        private static readonly AdapterInfo _adapterInfo = new AdapterInfo()
+        private static readonly AdapterInfo _adapterInfo = new()
         {
             Name = "Test",
             ID = "0",
@@ -23,7 +23,7 @@ namespace BowlFrame.Adapter
 
         public bool IsConnected { get => status >= 2; }
 
-        private string? connectID;
+        protected string? connectID;
 
         string IAdapter.ConnectID { get => connectID ?? "Null"; set => connectID = value; }
 
@@ -33,7 +33,7 @@ namespace BowlFrame.Adapter
 
         public event IAdapter.ErrorEventHandler? ErrorEvent;
 
-        public AdapterSample()
+        public AdapterBase()
         {
             Logger.Log.Debug($"创建了 {_adapterInfo.Name} 适配器");
             status = 1;
@@ -49,8 +49,8 @@ namespace BowlFrame.Adapter
         {
             status = 1;
             Logger.Log.Debug($"重启了 {_adapterInfo.Name}({connectID}) 适配器");
-            DisconnectEvent?.Invoke(connectID ?? "Null", _adapterInfo, null);
-            ConnectedEvent?.Invoke(connectID ?? "Null", _adapterInfo);
+            OnDisconnectEvent(connectID ?? "Null", _adapterInfo);
+            OnConnectedEvent(connectID ?? "Null", _adapterInfo);
             status = 2;
             return new ValueTask<bool>(true);
         }
@@ -59,7 +59,7 @@ namespace BowlFrame.Adapter
         {
             status = 2;
             Logger.Log.Debug($"启动了 {_adapterInfo.Name}({connectID}) 适配器");
-            ConnectedEvent?.Invoke(connectID ?? "Null", _adapterInfo);
+            OnConnectedEvent(connectID ?? "Null", _adapterInfo);
             return new ValueTask<bool>(true);
         }
 
@@ -67,8 +67,23 @@ namespace BowlFrame.Adapter
         {
             status = 1;
             Logger.Log.Debug($"停止了 {_adapterInfo.Name}({connectID}) 适配器");
-            DisconnectEvent?.Invoke(connectID ?? "Null", _adapterInfo, null);
+            OnDisconnectEvent(connectID ?? "Null", _adapterInfo);
             return new ValueTask<bool>(true);
+        }
+
+        protected virtual void OnConnectedEvent(string connectID, AdapterInfo adapterInfo)
+        {
+            ConnectedEvent?.Invoke(connectID, adapterInfo);
+        }
+
+        protected virtual void OnDisconnectEvent(string connectID, AdapterInfo adapterInfo, Exception? exception = null)
+        {
+            DisconnectEvent?.Invoke(connectID, adapterInfo, exception);
+        }
+
+        protected virtual void OnErrorEvent(string connectID, AdapterInfo adapterInfo, Exception exception)
+        {
+            ErrorEvent?.Invoke(connectID, adapterInfo, exception);
         }
     }
 }
