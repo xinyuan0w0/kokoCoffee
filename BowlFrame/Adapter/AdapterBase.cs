@@ -35,7 +35,7 @@ namespace BowlFrame.Adapter
 
         public AdapterBase()
         {
-            Logger.Log.Debug($"创建了 {_adapterInfo.Name} 适配器");
+            //Logger.Log.Debug($"创建了 {_adapterInfo.Name} 适配器");
             status = 1;
         }
 

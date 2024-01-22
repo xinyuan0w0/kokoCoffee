@@ -7,13 +7,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Net.Http.Json;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
+using System.Net.Http;
+using System.Net.Http.Headers;
 
 namespace BowlFrame.Adapter.TencentQQAdapter
 {
     internal class TencentQQ : AdapterBase
     {
-        private readonly HttpClient _httpClient = new();
-
         private static readonly AdapterInfo _adapterInfo = new()
         {
             Name = "TencentQQ_Offical",
@@ -21,6 +23,8 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             Platform = "TencentQQ",
             Description = "腾讯QQ官方API",
         };
+
+        private readonly HttpClient _httpClient = new();
 
         private readonly System.Timers.Timer _accessTokenTimer = new();
 
@@ -33,10 +37,19 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 
         private TencentQQAccount account;
 
-        public TencentQQ(TencentQQAccount account)
+        private Uri baseUrl;
+
+        public TencentQQ(JObject args)
         {
-            this.account = account;
+            //反序列化
+            JsonSerializer jsonSerializer = new();
+            jsonSerializer.MissingMemberHandling = MissingMemberHandling.Error;
+            account = args.ToObject<TencentQQAccount>(jsonSerializer);
+
             Logger.Log.Debug($"创建了 {_adapterInfo.Name} 适配器");
+
+            //大概率是被遗弃的内容,但是还是保留了
+            baseUrl = new Uri(account.Sandbox ? "https://sandbox.api.sgroup.qq.com" : "https://api.sgroup.qq.com");
 
             //初始化定时器
             _accessTokenTimer.Elapsed += AccessTokenTimerCallback;
@@ -56,8 +69,13 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 
         public override async ValueTask<bool> Start()
         {
-            await StartGetAccessToken();
-            return true;
+            bool result = true;
+            result = result && await StartGetAccessToken();
+            result = result && await GetWSSUri() is not null;
+
+            manager.CreateClient()
+
+            return result;
         }
 
         public override ValueTask<bool> Stop()
@@ -74,7 +92,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             appAccessToken = await GetAppAccessToken();
             if (appAccessToken is null)
                 return false;
-            _accessTokenTimer.Interval = appAccessToken?.expires_in ?? 1 * 1000;
+            _accessTokenTimer.Interval = (appAccessToken?.expires_in ?? 1) * 1000;
             _accessTokenTimer.Start();
             return true;
         }
@@ -94,7 +112,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
                 else
                 {
                     appAccessToken = accessToken;
-                    _accessTokenTimer.Interval = appAccessToken?.expires_in ?? 1 * 1000;
+                    _accessTokenTimer.Interval = (appAccessToken?.expires_in ?? 1) * 1000;
                     _accessTokenTimer.Start();
                     return;
                 }
@@ -121,7 +139,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
                     continue;
                 }
 
-                if (responseMessage.IsSuccessStatusCode != true)
+                if (responseMessage.IsSuccessStatusCode)
                     break;
                 count++;
             } while (count <= 5);
@@ -129,15 +147,58 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             if (responseMessage is null)
                 return null;
             GetAppAccessToken result = await responseMessage.Content.ReadFromJsonAsync<GetAppAccessToken>();
-            result.expires_in -= 60;
+
+            //提前60秒进行刷新(写59不是手误)
+            result.expires_in -= 59;
+            Logger.Log.Debug($"获取 AppAccessToken 成功, AccessToken: {result.access_token} ExpirTime: {result.expires_in}");
             return result;
         }
 
-        private async Task<Uri> GetWSSUri()
+        private async Task<Uri?> GetWSSUri()
         {
+            HttpRequestMessage httpRequest = new HttpRequestMessage(HttpMethod.Get, new Uri(baseUrl, "/gateway/bot"));
+            HttpResponseMessage? responseMessage = await Send(httpRequest);
+
+            if (responseMessage is null)
+                return null;
+
+            GatewayWithShards result = await responseMessage.Content.ReadFromJsonAsync<GatewayWithShards>();
+            Logger.Log.Debug($"获取 Gateway 成功, Url: {result.url}");
+            return new Uri(result.url);
         }
 
-        protected void OnConnected(Exception exception)
+        private async Task<HttpResponseMessage?> Send(HttpRequestMessage httpRequestMessage)
+        {
+            short count = 0;
+            HttpResponseMessage? responseMessage = null;
+
+            //添加请求头
+            httpRequestMessage.Headers.Authorization = new AuthenticationHeaderValue("QQBot", appAccessToken?.access_token);
+            httpRequestMessage.Headers.Add("X-Union-Appid", account.AppID);
+            do
+            {
+                try
+                {
+                    responseMessage = await _httpClient.SendAsync(httpRequestMessage);
+                }
+                catch (Exception e)
+                {
+                    Logger.Log.Warn(e);
+                    count++;
+                    continue;
+                }
+
+                if (responseMessage.IsSuccessStatusCode)
+                    break;
+                count++;
+            } while (count <= 5);
+
+            if (responseMessage is null)
+                return null;
+            return responseMessage;
+        }
+
+        protected void OnConnected()
         {
             OnConnectedEvent(connectID ?? "Null", _adapterInfo);
         }
