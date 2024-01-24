@@ -160,7 +160,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
                     d = new
                     {
                         token = $"QQBot {appAccessToken.access_token}",
-                        intents = 1107301379, //0|1 << 0|1 << 1|1 << 10|1 << 12|1 << 25|1 << 30
+                        intents = account.Intents,
                         shard = new int[] { connectID, connectCount }, //切片数
                         properties = new { }
                     }
@@ -184,13 +184,12 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             await SendAsync(JsonConvert.SerializeObject(data));
         }
 
-        private async void ListenDisconnectEvent(WSClient client, WebSocketCloseStatus closeStatus)
+        private void ListenDisconnectEvent(WSClient client, WebSocketCloseStatus closeStatus)
         {
+            heartbeatTimer.Stop();
             if (isConnectSuccessed)
             {
-                while (socket.State != WebSocketState.Aborted)
-                    Thread.Sleep(50);
-                await ConnectAsync();
+                _ = ReconnectAsync();
             }
         }
 

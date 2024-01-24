@@ -13,6 +13,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
         public string Token { get; set; }
         public string AppSecret { get; set; }
         public bool Sandbox { get; set; }
+        public int Intents { get; set; }
     }
 
     internal struct GetAppAccessToken
@@ -52,14 +53,17 @@ namespace BowlFrame.Adapter.TencentQQAdapter
         /// 每 24 小时可创建 Session 数
         /// </summary>
         public int total { get; set; }
+
         /// <summary>
         /// 目前还可以创建的 Session 数
         /// </summary>
         public int remaining { get; set; }
+
         /// <summary>
         /// 重置计数的剩余时间(ms)
         /// </summary>
         public int reset_after { get; set; }
+
         /// <summary>
         /// 每 5s 可以创建的 Session 数
         /// </summary>

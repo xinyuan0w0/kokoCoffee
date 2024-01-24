@@ -14,7 +14,7 @@ namespace BowlFrame.Net.WebSocket
 {
     internal class WSClient : IDisposable
     {
-        protected readonly ClientWebSocket socket = new();
+        protected ClientWebSocket socket = new();
         protected Task? ReceiveTask;
 
         //属性
@@ -66,15 +66,32 @@ namespace BowlFrame.Net.WebSocket
 
         public async Task<bool> ConnectAsync()
         {
-            try
+            short retryCount = 5;
+            int retryInterval = 2000;
+
+            //可能有点疑惑,但是直觉上还是返回成功好
+            if (socket.State == WebSocketState.Connecting || socket.State == WebSocketState.Open)
+                return true;
+
+            while (retryCount > 0)
             {
-                await socket.ConnectAsync(uri, CancellationToken.None);
+                socket?.Dispose();
+                socket = new();
+
+                try
+                {
+                    await socket.ConnectAsync(uri, CancellationToken.None);
+                    break;
+                }
+                catch (Exception e)
+                {
+                    retryCount--;
+                    Log.Warn(e);
+                    await Task.Delay(retryInterval);
+                }
             }
-            catch (Exception e)
-            {
-                Log.Warn(e);
+            if (retryCount <= 0)
                 return false;
-            }
 
             //启动接收线程
             if (!ReceiveTask?.IsCompleted == true)
@@ -97,8 +114,12 @@ namespace BowlFrame.Net.WebSocket
 
         public async Task ReconnectAsync()
         {
-            if (socket.State <= WebSocketState.Open)
+            if (socket.State == WebSocketState.Open || socket.State == WebSocketState.Connecting)
                 await CloseAsync();
+            while (socket.State != WebSocketState.Aborted && socket.State != WebSocketState.None && socket.State != WebSocketState.Closed)
+                await Task.Delay(50);
+
+            Log.Debug(socket.State.ToString());
             await ConnectAsync();
         }
 
@@ -116,7 +137,7 @@ namespace BowlFrame.Net.WebSocket
 
         public virtual async Task SendAsync(ArraySegment<byte> buffer, WebSocketMessageType webSocketMessageType, bool endOfMessage)
         {
-            if (!(socket.State == WebSocketState.Open || socket.State == WebSocketState.CloseReceived))
+            if (socket.State != WebSocketState.Open)
                 return;
 
             try
@@ -151,7 +172,7 @@ namespace BowlFrame.Net.WebSocket
         {
             while (true)
             {
-                if (socket.State <= WebSocketState.Open)
+                if (socket.State == WebSocketState.Open)
                 {
                     //触发连接事件
                     ConnectedEvent?.Invoke(this);
