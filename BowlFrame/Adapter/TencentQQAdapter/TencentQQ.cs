@@ -30,7 +30,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 
         private readonly System.Timers.Timer _accessTokenTimer = new();
 
-        private static readonly WSManagerEx manager = new();
+        private readonly WSManagerEx manager = new();
 
         private GetAppAccessToken? appAccessToken;
 
@@ -126,15 +126,16 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 
         private async void AccessTokenTimerCallback(object? sender, System.Timers.ElapsedEventArgs e)
         {
-            short count = 0;
+            short retryCount = 0;
+            int retryInterval = 2000;
             do
             {
-                count++;
+                retryCount++;
                 GetAppAccessToken? accessToken = await GetAppAccessToken();
                 if (accessToken is null)
                 {
-                    Log.Warn($"Token刷新失败，5秒后重试 ({count}/5)");
-                    Thread.Sleep(5000);
+                    Log.Warn($"Token刷新失败，5秒后重试 ({retryCount}/5)");
+                    await Task.Delay(retryInterval);
                 }
                 else
                 {
@@ -143,7 +144,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
                     _accessTokenTimer.Start();
                     return;
                 }
-            } while (count < 5);
+            } while (retryCount < 5);
 
             OnError(new Exception("AppAccessToken 获取失败"));
         }
@@ -196,7 +197,8 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 
         private async Task<HttpResponseMessage?> Send(HttpRequestMessage httpRequestMessage)
         {
-            short count = 0;
+            short retryCount = 0;
+            int retryInterval = 2000;
             HttpResponseMessage? responseMessage = null;
 
             //添加请求头
@@ -204,21 +206,24 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             httpRequestMessage.Headers.Add("X-Union-Appid", account.AppID);
             do
             {
+                HttpRequestMessage requestMessage = await Copyer.CopyHttpRequestMessage(httpRequestMessage);
+
                 try
                 {
-                    responseMessage = await _httpClient.SendAsync(httpRequestMessage);
+                    responseMessage = await _httpClient.SendAsync(requestMessage);
                 }
                 catch (Exception e)
                 {
                     Log.Warn(e);
-                    count++;
+                    retryCount++;
+                    await Task.Delay(retryInterval);
                     continue;
                 }
 
                 if (responseMessage.IsSuccessStatusCode)
                     break;
-                count++;
-            } while (count <= 5);
+                retryCount++;
+            } while (retryCount <= 5);
 
             if (responseMessage is null)
                 return null;
