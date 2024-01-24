@@ -1,5 +1,6 @@
 ﻿using BowlFrame.Adapter;
 using BowlFrame.Tools;
+using static BowlFrame.Tools.Logger;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,7 +26,7 @@ namespace BowlFrame.Net.WebSocket
             set
             {
                 uri = value;
-                //重连(还没写)
+
                 if (socket.State <= WebSocketState.Open)
                 {
                     //重连
@@ -36,6 +37,8 @@ namespace BowlFrame.Net.WebSocket
 
         private string? connectID;
         public string ConnectID { get => connectID ?? "Null"; set => connectID = value; }
+
+        public bool IsConnected { get => socket.State == WebSocketState.Open; }
 
         //private short RetryCount { get; set; }
 
@@ -56,6 +59,11 @@ namespace BowlFrame.Net.WebSocket
             this.uri = uri;
         }
 
+        ~WSClient()
+        {
+            Dispose();
+        }
+
         public async Task<bool> ConnectAsync()
         {
             try
@@ -64,7 +72,7 @@ namespace BowlFrame.Net.WebSocket
             }
             catch (Exception e)
             {
-                Logger.Log.Warn(e);
+                Log.Warn(e);
                 return false;
             }
 
@@ -83,7 +91,7 @@ namespace BowlFrame.Net.WebSocket
             }
             catch (Exception e)
             {
-                Logger.Log.Warn(e);
+                Log.Warn(e);
             }
         }
 
@@ -96,23 +104,28 @@ namespace BowlFrame.Net.WebSocket
 
         public async Task SendAsync(string text)
         {
-            await SendAsync(Encoding.UTF8.GetBytes(text), WebSocketMessageType.Binary, true);
+            Log.Debug(text);
+            await SendAsync(Encoding.UTF8.GetBytes(text), WebSocketMessageType.Text, true);
         }
 
         public async Task SendAsync(byte[] bytes)
         {
+            Log.Debug(bytes);
             await SendAsync(bytes, WebSocketMessageType.Binary, true);
         }
 
-        public async Task SendAsync(ArraySegment<byte> buffer, WebSocketMessageType webSocketMessageType, bool endOfMessage)
+        public virtual async Task SendAsync(ArraySegment<byte> buffer, WebSocketMessageType webSocketMessageType, bool endOfMessage)
         {
+            if (!(socket.State == WebSocketState.Open || socket.State == WebSocketState.CloseReceived))
+                return;
+
             try
             {
                 await socket.SendAsync(buffer, webSocketMessageType, endOfMessage, CancellationToken.None);
             }
             catch (Exception e)
             {
-                Logger.Log.Warn(e);
+                Log.Warn(e);
             }
 
             //没这个必要
@@ -134,7 +147,7 @@ namespace BowlFrame.Net.WebSocket
             //    }
         }
 
-        public async Task Receive()
+        public virtual async Task Receive()
         {
             while (true)
             {
@@ -153,10 +166,22 @@ namespace BowlFrame.Net.WebSocket
             }
 
             List<byte> bytes = new();
+            int bytesLength = 0;
             while (true)
             {
                 byte[] buffer = new byte[1024];
-                WebSocketReceiveResult receiveResult = await socket.ReceiveAsync(buffer, CancellationToken.None);
+                WebSocketReceiveResult receiveResult;
+                try
+                {
+                    receiveResult = await socket.ReceiveAsync(buffer, CancellationToken.None);
+                }
+                catch (Exception e)
+                {
+                    Log.Warn(e);
+                    //触发断开连接事件
+                    DisconnectEvent?.Invoke(this, WebSocketCloseStatus.ProtocolError);
+                    return;
+                }
 
                 if (receiveResult.CloseStatus is not null)
                 {
@@ -166,17 +191,19 @@ namespace BowlFrame.Net.WebSocket
                 }
 
                 bytes.AddRange(buffer.ToList());
+                bytesLength += receiveResult.Count;
                 if (!receiveResult.EndOfMessage)
                     continue;
 
                 //触发接收事件
-                ReceiveEvent?.Invoke(this, bytes.ToArray(), receiveResult);
+                ReceiveEvent?.Invoke(this, bytes.GetRange(0, bytesLength).ToArray(), receiveResult);
 
                 bytes.Clear();
+                bytesLength = 0;
             }
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             socket.CloseAsync(WebSocketCloseStatus.EndpointUnavailable, "", CancellationToken.None).Wait();
             ReceiveTask?.Dispose();

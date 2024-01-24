@@ -1,6 +1,7 @@
 ﻿using BowlFrame.Net.WebSocket;
 using BowlFrame.Tools;
 using BowlFrame.Adapter.TencentQQAdapter;
+using static BowlFrame.Tools.Logger;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +12,7 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.WebSockets;
 
 namespace BowlFrame.Adapter.TencentQQAdapter
 {
@@ -28,12 +30,13 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 
         private readonly System.Timers.Timer _accessTokenTimer = new();
 
-        private static readonly WSManager manager = new();
+        private static readonly WSManagerEx manager = new();
 
         private GetAppAccessToken? appAccessToken;
 
-        //条件未写
-        public new bool IsConnected { get => true; }
+        private bool isConnected;
+
+        public new bool IsConnected { get => isConnected; }
 
         private TencentQQAccount account;
 
@@ -46,7 +49,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             jsonSerializer.MissingMemberHandling = MissingMemberHandling.Error;
             account = args.ToObject<TencentQQAccount>(jsonSerializer);
 
-            Logger.Log.Debug($"创建了 {_adapterInfo.Name} 适配器");
+            Log.Debug($"创建了 {_adapterInfo.Name} 适配器");
 
             //大概率是被遗弃的内容,但是还是保留了
             baseUrl = new Uri(account.Sandbox ? "https://sandbox.api.sgroup.qq.com" : "https://api.sgroup.qq.com");
@@ -54,11 +57,20 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             //初始化定时器
             _accessTokenTimer.Elapsed += AccessTokenTimerCallback;
             _accessTokenTimer.AutoReset = false;
+
+            //监听
+            manager.ConnectedEvent += ListenConnectedEvent;
+            manager.DisconnectEvent += ListenDisconnectEvent;
         }
 
         public override void Dispose()
         {
+            manager.ConnectedEvent -= ListenConnectedEvent;
+            manager.DisconnectEvent -= ListenDisconnectEvent;
+
             _accessTokenTimer.Dispose();
+
+            manager.Dispose();
         }
 
         public override async ValueTask<bool> Restart()
@@ -71,10 +83,25 @@ namespace BowlFrame.Adapter.TencentQQAdapter
         {
             bool result = true;
             result = result && await StartGetAccessToken();
-            result = result && await GetWSSUri() is not null;
+            GatewayWithShards? gateway = await GetGatewayWithShards();
+            result = result && gateway is not null;
 
-            manager.CreateClient()
+            if (!result || appAccessToken is null)
+                return false;
 
+            string? connectID;
+            for (int i = 0; i < gateway?.shards; i++)
+            {
+                connectID = manager.CreateClient(typeof(TencentQQWS), new Uri(gateway.Value.url), i, gateway.Value.shards, account, appAccessToken);
+                if (connectID is null)
+                    return false;
+            }
+
+            if (!manager.StartAllClient())
+            {
+                manager.StopAllClient();
+                return false;
+            }
             return result;
         }
 
@@ -106,7 +133,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
                 GetAppAccessToken? accessToken = await GetAppAccessToken();
                 if (accessToken is null)
                 {
-                    Logger.Log.Warn($"Token刷新失败，5秒后重试 ({count}/5)");
+                    Log.Warn($"Token刷新失败，5秒后重试 ({count}/5)");
                     Thread.Sleep(5000);
                 }
                 else
@@ -134,7 +161,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
                 }
                 catch (Exception e)
                 {
-                    Logger.Log.Warn(e);
+                    Log.Warn(e);
                     count++;
                     continue;
                 }
@@ -150,11 +177,11 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 
             //提前60秒进行刷新(写59不是手误)
             result.expires_in -= 59;
-            Logger.Log.Debug($"获取 AppAccessToken 成功, AccessToken: {result.access_token} ExpirTime: {result.expires_in}");
+            Log.Debug($"获取 AppAccessToken 成功, AccessToken: {result.access_token} ExpirTime: {result.expires_in}");
             return result;
         }
 
-        private async Task<Uri?> GetWSSUri()
+        private async Task<GatewayWithShards?> GetGatewayWithShards()
         {
             HttpRequestMessage httpRequest = new HttpRequestMessage(HttpMethod.Get, new Uri(baseUrl, "/gateway/bot"));
             HttpResponseMessage? responseMessage = await Send(httpRequest);
@@ -163,8 +190,8 @@ namespace BowlFrame.Adapter.TencentQQAdapter
                 return null;
 
             GatewayWithShards result = await responseMessage.Content.ReadFromJsonAsync<GatewayWithShards>();
-            Logger.Log.Debug($"获取 Gateway 成功, Url: {result.url}");
-            return new Uri(result.url);
+            Log.Debug($"获取 Gateway 成功, Url: {result.url} 建议分片: {result.shards}");
+            return result;
         }
 
         private async Task<HttpResponseMessage?> Send(HttpRequestMessage httpRequestMessage)
@@ -183,7 +210,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
                 }
                 catch (Exception e)
                 {
-                    Logger.Log.Warn(e);
+                    Log.Warn(e);
                     count++;
                     continue;
                 }
@@ -198,13 +225,31 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             return responseMessage;
         }
 
+        private void ListenConnectedEvent(WSClient client)
+        {
+            foreach (string connectID in manager.GetAllConnectID())
+                if (manager[connectID]?.IsConnected != true)
+                    return;
+            OnConnected();
+        }
+
+        private void ListenDisconnectEvent(WSClient client, WebSocketCloseStatus closeStatus)
+        {
+            foreach (string connectID in manager.GetAllConnectID())
+                if (manager[connectID]?.IsConnected == true)
+                    return;
+            OnDisconnect();
+        }
+
         protected void OnConnected()
         {
+            isConnected = true;
             OnConnectedEvent(connectID ?? "Null", _adapterInfo);
         }
 
-        protected void OnDisconnect(Exception exception)
+        protected void OnDisconnect(Exception? exception = null)
         {
+            isConnected = false;
             OnDisconnectEvent(connectID ?? "Null", _adapterInfo, exception);
         }
 
