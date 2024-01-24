@@ -1,6 +1,8 @@
 ﻿using BowlFrame.Adapter;
 using NanoidDotNet;
+using Newtonsoft.Json.Linq;
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,11 +16,24 @@ namespace BowlFrame.Net.WebSocket
 {
     internal class WSManager : IDisposable
     {
-        private readonly ConcurrentDictionary<string, WSClient> websocketDictionary = new();
+        protected readonly ConcurrentDictionary<string, WSClient> websocketDictionary = new();
 
         public delegate void ReceiveHandler(WSClient client, byte[] bytes, WebSocketReceiveResult receiveResult);
 
         public event ReceiveHandler? ReceiveEvent;
+
+        public delegate void ConnectedHandler(WSClient client);
+
+        public event ConnectedHandler? ConnectedEvent;
+
+        public delegate void DisconnectHandler(WSClient client, WebSocketCloseStatus closeStatus);
+
+        public event DisconnectHandler? DisconnectEvent;
+
+        ~WSManager()
+        {
+            Dispose();
+        }
 
         public WSClient? this[string connectID]
         {
@@ -51,8 +66,8 @@ namespace BowlFrame.Net.WebSocket
             WSClient client1;
             try
             {
-                client1 = client.GetType().Assembly.CreateInstance(client.GetType().FullName ?? throw new NullReferenceException())
-                    as WSClient ?? throw new NullReferenceException();
+                client1 = (client.Assembly.CreateInstance(client.FullName ?? throw new NullReferenceException(), false, BindingFlags.Default, null, args, null, null)
+                    as WSClient ?? throw new NullReferenceException());
             }
             catch (Exception e)
             {
@@ -66,9 +81,9 @@ namespace BowlFrame.Net.WebSocket
         public string? CreateClient(WSClient client)
         {
             //注册事件
-            client.ConnectedEvent += ConnectedEvent;
-            client.DisconnectEvent += DisconnectEvent;
-            client.ReceiveEvent += Receive;
+            client.ConnectedEvent += ListenConnectedEvent;
+            client.DisconnectEvent += ListenDisconnectEvent;
+            client.ReceiveEvent += ListenReceiveEvent;
 
             client.ConnectID = Nanoid.Generate(size: 8);
 
@@ -88,9 +103,9 @@ namespace BowlFrame.Net.WebSocket
                 return false;
 
             //注销事件
-            client.ConnectedEvent -= ConnectedEvent;
-            client.DisconnectEvent -= DisconnectEvent;
-            client.ReceiveEvent -= Receive;
+            client.ConnectedEvent -= ListenConnectedEvent;
+            client.DisconnectEvent -= ListenDisconnectEvent;
+            client.ReceiveEvent -= ListenReceiveEvent;
 
             client.Dispose();
             return true;
@@ -110,11 +125,11 @@ namespace BowlFrame.Net.WebSocket
             return client.ConnectAsync().Result;
         }
 
-        public bool StopClient(string connectID)
+        public void StopClient(string connectID)
         {
             websocketDictionary.TryGetValue(connectID, out WSClient? client);
             if (client is null)
-                return false;
+                return;
             try
             {
                 client.CloseAsync().Wait();
@@ -122,23 +137,22 @@ namespace BowlFrame.Net.WebSocket
             catch (Exception e)
             {
                 Log.Warn(e);
-                return false;
             }
-
-            return true;
         }
 
-        private void ConnectedEvent(WSClient client)
+        private void ListenConnectedEvent(WSClient client)
         {
             Log.Info($"WebSocketClient({client.ConnectID}) 已连接至 {client.Uri}");
+            ConnectedEvent?.Invoke(client);
         }
 
-        private void DisconnectEvent(WSClient client, WebSocketCloseStatus closeStatus)
+        private void ListenDisconnectEvent(WSClient client, WebSocketCloseStatus closeStatus)
         {
             Log.Info($"WebSocketClient({client.ConnectID}) 断开连接");
+            DisconnectEvent?.Invoke(client, closeStatus);
         }
 
-        private void Receive(WSClient client, byte[] bytes, WebSocketReceiveResult receiveResult)
+        private void ListenReceiveEvent(WSClient client, byte[] bytes, WebSocketReceiveResult receiveResult)
         {
             ReceiveEvent?.Invoke(client, bytes, receiveResult);
         }

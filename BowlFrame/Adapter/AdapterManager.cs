@@ -61,9 +61,9 @@ namespace BowlFrame.Adapter
             adapter.ConnectID = Nanoid.Generate(size: 8);
 
             //注册事件
-            adapter.ConnectedEvent += ConnectedEvent;
-            adapter.DisconnectEvent += DisconnectEvent;
-            adapter.ErrorEvent += ErrorEvent;
+            adapter.ConnectedEvent += ListenConnectedEvent;
+            adapter.DisconnectEvent += ListenDisconnectEvent;
+            adapter.ErrorEvent += ListenErrorEvent;
 
             if (!adapterDictionary.TryAdd(adapter.ConnectID, adapter))
             {
@@ -81,9 +81,9 @@ namespace BowlFrame.Adapter
                 return false;
 
             //注销事件
-            adapter.ConnectedEvent -= ConnectedEvent;
-            adapter.DisconnectEvent -= DisconnectEvent;
-            adapter.ErrorEvent -= ErrorEvent;
+            adapter.ConnectedEvent -= ListenConnectedEvent;
+            adapter.DisconnectEvent -= ListenDisconnectEvent;
+            adapter.ErrorEvent -= ListenErrorEvent;
 
             adapter.Dispose();
             return true;
@@ -113,12 +113,12 @@ namespace BowlFrame.Adapter
             return adapter.Stop().Result;
         }
 
-        private static void ConnectedEvent(string connectID, AdapterInfo adapterInfo)
+        private static void ListenConnectedEvent(string connectID, AdapterInfo adapterInfo)
         {
             Log.Info($"{adapterInfo.Name}({connectID}) 适配器连接至平台 {adapterInfo.Platform} 成功");
         }
 
-        private static void DisconnectEvent(string connectID, AdapterInfo adapterInfo, Exception? exception)
+        private static void ListenDisconnectEvent(string connectID, AdapterInfo adapterInfo, Exception? exception)
         {
             if (exception is null)
                 Log.Info($"{adapterInfo.Name}({connectID}) 适配器断开连接");
@@ -126,7 +126,7 @@ namespace BowlFrame.Adapter
                 Log.Error(exception, $"{adapterInfo.Name}({connectID}) 适配器异常断开连接");
         }
 
-        private static void ErrorEvent(string connectID, AdapterInfo adapterInfo, Exception exception)
+        private static void ListenErrorEvent(string connectID, AdapterInfo adapterInfo, Exception exception)
         {
             Log.Error(exception, $"{adapterInfo.Name}({connectID}) 适配器发生异常");
         }
