@@ -75,8 +75,11 @@ namespace BowlFrame.Net.WebSocket
 
             while (retryCount > 0)
             {
-                socket?.Dispose();
-                socket = new();
+                if (socket.State != WebSocketState.None)
+                {
+                    socket?.Dispose();
+                    socket = new();
+                }
 
                 try
                 {
@@ -93,9 +96,12 @@ namespace BowlFrame.Net.WebSocket
             if (retryCount <= 0)
                 return false;
 
+
+            //不行
+            //if (ReceiveTask?.IsCompleted != true)
+            //    ReceiveTask?.Dispose();
+
             //启动接收线程
-            if (!ReceiveTask?.IsCompleted == true)
-                ReceiveTask?.Dispose();
             ReceiveTask = Receive();
             return true;
         }
@@ -116,8 +122,9 @@ namespace BowlFrame.Net.WebSocket
         {
             if (socket.State == WebSocketState.Open || socket.State == WebSocketState.Connecting)
                 await CloseAsync();
-            while (socket.State != WebSocketState.Aborted && socket.State != WebSocketState.None && socket.State != WebSocketState.Closed)
-                await Task.Delay(50);
+
+            //while (!(socket.State == WebSocketState.Aborted || socket.State == WebSocketState.None || socket.State == WebSocketState.Closed))
+            //    await Task.Delay(50);
 
             Log.Debug(socket.State.ToString());
             await ConnectAsync();

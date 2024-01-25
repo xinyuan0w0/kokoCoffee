@@ -31,6 +31,12 @@ namespace BowlFrame.Net.WebSocket
             }
         }
 
+        public void DisposeAllClient()
+        {
+            foreach (KeyValuePair<string, WSClient> keyValuePair in websocketDictionary)
+                _ = DisposeClient(keyValuePair.Key);
+        }
+
         public List<string> GetAllConnectID()
         {
             return websocketDictionary.Keys.ToList();

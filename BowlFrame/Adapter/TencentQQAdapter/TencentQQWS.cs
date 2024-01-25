@@ -23,7 +23,12 @@ namespace BowlFrame.Adapter.TencentQQAdapter
         //连接信息
         private string? sessionID; //连接Session
 
-        private bool isConnectSuccessed;
+        private bool? isConnectSuccessed = false;
+
+        /// <summary>
+        /// Null 不允许再发起重连
+        /// </summary>
+        public bool? IsConnectSuccessed { get => isConnectSuccessed; }
 
         private string? id; //机器人ID
         private string? nickname; //机器人昵称
@@ -78,7 +83,12 @@ namespace BowlFrame.Adapter.TencentQQAdapter
                     case 9:
                         Log.Warn("认证失败");
                         isConnectSuccessed = false;
-                        await CloseAsync();
+                        //重连失败的话重新发起认证
+                        //if (isConnectSuccessed)
+                        //{
+                        //    isConnectSuccessed = false;
+                        //    _ = ReconnectAsync();
+                        //}
                         break;
                     //Hello 当客户端与网关建立 ws 连接之后，网关下发的第一条消息
                     case 10:
@@ -114,7 +124,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
                     sessionID = (string?)value["d"]?["session_id"];
                     id = (string?)value["d"]?["user"]?["id"];
                     nickname = (string?)value["d"]?["user"]?["username"];
-                    Log.Info($"登录成功, 当前账号 {nickname}({id})");
+                    Log.Info($"登录成功,当前账号 {nickname}({id})");
                     break;
 
                 case "RESUMED":
@@ -135,7 +145,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             Log.Trace($"心跳包间隔: {heartbeat}");
 
             var data = new object();
-            if (isConnectSuccessed)
+            if (isConnectSuccessed == true)
             {
                 // OpCode 6 Resume
                 data = new
@@ -187,10 +197,12 @@ namespace BowlFrame.Adapter.TencentQQAdapter
         private void ListenDisconnectEvent(WSClient client, WebSocketCloseStatus closeStatus)
         {
             heartbeatTimer.Stop();
-            if (isConnectSuccessed)
-            {
-                _ = ReconnectAsync();
-            }
+
+            //交给上一层重连
+            //if (isConnectSuccessed)
+            //{
+            //    _ = ReconnectAsync();
+            //}
         }
 
         public override void Dispose()
