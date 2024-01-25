@@ -1,4 +1,5 @@
 ﻿using BowlFrame;
+using System.Diagnostics;
 
 namespace CocoaFunc
 {

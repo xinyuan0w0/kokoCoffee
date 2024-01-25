@@ -107,9 +107,13 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 
         public override ValueTask<bool> Stop()
         {
+            isConnected = false;
+            manager.StopAllClient();
             //停止Token定时器
             _accessTokenTimer?.Stop();
 
+            //释放所有WSClient
+            manager.DisposeAllClient();
             return new ValueTask<bool>(true);
         }
 
@@ -240,6 +244,30 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 
         private void ListenDisconnectEvent(WSClient client, WebSocketCloseStatus closeStatus)
         {
+            if (!isConnected)
+                return;
+
+            TencentQQWS? client1 = client as TencentQQWS;
+            bool result;
+
+            if (client1 is not null)
+            {
+                if (client1.IsConnectSuccessed is not null)
+                {
+                    result = client1.ConnectAsync().Result;
+                    //重连失败,判断其他是否也断开
+                    if (result)
+                        return;
+                }
+                else
+                {
+                    Log.Warn($"TencentQQWS({client1.ConnectID}) 无法重连,重新发起连接");
+                    _ = Stop().Result;
+                    OnDisconnect();
+                    return;
+                }
+            }
+
             foreach (string connectID in manager.GetAllConnectID())
                 if (manager[connectID]?.IsConnected == true)
                     return;
