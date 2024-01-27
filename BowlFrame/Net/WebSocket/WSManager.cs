@@ -35,6 +35,16 @@ namespace BowlFrame.Net.WebSocket
             Dispose();
         }
 
+        public void Dispose()
+        {
+            //释放WSClient
+            foreach (string connectID in websocketDictionary.Keys)
+                _ = DisposeClient(connectID);
+
+            websocketDictionary.Clear();
+            GC.SuppressFinalize(this);
+        }
+
         public WSClient? this[string connectID]
         {
             get
@@ -109,12 +119,6 @@ namespace BowlFrame.Net.WebSocket
 
             client.Dispose();
             return true;
-        }
-
-        public void Dispose()
-        {
-            foreach (string connectID in websocketDictionary.Keys)
-                _ = DisposeClient(connectID);
         }
 
         public bool StartClient(string connectID)

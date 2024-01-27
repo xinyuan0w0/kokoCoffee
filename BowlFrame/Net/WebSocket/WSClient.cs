@@ -40,6 +40,8 @@ namespace BowlFrame.Net.WebSocket
 
         public bool IsConnected { get => socket.State == WebSocketState.Open; }
 
+        internal bool disposed = false;
+
         //private short RetryCount { get; set; }
 
         public delegate void ReceiveHandler(WSClient client, byte[] bytes, WebSocketReceiveResult receiveResult);
@@ -62,6 +64,7 @@ namespace BowlFrame.Net.WebSocket
         ~WSClient()
         {
             Dispose();
+            ReceiveTask?.Dispose();
         }
 
         public async Task<bool> ConnectAsync()
@@ -95,7 +98,6 @@ namespace BowlFrame.Net.WebSocket
             }
             if (retryCount <= 0)
                 return false;
-
 
             //不行
             //if (ReceiveTask?.IsCompleted != true)
@@ -233,9 +235,19 @@ namespace BowlFrame.Net.WebSocket
 
         public virtual void Dispose()
         {
-            socket.CloseAsync(WebSocketCloseStatus.EndpointUnavailable, "", CancellationToken.None).Wait();
-            ReceiveTask?.Dispose();
-            socket.Dispose();
+            if (!disposed)
+            {
+                socket.CloseAsync(WebSocketCloseStatus.EndpointUnavailable, "", CancellationToken.None).Wait();
+
+                //不能在这回收
+                //ReceiveTask?.Dispose();
+
+                socket.Dispose();
+
+                //没有被完全回收
+                //GC.SuppressFinalize(this);
+                disposed = true;
+            }
         }
     }
 }
