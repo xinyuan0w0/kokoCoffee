@@ -1,4 +1,5 @@
 ﻿using BowlFrame.Net.WebSocket;
+using BowlFrame.Adapter.TencentQQAdapter;
 using static BowlFrame.Tools.Logger;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
@@ -14,11 +15,12 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 {
     internal class TencentQQWS : WSClient
     {
+        internal TencentQQ tencentQQ;
         internal TencentQQAccount account;
         internal GetAppAccessToken appAccessToken;
 
-        private int connectID; //分片ID
-        private int connectCount; //分片数
+        private readonly int connectID; //分片ID
+        private readonly int connectCount; //分片数
 
         //连接信息
         private string? sessionID; //连接Session
@@ -30,6 +32,8 @@ namespace BowlFrame.Adapter.TencentQQAdapter
         /// </summary>
         public bool? IsConnectSuccessed { get => isConnectSuccessed; }
 
+        private short retryCount = 0;
+
         private string? id; //机器人ID
         private string? nickname; //机器人昵称
 
@@ -38,20 +42,28 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 
         private readonly System.Timers.Timer heartbeatTimer = new();
 
-        public TencentQQWS(Uri uri, int connectID, int connectCount, TencentQQAccount account, GetAppAccessToken appAccessToken) : base(uri)
+        public TencentQQWS(TencentQQ tencentQQ, Uri uri, int connectID, int connectCount, TencentQQAccount account, ref GetAppAccessToken appAccessToken) : base(uri)
         {
             this.connectID = connectID;
             this.connectCount = connectCount;
             this.account = account;
             this.appAccessToken = appAccessToken;
+            this.tencentQQ = tencentQQ;
+
             DisconnectEvent += ListenDisconnectEvent;
             ReceiveEvent += ReceiveMsg;
+            tencentQQ.ReflushAppAccessTokenEvent += ListenReflushAppAccessTokenEvent;
 
             Log.Debug($"创建了 TencentQQWS WSClient");
 
             //初始化定时器
             heartbeatTimer.Elapsed += HeartbeatCallback;
             heartbeatTimer.AutoReset = false;
+        }
+
+        ~TencentQQWS()
+        {
+            Dispose();
         }
 
         internal async void ReceiveMsg(WSClient client, byte[] bytes, WebSocketReceiveResult receiveResult)
@@ -72,7 +84,6 @@ namespace BowlFrame.Adapter.TencentQQAdapter
                     case 0:
                         if ((int?)value["s"] <= s) return; //丢弃重复消息
                         s = (int?)value["s"];
-                        string t = (string?)value["t"] ?? "";
                         Dispatch(value);
                         break;
                     //Reconnect	服务端通知客户端重新连接
@@ -82,7 +93,14 @@ namespace BowlFrame.Adapter.TencentQQAdapter
                     //Invalid Session 当 identify 或 resume 的时候，如果参数有错，服务端会返回该消息
                     case 9:
                         Log.Warn("认证失败");
-                        isConnectSuccessed = false;
+                        retryCount++;
+
+                        //失败次数过多,放弃登录
+                        if (retryCount > 5)
+                            isConnectSuccessed = null;
+                        else
+                            isConnectSuccessed = false;
+
                         //重连失败的话重新发起认证
                         //if (isConnectSuccessed)
                         //{
@@ -121,6 +139,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
                 case "READY":
                     await SendHeartbeat();
                     isConnectSuccessed = true;
+                    retryCount = 0;
                     sessionID = (string?)value["d"]?["session_id"];
                     id = (string?)value["d"]?["user"]?["id"];
                     nickname = (string?)value["d"]?["user"]?["username"];
@@ -143,8 +162,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             int heartbeat = (int?)value["d"]?["heartbeat_interval"] ?? 300000;
             heartbeatTimer.Interval = heartbeat;
             Log.Trace($"心跳包间隔: {heartbeat}");
-
-            var data = new object();
+            object data;
             if (isConnectSuccessed == true)
             {
                 // OpCode 6 Resume
@@ -205,14 +223,21 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             //}
         }
 
+        private void ListenReflushAppAccessTokenEvent(GetAppAccessToken appAccessToken)
+        {
+            this.appAccessToken = appAccessToken;
+        }
+
         public override void Dispose()
         {
             heartbeatTimer.Dispose();
 
             DisconnectEvent -= ListenDisconnectEvent;
             ReceiveEvent -= ReceiveMsg;
+            tencentQQ.ReflushAppAccessTokenEvent -= ListenReflushAppAccessTokenEvent;
 
             base.Dispose();
+            GC.SuppressFinalize(this);
         }
     }
 }

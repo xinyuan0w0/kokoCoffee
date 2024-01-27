@@ -32,21 +32,27 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 
         private readonly WSManagerEx manager = new();
 
-        private GetAppAccessToken? appAccessToken;
-
         private bool isConnected;
 
         public new bool IsConnected { get => isConnected; }
 
         private TencentQQAccount account;
 
-        private Uri baseUrl;
+        private GetAppAccessToken? appAccessToken;
+
+        private readonly Uri baseUrl;
+
+        public delegate void ReflushAppAccessTokenHandle(GetAppAccessToken appAccessToken);
+
+        public event ReflushAppAccessTokenHandle? ReflushAppAccessTokenEvent;
 
         public TencentQQ(JObject args)
         {
             //反序列化
-            JsonSerializer jsonSerializer = new();
-            jsonSerializer.MissingMemberHandling = MissingMemberHandling.Error;
+            JsonSerializer jsonSerializer = new()
+            {
+                MissingMemberHandling = MissingMemberHandling.Error
+            };
             account = args.ToObject<TencentQQAccount>(jsonSerializer);
 
             Log.Debug($"创建了 {_adapterInfo.Name} 适配器");
@@ -63,6 +69,11 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             manager.DisconnectEvent += ListenDisconnectEvent;
         }
 
+        ~TencentQQ()
+        {
+            Dispose();
+        }
+
         public override void Dispose()
         {
             manager.ConnectedEvent -= ListenConnectedEvent;
@@ -70,7 +81,9 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 
             _accessTokenTimer.Dispose();
 
+            _httpClient.Dispose();
             manager.Dispose();
+            GC.SuppressFinalize(this);
         }
 
         public override async ValueTask<bool> Restart()
@@ -92,7 +105,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             string? connectID;
             for (int i = 0; i < gateway?.shards; i++)
             {
-                connectID = manager.CreateClient(typeof(TencentQQWS), new Uri(gateway.Value.url), i, gateway.Value.shards, account, appAccessToken);
+                connectID = manager.CreateClient(typeof(TencentQQWS), this, new Uri(gateway.Value.url), i, gateway.Value.shards, account, appAccessToken);
                 if (connectID is null)
                     return false;
             }
@@ -144,6 +157,11 @@ namespace BowlFrame.Adapter.TencentQQAdapter
                 else
                 {
                     appAccessToken = accessToken;
+
+                    //广播Token刷新
+                    ReflushAppAccessTokenEvent?.Invoke(appAccessToken ?? new GetAppAccessToken());
+
+                    //启动定时器
                     _accessTokenTimer.Interval = (appAccessToken?.expires_in ?? 1) * 1000;
                     _accessTokenTimer.Start();
                     return;
@@ -188,7 +206,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 
         private async Task<GatewayWithShards?> GetGatewayWithShards()
         {
-            HttpRequestMessage httpRequest = new HttpRequestMessage(HttpMethod.Get, new Uri(baseUrl, "/gateway/bot"));
+            HttpRequestMessage httpRequest = new(HttpMethod.Get, new Uri(baseUrl, "/gateway/bot"));
             HttpResponseMessage? responseMessage = await Send(httpRequest);
 
             if (responseMessage is null)
@@ -229,7 +247,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
                 retryCount++;
             } while (retryCount <= 5);
 
-            if (responseMessage is null)
+            if (responseMessage is null || !responseMessage.IsSuccessStatusCode)
                 return null;
             return responseMessage;
         }
@@ -242,11 +260,12 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             OnConnected();
         }
 
-        private void ListenDisconnectEvent(WSClient client, WebSocketCloseStatus closeStatus)
+        private async void ListenDisconnectEvent(WSClient client, WebSocketCloseStatus closeStatus)
         {
             if (!isConnected)
                 return;
 
+            int retryInterval = 2000;
             TencentQQWS? client1 = client as TencentQQWS;
             bool result;
 
@@ -254,6 +273,12 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             {
                 if (client1.IsConnectSuccessed is not null)
                 {
+                    if (client1.IsConnectSuccessed != true)
+                    {
+                        Log.Info($"TencentQQWS({client1.ConnectID}) 等待 {retryInterval / 1000}s 后重连");
+                        await Task.Delay(retryInterval);
+                    }
+
                     result = client1.ConnectAsync().Result;
                     //重连失败,判断其他是否也断开
                     if (result)
@@ -261,8 +286,16 @@ namespace BowlFrame.Adapter.TencentQQAdapter
                 }
                 else
                 {
-                    Log.Warn($"TencentQQWS({client1.ConnectID}) 无法重连,重新发起连接");
-                    _ = Stop().Result;
+                    Log.Warn($"TencentQQWS({client1.ConnectID}) 无法重连,重新启动适配器");
+                    try
+                    {
+                        _ = Stop().Result; // 异常
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error(e);
+                        throw;
+                    }
                     OnDisconnect();
                     return;
                 }
