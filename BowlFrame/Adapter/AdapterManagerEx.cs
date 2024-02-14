@@ -17,7 +17,7 @@ namespace BowlFrame.Adapter
                 return false;
 
             JArray config = JArray.Parse(File.ReadAllText(filePath));
-            foreach (JObject keyValues in config)
+            foreach (JObject keyValues in config.Cast<JObject>())
             {
                 foreach (JProperty property in keyValues.Properties())
                 {

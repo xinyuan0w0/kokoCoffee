@@ -41,7 +41,7 @@ namespace BowlFrame.Adapter
 
         public virtual void Dispose()
         {
-            Logger.Log.Debug($"释放了 {_adapterInfo.Name}({connectID}) 适配器");
+            //Logger.Log.Debug($"释放了 {_adapterInfo.Name}({connectID}) 适配器");
             status = 0;
         }
 
