@@ -65,6 +65,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             _accessTokenTimer.AutoReset = false;
 
             //监听
+            manager.ReceiveEvent += ListenReceiveEvent;
             manager.ConnectedEvent += ListenConnectedEvent;
             manager.DisconnectEvent += ListenDisconnectEvent;
         }
@@ -76,6 +77,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 
         public override void Dispose()
         {
+            manager.ReceiveEvent -= ListenReceiveEvent;
             manager.ConnectedEvent -= ListenConnectedEvent;
             manager.DisconnectEvent -= ListenDisconnectEvent;
 
@@ -83,6 +85,8 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 
             _httpClient.Dispose();
             manager.Dispose();
+
+            Log.Debug($"释放了 {_adapterInfo.Name}({connectID}) 适配器");
             GC.SuppressFinalize(this);
         }
 
@@ -103,9 +107,9 @@ namespace BowlFrame.Adapter.TencentQQAdapter
                 return false;
 
             string? connectID;
-            for (int i = 0; i < gateway?.shards; i++)
+            for (int i = 0; i < gateway?.Shards; i++)
             {
-                connectID = manager.CreateClient(typeof(TencentQQWS), this, new Uri(gateway.Value.url), i, gateway.Value.shards, account, appAccessToken);
+                connectID = manager.CreateClient(typeof(TencentQQWS), this, new Uri(gateway.Value.Url), i, gateway.Value.Shards, account, appAccessToken);
                 if (connectID is null)
                     return false;
             }
@@ -136,7 +140,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             appAccessToken = await GetAppAccessToken();
             if (appAccessToken is null)
                 return false;
-            _accessTokenTimer.Interval = (appAccessToken?.expires_in ?? 1) * 1000;
+            _accessTokenTimer.Interval = (appAccessToken?.ExpiresIn ?? 1) * 1000;
             _accessTokenTimer.Start();
             return true;
         }
@@ -162,7 +166,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
                     ReflushAppAccessTokenEvent?.Invoke(appAccessToken ?? new GetAppAccessToken());
 
                     //启动定时器
-                    _accessTokenTimer.Interval = (appAccessToken?.expires_in ?? 1) * 1000;
+                    _accessTokenTimer.Interval = (appAccessToken?.ExpiresIn ?? 1) * 1000;
                     _accessTokenTimer.Start();
                     return;
                 }
@@ -196,11 +200,11 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 
             if (responseMessage is null)
                 return null;
-            GetAppAccessToken result = await responseMessage.Content.ReadFromJsonAsync<GetAppAccessToken>();
+            GetAppAccessToken result = JsonConvert.DeserializeObject<GetAppAccessToken>(await responseMessage.Content.ReadAsStringAsync());
 
             //提前60秒进行刷新(写59不是手误)
-            result.expires_in -= 59;
-            Log.Debug($"获取 AppAccessToken 成功, AccessToken: {result.access_token} ExpirTime: {result.expires_in}");
+            result.ExpiresIn -= 59;
+            Log.Debug($"获取 AppAccessToken 成功, AccessToken: {result.AccessToken} ExpirTime: {result.ExpiresIn}");
             return result;
         }
 
@@ -212,8 +216,8 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             if (responseMessage is null)
                 return null;
 
-            GatewayWithShards result = await responseMessage.Content.ReadFromJsonAsync<GatewayWithShards>();
-            Log.Debug($"获取 Gateway 成功, Url: {result.url} 建议分片: {result.shards}");
+            GatewayWithShards result = JsonConvert.DeserializeObject<GatewayWithShards>(await responseMessage.Content.ReadAsStringAsync());
+            Log.Debug($"获取 Gateway 成功, Url: {result.Url} 建议分片: {result.Shards}");
             return result;
         }
 
@@ -224,7 +228,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             HttpResponseMessage? responseMessage = null;
 
             //添加请求头
-            httpRequestMessage.Headers.Authorization = new AuthenticationHeaderValue("QQBot", appAccessToken?.access_token);
+            httpRequestMessage.Headers.Authorization = new AuthenticationHeaderValue("QQBot", appAccessToken?.AccessToken);
             httpRequestMessage.Headers.Add("X-Union-Appid", account.AppID);
             do
             {
@@ -267,7 +271,6 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 
             int retryInterval = 2000;
             TencentQQWS? client1 = client as TencentQQWS;
-            bool result;
 
             if (client1 is not null)
             {
@@ -275,36 +278,32 @@ namespace BowlFrame.Adapter.TencentQQAdapter
                 {
                     if (client1.IsConnectSuccessed != true)
                     {
-                        Log.Info($"TencentQQWS({client1.ConnectID}) 等待 {retryInterval / 1000}s 后重连");
+                        Log.Info($"{client.GetType().Name}({client.ConnectID}) 等待 {retryInterval / 1000}s 后重连");
                         await Task.Delay(retryInterval);
                     }
 
-                    result = client1.ConnectAsync().Result;
-                    //重连失败,判断其他是否也断开
-                    if (result)
+                    if (client.ConnectAsync().Result)
                         return;
                 }
                 else
                 {
-                    Log.Warn($"TencentQQWS({client1.ConnectID}) 无法重连,重新启动适配器");
-                    try
-                    {
-                        _ = Stop().Result; // 异常
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Error(e);
-                        throw;
-                    }
+                    Log.Warn($"{client.GetType().Name}({client.ConnectID}) 无法重连,重新启动适配器");
+                    _ = Stop().Result;
                     OnDisconnect();
                     return;
                 }
             }
 
+            //重连失败,判断其他是否也断开
             foreach (string connectID in manager.GetAllConnectID())
                 if (manager[connectID]?.IsConnected == true)
                     return;
             OnDisconnect();
+        }
+
+        private void ListenReceiveEvent(WSClient client, byte[] bytes, WebSocketReceiveResult receiveResult)
+        {
+            throw new NotImplementedException();
         }
 
         protected void OnConnected()

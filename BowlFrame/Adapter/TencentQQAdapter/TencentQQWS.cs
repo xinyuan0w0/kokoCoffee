@@ -15,9 +15,9 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 {
     internal class TencentQQWS : WSClient
     {
-        internal TencentQQ tencentQQ;
-        internal TencentQQAccount account;
-        internal GetAppAccessToken appAccessToken;
+        private readonly TencentQQ tencentQQ;
+        private readonly TencentQQAccount account;
+        private GetAppAccessToken appAccessToken;
 
         private readonly int connectID; //分片ID
         private readonly int connectCount; //分片数
@@ -64,6 +64,18 @@ namespace BowlFrame.Adapter.TencentQQAdapter
         ~TencentQQWS()
         {
             Dispose();
+        }
+
+        public override void Dispose()
+        {
+            heartbeatTimer.Dispose();
+
+            DisconnectEvent -= ListenDisconnectEvent;
+            ReceiveEvent -= ReceiveMsg;
+            tencentQQ.ReflushAppAccessTokenEvent -= ListenReflushAppAccessTokenEvent;
+
+            base.Dispose();
+            GC.SuppressFinalize(this);
         }
 
         internal async void ReceiveMsg(WSClient client, byte[] bytes, WebSocketReceiveResult receiveResult)
@@ -127,7 +139,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             }
         }
 
-        internal async void Dispatch(JObject value)
+        private async void Dispatch(JObject value)
         {
             string? t = (string?)value["t"];
 
@@ -157,7 +169,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             }
         }
 
-        internal async Task Hello(JObject value)
+        private async Task Hello(JObject value)
         {
             int heartbeat = (int?)value["d"]?["heartbeat_interval"] ?? 300000;
             heartbeatTimer.Interval = heartbeat;
@@ -171,7 +183,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
                     op = 6,
                     d = new
                     {
-                        token = $"QQBot {appAccessToken.access_token}",
+                        token = $"QQBot {appAccessToken.AccessToken}",
                         session_id = sessionID,
                         seq = s,
                     }
@@ -187,7 +199,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
                     op = 2,
                     d = new
                     {
-                        token = $"QQBot {appAccessToken.access_token}",
+                        token = $"QQBot {appAccessToken.AccessToken}",
                         intents = account.Intents,
                         shard = new int[] { connectID, connectCount }, //切片数
                         properties = new { }
@@ -226,18 +238,6 @@ namespace BowlFrame.Adapter.TencentQQAdapter
         private void ListenReflushAppAccessTokenEvent(GetAppAccessToken appAccessToken)
         {
             this.appAccessToken = appAccessToken;
-        }
-
-        public override void Dispose()
-        {
-            heartbeatTimer.Dispose();
-
-            DisconnectEvent -= ListenDisconnectEvent;
-            ReceiveEvent -= ReceiveMsg;
-            tencentQQ.ReflushAppAccessTokenEvent -= ListenReflushAppAccessTokenEvent;
-
-            base.Dispose();
-            GC.SuppressFinalize(this);
         }
     }
 }
