@@ -13,4 +13,14 @@ namespace BowlFrame.Adapter
         public string Platform;
         public string Description;
     }
+
+    public interface IPlatform
+    {
+        public string Name { get; }
+
+        /// <summary>
+        /// 唯一ID,同平台不同适配器要求不同
+        /// </summary>
+        public string ID { get; }
+    }
 }
