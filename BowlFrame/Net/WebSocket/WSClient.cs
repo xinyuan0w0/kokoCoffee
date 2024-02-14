@@ -14,11 +14,11 @@ namespace BowlFrame.Net.WebSocket
 {
     internal class WSClient : IDisposable
     {
-        protected ClientWebSocket socket = new();
+        protected ClientWebSocket? socket;
         protected Task? ReceiveTask;
 
         //属性
-        private Uri uri;
+        protected Uri uri;
 
         public Uri Uri
         {
@@ -27,7 +27,7 @@ namespace BowlFrame.Net.WebSocket
             {
                 uri = value;
 
-                if (socket.State <= WebSocketState.Open)
+                if (socket?.State <= WebSocketState.Open)
                 {
                     //重连
                     ReconnectAsync().Start();
@@ -38,7 +38,7 @@ namespace BowlFrame.Net.WebSocket
         private string? connectID;
         public string ConnectID { get => connectID ?? "Null"; set => connectID = value; }
 
-        public bool IsConnected { get => socket.State == WebSocketState.Open; }
+        public bool IsConnected { get => socket?.State == WebSocketState.Open; }
 
         internal bool disposed = false;
 
@@ -67,22 +67,28 @@ namespace BowlFrame.Net.WebSocket
             ReceiveTask?.Dispose();
         }
 
-        public async Task<bool> ConnectAsync()
+        protected virtual void CreateNewSocket()
+        {
+            socket?.Dispose();
+            socket = new();
+        }
+
+        public virtual async Task<bool> ConnectAsync()
         {
             short retryCount = 5;
             int retryInterval = 2000;
 
             //可能有点疑惑,但是直觉上还是返回成功好
-            if (socket.State == WebSocketState.Connecting || socket.State == WebSocketState.Open)
+            if (socket?.State == WebSocketState.Connecting || socket?.State == WebSocketState.Open)
                 return true;
 
             while (retryCount > 0)
             {
-                if (socket.State != WebSocketState.None)
-                {
-                    socket?.Dispose();
-                    socket = new();
-                }
+                if (socket is null || socket?.State != WebSocketState.None)
+                    CreateNewSocket();
+
+                if (socket is null)
+                    continue;
 
                 try
                 {
@@ -108,8 +114,10 @@ namespace BowlFrame.Net.WebSocket
             return true;
         }
 
-        public async Task CloseAsync()
+        public virtual async Task CloseAsync()
         {
+            if (socket is null)
+                return;
             try
             {
                 await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
@@ -120,25 +128,25 @@ namespace BowlFrame.Net.WebSocket
             }
         }
 
-        public async Task ReconnectAsync()
+        public virtual async Task ReconnectAsync()
         {
-            if (socket.State == WebSocketState.Open || socket.State == WebSocketState.Connecting)
+            if (socket?.State == WebSocketState.Open || socket?.State == WebSocketState.Connecting)
                 await CloseAsync();
 
             //while (!(socket.State == WebSocketState.Aborted || socket.State == WebSocketState.None || socket.State == WebSocketState.Closed))
             //    await Task.Delay(50);
 
-            Log.Debug(socket.State.ToString());
+            Log.Debug(socket?.State.ToString());
             await ConnectAsync();
         }
 
-        public async Task SendAsync(string text)
+        public virtual async Task SendAsync(string text)
         {
             Log.Debug(text);
             await SendAsync(Encoding.UTF8.GetBytes(text), WebSocketMessageType.Text, true);
         }
 
-        public async Task SendAsync(byte[] bytes)
+        public virtual async Task SendAsync(byte[] bytes)
         {
             Log.Debug(bytes);
             await SendAsync(bytes, WebSocketMessageType.Binary, true);
@@ -146,7 +154,7 @@ namespace BowlFrame.Net.WebSocket
 
         public virtual async Task SendAsync(ArraySegment<byte> buffer, WebSocketMessageType webSocketMessageType, bool endOfMessage)
         {
-            if (socket.State != WebSocketState.Open)
+            if (socket?.State != WebSocketState.Open)
                 return;
 
             try
@@ -181,13 +189,13 @@ namespace BowlFrame.Net.WebSocket
         {
             while (true)
             {
-                if (socket.State == WebSocketState.Open)
+                if (socket?.State == WebSocketState.Open)
                 {
                     //触发连接事件
                     ConnectedEvent?.Invoke(this);
                     break;
                 }
-                else if (socket.State >= WebSocketState.CloseSent)
+                else if (socket?.State >= WebSocketState.CloseSent)
                 {
                     //触发断开连接事件
                     DisconnectEvent?.Invoke(this, socket.CloseStatus ?? WebSocketCloseStatus.Empty);
@@ -233,16 +241,19 @@ namespace BowlFrame.Net.WebSocket
             }
         }
 
+#pragma warning disable CA1816 // Dispose 方法应调用 SuppressFinalize
+
         public virtual void Dispose()
+#pragma warning restore CA1816 // Dispose 方法应调用 SuppressFinalize
         {
             if (!disposed)
             {
-                socket.CloseAsync(WebSocketCloseStatus.EndpointUnavailable, "", CancellationToken.None).Wait();
+                socket?.CloseAsync(WebSocketCloseStatus.EndpointUnavailable, "", CancellationToken.None).Wait();
 
                 //不能在这回收
                 //ReceiveTask?.Dispose();
 
-                socket.Dispose();
+                socket?.Dispose();
 
                 //没有被完全回收
                 //GC.SuppressFinalize(this);
