@@ -1,13 +1,13 @@
 ﻿using Newtonsoft.Json.Linq;
 using SqlSugar;
-using static BowlFrame.Database.Struct.DataTypeToJTokenType;
+using static BowlFrame.Database.TableStruct.DataTypeToJTokenType;
 
-namespace BowlFrame.Database.Struct
+namespace BowlFrame.Database.TableStruct
 {
 #pragma warning disable CS8618 // 在退出构造函数时，不可为 null 的字段必须包含非 null 值。请考虑声明为可以为 null。
 
     [SugarTable("data")]
-    public class Database_Data
+    public class DbData
     {
         public string UUID { get; set; }
 
