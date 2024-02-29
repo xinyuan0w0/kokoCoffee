@@ -1,14 +1,6 @@
-﻿using BowlFrame.Adapter;
-using BowlFrame.Tools;
-using static BowlFrame.Tools.Logger;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Sockets;
-using System.Net.WebSockets;
+﻿using System.Net.WebSockets;
 using System.Text;
-using System.Threading.Tasks;
-using static System.Net.Mime.MediaTypeNames;
+using static BowlFrame.Tools.Logger;
 
 namespace BowlFrame.Net.WebSocket
 {
@@ -73,7 +65,7 @@ namespace BowlFrame.Net.WebSocket
             socket = new();
         }
 
-        public virtual async Task<bool> ConnectAsync()
+        public virtual async Task<bool> ConnectAsync(CancellationToken cancellationToken = default)
         {
             short retryCount = 5;
             int retryInterval = 2000;
@@ -92,14 +84,14 @@ namespace BowlFrame.Net.WebSocket
 
                 try
                 {
-                    await socket.ConnectAsync(uri, CancellationToken.None);
+                    await socket.ConnectAsync(uri, cancellationToken);
                     break;
                 }
                 catch (Exception e)
                 {
                     retryCount--;
                     Log.Warn(e);
-                    await Task.Delay(retryInterval);
+                    await Task.Delay(retryInterval, cancellationToken);
                 }
             }
             if (retryCount <= 0)
@@ -114,13 +106,13 @@ namespace BowlFrame.Net.WebSocket
             return true;
         }
 
-        public virtual async Task CloseAsync()
+        public virtual async Task CloseAsync(CancellationToken cancellationToken = default)
         {
             if (socket is null)
                 return;
             try
             {
-                await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+                await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "", cancellationToken);
             }
             catch (Exception e)
             {
@@ -128,38 +120,37 @@ namespace BowlFrame.Net.WebSocket
             }
         }
 
-        public virtual async Task ReconnectAsync()
+        public virtual async Task ReconnectAsync(CancellationToken cancellationToken = default)
         {
             if (socket?.State == WebSocketState.Open || socket?.State == WebSocketState.Connecting)
-                await CloseAsync();
+                await CloseAsync(cancellationToken);
 
             //while (!(socket.State == WebSocketState.Aborted || socket.State == WebSocketState.None || socket.State == WebSocketState.Closed))
             //    await Task.Delay(50);
 
-            Log.Debug(socket?.State.ToString());
-            await ConnectAsync();
+            await ConnectAsync(cancellationToken);
         }
 
         public virtual async Task SendAsync(string text)
         {
-            Log.Debug(text);
+            Log.Trace(text);
             await SendAsync(Encoding.UTF8.GetBytes(text), WebSocketMessageType.Text, true);
         }
 
         public virtual async Task SendAsync(byte[] bytes)
         {
-            Log.Debug(bytes);
+            Log.Trace(bytes);
             await SendAsync(bytes, WebSocketMessageType.Binary, true);
         }
 
-        public virtual async Task SendAsync(ArraySegment<byte> buffer, WebSocketMessageType webSocketMessageType, bool endOfMessage)
+        public virtual async Task SendAsync(ArraySegment<byte> buffer, WebSocketMessageType webSocketMessageType, bool endOfMessage, CancellationToken cancellationToken = default)
         {
             if (socket?.State != WebSocketState.Open)
                 return;
 
             try
             {
-                await socket.SendAsync(buffer, webSocketMessageType, endOfMessage, CancellationToken.None);
+                await socket.SendAsync(buffer, webSocketMessageType, endOfMessage, cancellationToken);
             }
             catch (Exception e)
             {
@@ -244,7 +235,6 @@ namespace BowlFrame.Net.WebSocket
 #pragma warning disable CA1816 // Dispose 方法应调用 SuppressFinalize
 
         public virtual void Dispose()
-#pragma warning restore CA1816 // Dispose 方法应调用 SuppressFinalize
         {
             if (!disposed)
             {
@@ -260,5 +250,7 @@ namespace BowlFrame.Net.WebSocket
                 disposed = true;
             }
         }
+
+#pragma warning restore CA1816 // Dispose 方法应调用 SuppressFinalize
     }
 }
