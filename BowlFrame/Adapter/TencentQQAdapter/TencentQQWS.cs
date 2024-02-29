@@ -1,15 +1,10 @@
 ﻿using BowlFrame.Net.WebSocket;
-using BowlFrame.Adapter.TencentQQAdapter;
-using static BowlFrame.Tools.Logger;
-using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using Newtonsoft.Json.Linq;
 using System.Net.WebSockets;
 using System.Text;
-using System.Threading.Tasks;
 using System.Timers;
+using static BowlFrame.Tools.Logger;
 
 namespace BowlFrame.Adapter.TencentQQAdapter
 {
@@ -86,7 +81,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
                 string receivedMessage = Encoding.UTF8.GetString(bytes);
                 JObject value = JObject.Parse(receivedMessage);
 
-                Log.Debug(receivedMessage);
+                Log.Trace(receivedMessage);
 
                 short op = (short?)value["op"] ?? 9;
 
@@ -164,7 +159,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
                     break;
 
                 default:
-                    Log.Trace($"未使用的事件 {t}");
+                    Log.Debug($"未使用的事件 {t}");
                     break;
             }
         }
@@ -173,7 +168,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
         {
             int heartbeat = (int?)value["d"]?["heartbeat_interval"] ?? 300000;
             heartbeatTimer.Interval = heartbeat;
-            Log.Trace($"心跳包间隔: {heartbeat}");
+            Log.Debug($"心跳包间隔: {heartbeat}");
             object data;
             if (isConnectSuccessed == true)
             {
