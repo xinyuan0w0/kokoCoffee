@@ -1,7 +1,7 @@
 ﻿using BowlFrame.Adapter;
 using BowlFrame.Config;
 using BowlFrame.Database;
-using BowlFrame.Database.Struct;
+using BowlFrame.Database.TableStruct;
 using NanoidDotNet;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -35,11 +35,11 @@ namespace BowlFrame
 
             //List<Task> tasks = [];
 
-            int count = await database.Client.Queryable<Database_PlatformID>().CountAsync();
+            int count = await database.Client.Queryable<DbPlatformID>().CountAsync();
 
             Log.Trace($"数据库对象数量: {count}");
 
-            //var query = database.Client.Queryable<Database_PlatformID>();
+            //var query = database.Client.Queryable<DbPlatformID>();
 
             //var result =
             //     from n in query

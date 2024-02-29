@@ -1,9 +1,9 @@
 ﻿using BowlFrame.Config;
-using BowlFrame.Database.Struct;
+using BowlFrame.Database.TableStruct;
 using BowlFrame.Exceptions.Database.DatabaseEx;
 using Newtonsoft.Json.Linq;
 using SqlSugar;
-using static BowlFrame.Database.Struct.DataTypeToJTokenType;
+using static BowlFrame.Database.TableStruct.DataTypeToJTokenType;
 using static BowlFrame.Tools.Logger;
 
 namespace BowlFrame.Database
@@ -58,11 +58,11 @@ namespace BowlFrame.Database
 
         public async Task<JObject> ReadJsonFromData(string uuid, string key, string? subKey = null, CancellationToken cancellationToken = default)
         {
-            ISugarQueryable<Database_Data> table = _client.Queryable<Database_Data>();
+            ISugarQueryable<DbData> table = _client.Queryable<DbData>();
 
-            ISugarQueryable<Database_Data> query = from a in table
-                                                   where a.UUID == uuid && a.Key == key && (subKey == null || a.SubKey == subKey)
-                                                   select a;
+            ISugarQueryable<DbData> query = from a in table
+                                            where a.UUID == uuid && a.Key == key && (subKey == null || a.SubKey == subKey)
+                                            select a;
 
             #region 构建Json
 
@@ -74,7 +74,7 @@ namespace BowlFrame.Database
             {
                 writer.WriteStartObject();
 
-                foreach (Database_Data data in await query.ToArrayAsync())
+                foreach (DbData data in await query.ToArrayAsync())
                 {
                     if (cancellationToken.IsCancellationRequested)
                         cancellationToken.ThrowIfCancellationRequested();
@@ -146,11 +146,11 @@ namespace BowlFrame.Database
         {
             await _client.BeginTranAsync(System.Data.IsolationLevel.ReadUncommitted);
 
-            List<Database_Data> list = [];
+            List<DbData> list = [];
 
             foreach (JProperty property in values.Properties())
                 //锁行
-                _ = _client.Queryable<Database_Data>().TranLock(DbLockType.Wait).Where(a => a.UUID == uuid && a.Key == property.Name).ToList();
+                _ = _client.Queryable<DbData>().TranLock(DbLockType.Wait).Where(a => a.UUID == uuid && a.Key == property.Name).ToList();
 
             //Log.Debug("进入");
             //await Task.Delay(60000);
@@ -163,7 +163,7 @@ namespace BowlFrame.Database
                     if (cancellationToken.IsCancellationRequested)
                         cancellationToken.ThrowIfCancellationRequested();
 
-                    ISugarQueryable<Database_Data>? query;
+                    ISugarQueryable<DbData>? query;
 
                     //第二次Json循环
                     foreach (JProperty property_2 in property.Value.Cast<JProperty>())
@@ -172,13 +172,13 @@ namespace BowlFrame.Database
                             continue;
 
                         //创建查询对象
-                        query = _client.Queryable<Database_Data>()
+                        query = _client.Queryable<DbData>()
                                 .Where(a => a.UUID == uuid && a.Key == property.Name && a.SubKey == property_2.Name);
 
                         if (cancellationToken.IsCancellationRequested)
                             cancellationToken.ThrowIfCancellationRequested();
 
-                        Database_Data[] data = await query.ToArrayAsync();
+                        DbData[] data = await query.ToArrayAsync();
 
                         //超过一条数据
                         if (data.Length > 1)
@@ -186,7 +186,7 @@ namespace BowlFrame.Database
                         //插入数据
                         else if (data.Length == 0)
                             list.Add(
-                                new Database_Data
+                                new DbData
                                 {
                                     UUID = uuid,
                                     Key = property.Name,
@@ -199,7 +199,7 @@ namespace BowlFrame.Database
                         else if (data[0].DataType != (GetDataType(property_2.Value.Type) ?? throw new NullReferenceException())
                             || data[0].Value != (property_2.Value.Type == JTokenType.Bytes ? Convert.ToBase64String((byte[]?)property_2.Value ?? []) : property_2.Value.ToString()))
                             list.Add(
-                                new Database_Data
+                                new DbData
                                 {
                                     UUID = uuid,
                                     Key = property.Name,
