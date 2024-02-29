@@ -1,16 +1,8 @@
-﻿using static BowlFrame.Tools.Logger;
+﻿using BowlFrame.Net.WebSocket;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Principal;
-using System.Text;
-using System.Threading.Tasks;
-using System.Net.Sockets;
 using System.Net.WebSockets;
-using BowlFrame.Adapter.TencentQQAdapter;
-using BowlFrame.Net.WebSocket;
+using static BowlFrame.Tools.Logger;
 
 namespace BowlFrame.Adapter.OneBotV11Adapter
 {
@@ -24,13 +16,13 @@ namespace BowlFrame.Adapter.OneBotV11Adapter
             Description = "腾讯QQ第三方API",
         };
 
-        private OneBotV11Account account;
+        private readonly OneBotV11Account account;
 
-        private OneBotV11WS socket;
+        private readonly OneBotV11WS socket;
 
         private bool isConnected;
 
-        public new bool IsConnected { get => isConnected; }
+        public override bool IsConnected { get => isConnected; }
 
         public OneBotV11(JObject args)
         {
