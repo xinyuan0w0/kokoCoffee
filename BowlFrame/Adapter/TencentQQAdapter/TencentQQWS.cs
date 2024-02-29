@@ -49,7 +49,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             ReceiveEvent += ReceiveMsg;
             tencentQQ.ReflushAppAccessTokenEvent += ListenReflushAppAccessTokenEvent;
 
-            Log.Debug($"创建了 TencentQQWS WSClient");
+            Log.Debug("创建了 TencentQQWS WSClient");
 
             //初始化定时器
             heartbeatTimer.Elapsed += HeartbeatCallback;
@@ -128,7 +128,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
                         break;
 
                     default:
-                        Log.Warn($"收到了未知的OpCode {op}");
+                        Log.Warn("收到了未知的OpCode {0}", op);
                         break;
                 }
             }
@@ -150,16 +150,16 @@ namespace BowlFrame.Adapter.TencentQQAdapter
                     sessionID = (string?)value["d"]?["session_id"];
                     id = (string?)value["d"]?["user"]?["id"];
                     nickname = (string?)value["d"]?["user"]?["username"];
-                    Log.Info($"登录成功,当前账号 {nickname}({id})");
+                    Log.Info("登录成功,当前账号 {0}({1})", nickname, id);
                     break;
 
                 case "RESUMED":
                     await SendHeartbeat();
-                    Log.Info($"重连成功");
+                    Log.Info("重连成功");
                     break;
 
                 default:
-                    Log.Debug($"未使用的事件 {t}");
+                    Log.Debug("未使用的事件 {0}", t);
                     break;
             }
         }
@@ -168,7 +168,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
         {
             int heartbeat = (int?)value["d"]?["heartbeat_interval"] ?? 300000;
             heartbeatTimer.Interval = heartbeat;
-            Log.Debug($"心跳包间隔: {heartbeat}");
+            Log.Debug("心跳包间隔: {0}", heartbeat);
             object data;
             if (isConnectSuccessed == true)
             {
