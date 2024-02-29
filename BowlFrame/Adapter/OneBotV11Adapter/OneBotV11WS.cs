@@ -15,7 +15,7 @@ namespace BowlFrame.Adapter.OneBotV11Adapter
             this.accessToken = accessToken;
             ReceiveEvent += ReceiveMsg;
 
-            Log.Debug($"创建了 OneBotV11WS WSClient");
+            Log.Debug("创建了 OneBotV11WS WSClient");
         }
 
         ~OneBotV11WS()
