@@ -126,16 +126,16 @@ namespace BowlFrame.Net.WebSocket
             await ConnectAsync(cancellationToken);
         }
 
-        public virtual async Task SendAsync(string text)
+        public virtual async Task SendAsync(string text, CancellationToken cancellationToken = default)
         {
             Log.Trace(text);
-            await SendAsync(Encoding.UTF8.GetBytes(text), WebSocketMessageType.Text, true);
+            await SendAsync(Encoding.UTF8.GetBytes(text), WebSocketMessageType.Text, true, cancellationToken);
         }
 
-        public virtual async Task SendAsync(byte[] bytes)
+        public virtual async Task SendAsync(byte[] bytes, CancellationToken cancellationToken = default)
         {
             Log.Trace(bytes);
-            await SendAsync(bytes, WebSocketMessageType.Binary, true);
+            await SendAsync(bytes, WebSocketMessageType.Binary, true, cancellationToken);
         }
 
         public virtual async Task SendAsync(ArraySegment<byte> buffer, WebSocketMessageType webSocketMessageType, bool endOfMessage, CancellationToken cancellationToken = default)
