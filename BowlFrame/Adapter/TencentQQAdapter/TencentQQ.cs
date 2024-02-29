@@ -1,18 +1,11 @@
 ﻿using BowlFrame.Net.WebSocket;
 using BowlFrame.Tools;
-using BowlFrame.Adapter.TencentQQAdapter;
-using static BowlFrame.Tools.Logger;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Net.Http.Json;
-using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
-using System.Net.Http;
+using Newtonsoft.Json.Linq;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Net.WebSockets;
+using static BowlFrame.Tools.Logger;
 
 namespace BowlFrame.Adapter.TencentQQAdapter
 {
@@ -34,7 +27,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 
         private bool isConnected;
 
-        public new bool IsConnected { get => isConnected; }
+        public override bool IsConnected { get => isConnected; }
 
         private TencentQQAccount account;
 
@@ -93,6 +86,11 @@ namespace BowlFrame.Adapter.TencentQQAdapter
         public override async ValueTask<bool> Restart()
         {
             await StartGetAccessToken();
+            if (!manager.StartAllClient())
+            {
+                manager.StopAllClient();
+                return false;
+            }
             return true;
         }
 
