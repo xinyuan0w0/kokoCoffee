@@ -1,0 +1,30 @@
+﻿using SqlSugar;
+
+namespace BowlFrame.Database.Struct
+{
+#pragma warning disable CS8618 // 在退出构造函数时，不可为 null 的字段必须包含非 null 值。请考虑声明为可以为 null。
+
+    [SugarTable("id")]
+    public class Database_ID
+    {
+        [SugarColumn(IsPrimaryKey = true, IsIdentity = true)]
+        public int UID { get; set; }
+
+        [SugarColumn(IsPrimaryKey = true)]
+        public string UUID { get; set; }
+
+        public TargetType Type { get; set; }
+    }
+
+#pragma warning restore CS8618 // 在退出构造函数时，不可为 null 的字段必须包含非 null 值。请考虑声明为可以为 null。
+
+    public enum TargetType
+    {
+        Groups = 0,
+        User = 1,
+        Group = 2,
+        Channel = 3,
+        SubChannel = 4,
+        Func = 5,
+    }
+}
