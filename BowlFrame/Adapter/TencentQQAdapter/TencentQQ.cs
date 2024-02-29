@@ -301,7 +301,6 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 
         private void ListenReceiveEvent(WSClient client, byte[] bytes, WebSocketReceiveResult receiveResult)
         {
-            throw new NotImplementedException();
         }
 
         protected void OnConnected()
