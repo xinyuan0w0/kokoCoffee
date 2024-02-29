@@ -1,13 +1,6 @@
-﻿using BowlFrame.Tools;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace BowlFrame.Adapter
+﻿namespace BowlFrame.Adapter
 {
-    internal class AdapterBase : IAdapter
+    internal abstract class AdapterBase : IAdapter
     {
         private static readonly AdapterInfo _adapterInfo = new()
         {
@@ -19,9 +12,7 @@ namespace BowlFrame.Adapter
 
         public AdapterInfo AdapterInfo { get => _adapterInfo; }
 
-        private short status = 0;
-
-        public bool IsConnected { get => status >= 2; }
+        public abstract bool IsConnected { get; }
 
         protected string? connectID;
 
@@ -33,43 +24,15 @@ namespace BowlFrame.Adapter
 
         public event IAdapter.ErrorEventHandler? ErrorEvent;
 
-        public AdapterBase()
-        {
-            //Logger.Log.Debug($"创建了 {_adapterInfo.Name} 适配器");
-            status = 1;
-        }
-
         public virtual void Dispose()
         {
-            //Logger.Log.Debug($"释放了 {_adapterInfo.Name}({connectID}) 适配器");
-            status = 0;
         }
 
-        public virtual ValueTask<bool> Restart()
-        {
-            status = 1;
-            Logger.Log.Debug($"重启了 {_adapterInfo.Name}({connectID}) 适配器");
-            OnDisconnectEvent(connectID ?? "Null", _adapterInfo);
-            OnConnectedEvent(connectID ?? "Null", _adapterInfo);
-            status = 2;
-            return new ValueTask<bool>(true);
-        }
+        public abstract ValueTask<bool> Restart();
 
-        public virtual ValueTask<bool> Start()
-        {
-            status = 2;
-            Logger.Log.Debug($"启动了 {_adapterInfo.Name}({connectID}) 适配器");
-            OnConnectedEvent(connectID ?? "Null", _adapterInfo);
-            return new ValueTask<bool>(true);
-        }
+        public abstract ValueTask<bool> Start();
 
-        public virtual ValueTask<bool> Stop()
-        {
-            status = 1;
-            Logger.Log.Debug($"停止了 {_adapterInfo.Name}({connectID}) 适配器");
-            OnDisconnectEvent(connectID ?? "Null", _adapterInfo);
-            return new ValueTask<bool>(true);
-        }
+        public abstract ValueTask<bool> Stop();
 
         protected virtual void OnConnectedEvent(string connectID, AdapterInfo adapterInfo)
         {
