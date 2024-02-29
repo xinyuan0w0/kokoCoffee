@@ -1,13 +1,8 @@
 ﻿using BowlFrame.Net.WebSocket;
-using static BowlFrame.Tools.Logger;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using Newtonsoft.Json.Linq;
 using System.Net.WebSockets;
 using System.Text;
-using System.Threading.Tasks;
-using Newtonsoft.Json.Linq;
-using BowlFrame.Adapter.TencentQQAdapter;
+using static BowlFrame.Tools.Logger;
 
 namespace BowlFrame.Adapter.OneBotV11Adapter
 {
@@ -51,7 +46,7 @@ namespace BowlFrame.Adapter.OneBotV11Adapter
                 string receivedMessage = Encoding.UTF8.GetString(bytes);
                 JObject value = JObject.Parse(receivedMessage);
 
-                Log.Debug(receivedMessage);
+                Log.Trace(receivedMessage);
 
                 string? type = (string?)value["post_type"];
 
