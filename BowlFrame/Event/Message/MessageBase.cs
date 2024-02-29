@@ -13,6 +13,11 @@ namespace BowlFrame.Event.Message
         {
         }
 
+        /// <summary>
+        /// 被动发送
+        /// </summary>
+        /// <param name="messages"></param>
+        /// <returns></returns>
         public abstract Task<bool> SendAsync(Messages messages);
     }
 }

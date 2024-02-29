@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace BowlFrame.Event
+﻿namespace BowlFrame.Event
 {
     public enum MsgType
     {
@@ -17,6 +11,7 @@ namespace BowlFrame.Event
     {
         Private = 0,
         Group = 1,
-        Channel = 2
+        Channel = 2,
+        Post = 3,
     }
 }
