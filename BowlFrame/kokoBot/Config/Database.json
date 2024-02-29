@@ -1,0 +1,9 @@
+﻿{
+  "Driver": "MySql",
+  "Host": "192.168.88.100",
+  "Post": 3306,
+  "Username": "kokobot_test",
+  "Password": "kokobot_test",
+  "Database": "kokobot_test",
+  "ExtraString": ""
+}
