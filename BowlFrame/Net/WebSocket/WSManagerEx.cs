@@ -32,7 +32,7 @@
 
         public List<string> GetAllConnectID()
         {
-            return websocketDictionary.Keys.ToList();
+            return [.. websocketDictionary.Keys];
         }
     }
 }

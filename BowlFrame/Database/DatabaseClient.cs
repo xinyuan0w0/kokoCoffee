@@ -95,7 +95,7 @@ namespace BowlFrame.Database
                             break;
 
                         case DbDataType.Boolean:
-                            writer.WriteValue(data.Value.ToLower() == "true");
+                            writer.WriteValue(data.Value.Equals("true", StringComparison.CurrentCultureIgnoreCase));
                             break;
 
                         case DbDataType.String:
@@ -136,7 +136,7 @@ namespace BowlFrame.Database
 
         public async Task<JObject> ReadJsonFromData(string uuid, ArraySegment<string> keys, string? subKey = null)
         {
-            JObject value = new();
+            JObject value = [];
             foreach (string key in keys)
                 value.Merge(await ReadJsonFromData(uuid, key, subKey));
             return value;
@@ -146,7 +146,7 @@ namespace BowlFrame.Database
         {
             await _client.BeginTranAsync(System.Data.IsolationLevel.ReadUncommitted);
 
-            List<Database_Data> list = new();
+            List<Database_Data> list = [];
 
             foreach (JProperty property in values.Properties())
                 //锁行
@@ -196,8 +196,8 @@ namespace BowlFrame.Database
                                 });
                         //更新数据
                         //判断数据是否更新
-                        else if (data[0].DataType != (GetDataType(property_2.Value.Type) ?? throw new ArgumentNullException())
-                            || data[0].Value != (property_2.Value.Type == JTokenType.Bytes ? Convert.ToBase64String((byte[]?)property_2.Value ?? Array.Empty<byte>()) : property_2.Value.ToString()))
+                        else if (data[0].DataType != (GetDataType(property_2.Value.Type) ?? throw new NullReferenceException())
+                            || data[0].Value != (property_2.Value.Type == JTokenType.Bytes ? Convert.ToBase64String((byte[]?)property_2.Value ?? []) : property_2.Value.ToString()))
                             list.Add(
                                 new Database_Data
                                 {
@@ -212,7 +212,7 @@ namespace BowlFrame.Database
 
                 if (list.Count > 0)
                 {
-                    int lineCount = await _client.Storageable(list).WhereColumns(a => new { a.UUID, a.Key, a.SubKey }).ExecuteCommandAsync();
+                    int lineCount = await _client.Storageable(list).WhereColumns(a => new { a.UUID, a.Key, a.SubKey }).ExecuteCommandAsync(cancellationToken);
                     Log.Debug("增加/修改了 {0} 行", lineCount);
                 }
             }

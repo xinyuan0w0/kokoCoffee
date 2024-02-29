@@ -4,13 +4,13 @@ using static BowlFrame.Tools.Logger;
 
 namespace BowlFrame.Net.WebSocket
 {
-    internal class WSClient : IDisposable
+    internal class WSClient(Uri uri) : IDisposable
     {
         protected ClientWebSocket? socket;
         protected Task? ReceiveTask;
 
         //属性
-        protected Uri uri;
+        protected Uri uri = uri;
 
         public Uri Uri
         {
@@ -47,11 +47,6 @@ namespace BowlFrame.Net.WebSocket
         public delegate void DisconnectHandler(WSClient client, WebSocketCloseStatus closeStatus);
 
         public event DisconnectHandler? DisconnectEvent;
-
-        public WSClient(Uri uri)
-        {
-            this.uri = uri;
-        }
 
         ~WSClient()
         {
@@ -194,7 +189,7 @@ namespace BowlFrame.Net.WebSocket
                 }
             }
 
-            List<byte> bytes = new();
+            List<byte> bytes = [];
             int bytesLength = 0;
             while (true)
             {
@@ -219,13 +214,13 @@ namespace BowlFrame.Net.WebSocket
                     return;
                 }
 
-                bytes.AddRange(buffer.ToList());
+                bytes.AddRange([.. buffer]);
                 bytesLength += receiveResult.Count;
                 if (!receiveResult.EndOfMessage)
                     continue;
 
                 //触发接收事件
-                ReceiveEvent?.Invoke(this, bytes.GetRange(0, bytesLength).ToArray(), receiveResult);
+                ReceiveEvent?.Invoke(this, bytes.ToArray()[..bytesLength], receiveResult);
 
                 bytes.Clear();
                 bytesLength = 0;

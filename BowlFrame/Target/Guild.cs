@@ -2,17 +2,11 @@
 
 namespace BowlFrame.Target
 {
-    public abstract class Guild
+    public abstract class Guild(string uuid, string fatherUUID)
     {
-        public string UUID { get; }
+        public string UUID { get; } = uuid;
 
-        public string FatherUUID { get; }
-
-        public Guild(string uuid, string fatherUUID)
-        {
-            UUID = uuid;
-            FatherUUID = fatherUUID;
-        }
+        public string FatherUUID { get; } = fatherUUID;
 
         /// <summary>
         /// 主动发送

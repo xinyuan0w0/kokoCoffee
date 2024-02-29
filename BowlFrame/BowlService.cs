@@ -32,44 +32,30 @@ namespace BowlFrame
         public static async void Debug()
         {
             DatabaseClient database = new();
-            DatabaseClient database2 = new();
-            DatabaseClient database3 = new();
-            DatabaseClient database4 = new();
-            DatabaseClient database5 = new();
-            DatabaseClient database6 = new();
-            DatabaseClient database7 = new();
-            DatabaseClient database8 = new();
-            List<Task> tasks = new();
+
+            //List<Task> tasks = [];
 
             int count = await database.Client.Queryable<Database_PlatformID>().CountAsync();
 
             Log.Trace($"数据库对象数量: {count}");
 
-            var query = database.Client.Queryable<Database_PlatformID>();
+            //var query = database.Client.Queryable<Database_PlatformID>();
 
-            var result =
-                 from n in query
-                 where n.ID == "16581252311272482171"
-                 select n;
+            //var result =
+            //     from n in query
+            //     where n.ID == "16581252311272482171"
+            //     select n;
 
-            JObject a = await database.ReadJsonFromData("5qySHjU2oPR_hHK0l8BGc", new[] { "Register", "Check", "Sign" });
+            //JObject a = await database.ReadJsonFromData("5qySHjU2oPR_hHK0l8BGc", new[] { "Register", "Check", "Sign" });
 
-            for (int i = 0; i < 1000; i++)
-            {
-                tasks.Clear();
+            //for (int i = 0; i < 1000; i++)
+            //{
+            //    tasks.Clear();
 
-                tasks.Add(database.WriteJsonIntoData(Nanoid.Generate(), a));
-                //await Task.Delay(1000);
-                tasks.Add(database2.WriteJsonIntoData(Nanoid.Generate(), a));
-                tasks.Add(database3.WriteJsonIntoData(Nanoid.Generate(), a));
-                tasks.Add(database4.WriteJsonIntoData(Nanoid.Generate(), a));
-                tasks.Add(database5.WriteJsonIntoData(Nanoid.Generate(), a));
-                tasks.Add(database6.WriteJsonIntoData(Nanoid.Generate(), a));
-                tasks.Add(database7.WriteJsonIntoData(Nanoid.Generate(), a));
-                tasks.Add(database8.WriteJsonIntoData(Nanoid.Generate(), a));
+            //    tasks.Add(database.WriteJsonIntoData(Nanoid.Generate(), a));
 
-                Task.WaitAll(tasks.ToArray());
-            }
+            //    Task.WaitAll(tasks.ToArray());
+            //}
         }
     }
 }
