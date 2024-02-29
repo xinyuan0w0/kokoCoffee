@@ -4,6 +4,6 @@ namespace BowlFrame.Tools
 {
     public static class Logger
     {
-        public static NLog.Logger Log = LogManager.GetCurrentClassLogger();
+        public static readonly NLog.Logger Log = LogManager.GetCurrentClassLogger();
     }
 }

@@ -2,18 +2,13 @@
 
 namespace BowlFrame.Target
 {
-    public abstract class User
+    public abstract class User(string uuid)
     {
-        public string UUID { get; }
+        public string UUID { get; } = uuid;
 
         public abstract string Nickname { get; }
 
         public abstract byte[] Avatar { get; }
-
-        public User(string uuid)
-        {
-            UUID = uuid;
-        }
 
         /// <summary>
         /// 主动发送

@@ -2,23 +2,15 @@
 
 namespace BowlFrame.Event
 {
-    public abstract class EventBase : IEvent
+    public abstract class EventBase(Adapter.IPlatform platform, MsgType msgType, SourceType sourceType, DateTime? time = null) : IEvent
     {
-        public Adapter.IPlatform Platform { get; }
+        public Adapter.IPlatform Platform { get; } = platform;
 
-        public MsgType MsgType { get; }
+        public MsgType MsgType { get; } = msgType;
 
-        public SourceType SourceType { get; }
+        public SourceType SourceType { get; } = sourceType;
 
-        public DateTime Time { get; }
-
-        public EventBase(Adapter.IPlatform platform, MsgType msgType, SourceType sourceType, DateTime? time = null)
-        {
-            Platform = platform;
-            MsgType = msgType;
-            SourceType = sourceType;
-            Time = time ?? DateTime.UtcNow;
-        }
+        public DateTime Time { get; } = time ?? DateTime.UtcNow;
 
         public Messages? Messages { get; }
     }

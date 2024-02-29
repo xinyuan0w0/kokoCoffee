@@ -2,14 +2,9 @@
 
 namespace BowlFrame.Target
 {
-    internal abstract class Group
+    internal abstract class Group(string uuid)
     {
-        public string UUID { get; }
-
-        public Group(string uuid)
-        {
-            UUID = uuid;
-        }
+        public string UUID { get; } = uuid;
 
         /// <summary>
         /// 主动发送

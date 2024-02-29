@@ -3,16 +3,12 @@ using BowlFrame.Target;
 
 namespace BowlFrame.Event.Message
 {
-    internal abstract class GroupMessage : MessageBase
+    internal abstract class GroupMessage(IPlatform platform) : MessageBase(platform, SourceType.Group)
     {
         public abstract string RoomID { get; }
 
         public abstract User User { get; }
 
         public abstract Group Group { get; }
-
-        public GroupMessage(IPlatform platform) : base(platform, SourceType.Group)
-        {
-        }
     }
 }

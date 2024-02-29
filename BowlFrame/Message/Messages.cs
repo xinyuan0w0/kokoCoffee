@@ -2,7 +2,7 @@
 {
     public class Messages
     {
-        private readonly List<MessageBlock> messageBlocks = new();
+        private readonly List<MessageBlock> messageBlocks = [];
 
         public bool Add(ArraySegment<MessageBlock> messageBlocks)
         {
@@ -26,7 +26,7 @@
 
         public List<MessageBlock> GetAll(string name)
         {
-            List<MessageBlock> result = new();
+            List<MessageBlock> result = [];
 
             int? index = 0;
             while (true)
