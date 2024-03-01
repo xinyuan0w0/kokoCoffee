@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,7 +16,27 @@ namespace BowlFrame.Database
         public string Key { get; set; }
         public string SubKey { get; set; }
 
-        public readonly object Value => _int ?? _double ?? 0;
+        public object Value
+        {
+            readonly get => _int ?? _double ?? 0;
+            set
+            {
+                Type type = value.GetType();
+
+                if (type == typeof(short) || type == typeof(int) || type == typeof(long))
+                {
+                    _int = Convert.ToInt64(value);
+                    _double = null;
+                    IsDouble = false;
+                }
+                else if (type == typeof(float) || type == typeof(double))
+                {
+                    _int = null;
+                    _double = Convert.ToDouble(value);
+                    IsDouble = true;
+                }
+            }
+        }
 
         public bool? IsDouble { get; private set; } = null;
 

@@ -50,9 +50,8 @@ namespace BowlFrame
                 UUID = "test",
                 Key = "test",
                 SubKey = "test2",
+                Value = 2,
             };
-
-            changeInfo.Change(1.1);
 
             for (int i = 0; i < 3; i++)
             {
