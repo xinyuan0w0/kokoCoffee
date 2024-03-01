@@ -9,6 +9,8 @@ namespace BowlFrame.Event.Message
 
         public abstract User User { get; }
 
-        public abstract Guild Guild { get; }
+        public abstract Guild SubGuild { get; }
+
+        public abstract Channel Channel { get; }
     }
 }
