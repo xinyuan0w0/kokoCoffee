@@ -3,8 +3,11 @@ using BowlFrame.Database.TableStruct;
 using BowlFrame.Exceptions.Database.DatabaseEx;
 using Newtonsoft.Json.Linq;
 using SqlSugar;
+using System.Threading;
+using System;
 using static BowlFrame.Database.TableStruct.DataTypeToJTokenType;
 using static BowlFrame.Tools.Logger;
+using SqlSugar.Extensions;
 
 namespace BowlFrame.Database
 {
@@ -91,7 +94,7 @@ namespace BowlFrame.Database
                             break;
 
                         case DbDataType.Float:
-                            writer.WriteValue(Convert.ToDecimal(data.Value));
+                            writer.WriteValue(Convert.ToDouble(data.Value));
                             break;
 
                         case DbDataType.Boolean:
@@ -151,9 +154,6 @@ namespace BowlFrame.Database
             foreach (JProperty property in values.Properties())
                 //锁行
                 _ = _client.Queryable<DbData>().TranLock(DbLockType.Wait).Where(a => a.UUID == uuid && a.Key == property.Name).ToList();
-
-            //Log.Debug("进入");
-            //await Task.Delay(60000);
 
             try
             {
@@ -230,7 +230,95 @@ namespace BowlFrame.Database
             }
 
             await _client.CommitTranAsync();
-            return;
+        }
+
+        public async Task SafeChangeDataNumber(ChangeInfo change, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                ISugarQueryable<DbData>? query;
+
+                if (cancellationToken.IsCancellationRequested)
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                if (change.Value is null || change.IsDouble is null)
+                    return;
+
+                bool isDouble = (bool)change.IsDouble;
+
+                var value = Convert.ChangeType(change.Value, isDouble ? typeof(decimal) : typeof(long));
+
+                //创建查询对象
+                query = _client.Queryable<DbData>()
+                        .Where(a => a.UUID == change.UUID && a.Key == change.Key && a.SubKey == change.SubKey);
+
+                if (cancellationToken.IsCancellationRequested)
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                DbData[] data = await query.ToArrayAsync();
+
+                //超过一条数据
+                if (data.Length > 1)
+                    throw new WriteDataError(change.Key, change.SubKey);
+                //插入数据
+                else if (data.Length == 0)
+                    await _client.Insertable(new DbData()
+                    {
+                        UUID = change.UUID,
+                        Key = change.Key,
+                        SubKey = change.SubKey,
+                        DataType = isDouble ? DbDataType.Float : DbDataType.Integer,
+                        Value = value.ToString()!,
+                    }).ExecuteCommandAsync(cancellationToken);
+                //更新数据
+                else if (data[0].DataType == DbDataType.Integer || data[0].DataType == DbDataType.Float)
+                    await _client.Updateable<DbData>()
+                        .SetColumns(a => a.Value == a.Value + value)
+                        .SetColumns(a => a.DataType == (a.DataType == DbDataType.Float ? DbDataType.Float : (isDouble ? DbDataType.Float : DbDataType.Integer)))
+                        .Where(a => a.UUID == change.UUID && a.Key == change.Key && a.SubKey == change.SubKey)
+                        .ExecuteCommandAsync(cancellationToken);
+                else
+                    throw new WriteDataError(change.Key, change.SubKey);
+            }
+            catch (OperationCanceledException e)
+            {
+                Log.Error(e);
+                throw;
+            }
+            catch (Exception e)
+            {
+                Log.Error(e);
+                throw new WriteDataError();
+            }
+        }
+
+        public async Task SafeChangeDataNumber(ArraySegment<ChangeInfo> changes, CancellationToken cancellationToken = default)
+        {
+            await _client.BeginTranAsync(System.Data.IsolationLevel.ReadUncommitted);
+
+            //foreach (ChangeInfo change in changes)
+            //    //锁行
+            //    _ = _client.Queryable<DbData>().TranLock(DbLockType.Wait).Where(a => a.UUID == change.UUID && a.Key == change.Key && a.SubKey == change.SubKey).ToList();
+
+            try
+            {
+                foreach (ChangeInfo change in changes)
+                    await SafeChangeDataNumber(change, cancellationToken);
+            }
+            catch (OperationCanceledException e)
+            {
+                await _client.RollbackTranAsync();
+                Log.Error(e);
+                throw;
+            }
+            catch (Exception e)
+            {
+                await _client.RollbackTranAsync();
+                Log.Error(e);
+                throw;
+            }
+
+            await _client.CommitTranAsync();
         }
     }
 }
