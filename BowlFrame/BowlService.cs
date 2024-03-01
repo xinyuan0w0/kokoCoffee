@@ -5,6 +5,7 @@ using BowlFrame.Database.TableStruct;
 using NanoidDotNet;
 using Newtonsoft.Json.Linq;
 using NLog;
+using System.Threading.Tasks;
 using static BowlFrame.Tools.Logger;
 
 namespace BowlFrame
@@ -32,12 +33,38 @@ namespace BowlFrame
         public static async void Debug()
         {
             DatabaseClient database = new();
+            DatabaseClient database2 = new();
 
-            //List<Task> tasks = [];
+            DatabaseClient database3 = new();
+
+            DatabaseClient database4 = new();
+
+            List<Task> tasks = [];
 
             int count = await database.Client.Queryable<DbPlatformID>().CountAsync();
 
             Log.Trace($"数据库对象数量: {count}");
+
+            ChangeInfo changeInfo = new()
+            {
+                UUID = "test",
+                Key = "test",
+                SubKey = "test2",
+            };
+
+            changeInfo.Change(1.1);
+
+            for (int i = 0; i < 3; i++)
+            {
+                tasks.Clear();
+
+                tasks.Add(database.SafeChangeDataNumber(changeInfo));
+                tasks.Add(database2.SafeChangeDataNumber(changeInfo));
+                tasks.Add(database3.SafeChangeDataNumber(changeInfo));
+                tasks.Add(database4.SafeChangeDataNumber(changeInfo));
+
+                Task.WaitAll(tasks.ToArray());
+            }
 
             //var query = database.Client.Queryable<DbPlatformID>();
 
