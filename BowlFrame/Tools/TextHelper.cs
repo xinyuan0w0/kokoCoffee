@@ -1,10 +1,4 @@
 ﻿using BowlFrame.Config;
-using Microsoft.VisualBasic.FileIO;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BowlFrame.Tools
 {
@@ -19,7 +13,7 @@ namespace BowlFrame.Tools
         /// <returns></returns>
         public static string ReplacePlaceholder(string? text, Dictionary<string, (string, int?)>? placeholders = null, bool disableInsidePlaceholders = false)
         {
-            if (text == null) return "";
+            if (text is null) return "";
 
             placeholders ??= [];
 
@@ -52,7 +46,6 @@ namespace BowlFrame.Tools
                 if (foot + 1 > text.Length) break;
                 foot = text.IndexOf('}', foot + 1);
             }
-
             return text;
         }
     }
