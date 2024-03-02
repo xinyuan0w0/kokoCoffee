@@ -13,15 +13,14 @@ namespace BowlFrame.Config
     {
         private static readonly ConcurrentDictionary<string, byte[]> files = new();
 
-        public static async Task<bool> AddFile(string name, string filePath, CancellationToken cancellationToken = default)
+        public static async Task<bool> AddFileFromPath(string name, string filePath, CancellationToken cancellationToken = default)
         {
             try
             {
                 filePath = Path.GetFullPath(filePath);
-                if (Path.Exists(filePath))
+                if (!Path.Exists(filePath))
                     return false;
-
-                byte[] bytes = await File.ReadAllBytesAsync(filePath, cancellationToken);
+                byte[] bytes = Encoding.UTF8.GetBytes(await File.ReadAllTextAsync(filePath, cancellationToken));
 
                 return AddFile(name, bytes);
             }
