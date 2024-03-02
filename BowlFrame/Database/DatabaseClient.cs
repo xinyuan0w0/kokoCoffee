@@ -8,6 +8,7 @@ using System;
 using static BowlFrame.Database.TableStruct.DataTypeToJTokenType;
 using static BowlFrame.Tools.Logger;
 using SqlSugar.Extensions;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace BowlFrame.Database
 {
@@ -61,69 +62,25 @@ namespace BowlFrame.Database
 
         public async Task<JObject> ReadJsonFromData(string uuid, string key, string? subKey = null, CancellationToken cancellationToken = default)
         {
-            ISugarQueryable<DbData> table = _client.Queryable<DbData>();
-
-            ISugarQueryable<DbData> query = from a in table
-                                            where a.UUID == uuid && a.Key == key && (subKey == null || a.SubKey == subKey)
-                                            select a;
+            ISugarQueryable<DbData> query = _client.Queryable<DbData>()
+                .Where(a => a.UUID == uuid && a.Key == key && (subKey == null || a.SubKey == subKey));
 
             #region 构建Json
 
-            JTokenWriter writer = new();
+            using JTokenWriter writer = new();
             writer.WriteStartObject();
             writer.WritePropertyName(key);
 
-            if (await query.CountAsync(cancellationToken) > 0)
+            if (await query.AnyAsync())
             {
                 writer.WriteStartObject();
-
                 foreach (DbData data in await query.ToArrayAsync())
                 {
                     if (cancellationToken.IsCancellationRequested)
                         cancellationToken.ThrowIfCancellationRequested();
-
                     writer.WritePropertyName(data.SubKey);
-                    switch (data.DataType)
-                    {
-                        case DbDataType.Null:
-                            writer.WriteNull();
-                            break;
-
-                        case DbDataType.Integer:
-                            writer.WriteValue(Convert.ToInt64(data.Value));
-                            break;
-
-                        case DbDataType.Float:
-                            writer.WriteValue(Convert.ToDouble(data.Value));
-                            break;
-
-                        case DbDataType.Boolean:
-                            writer.WriteValue(data.Value.Equals("true", StringComparison.CurrentCultureIgnoreCase));
-                            break;
-
-                        case DbDataType.String:
-                            writer.WriteValue(data.Value);
-                            break;
-
-                        case DbDataType.Array:
-                            JArray.Parse(data.Value).WriteTo(writer);
-                            break;
-
-                        case DbDataType.Object:
-                            JObject.Parse(data.Value).WriteTo(writer);
-                            break;
-
-                        case DbDataType.Date:
-                            writer.WriteValue(Convert.ToDateTime(data.Value));
-                            break;
-
-                        case DbDataType.Bytes:
-                            writer.WriteValue(Convert.FromBase64String(data.Value));
-                            break;
-
-                        default:
-                            throw new ReadDataError(key, subKey);
-                    }
+                    if (!WriteJsonValue(writer, data.DataType, data.Value))
+                        throw new ReadDataError(key, subKey);
                 }
                 writer.WriteEndObject();
             }
@@ -135,6 +92,52 @@ namespace BowlFrame.Database
             #endregion 构建Json
 
             return writer.Token as JObject ?? throw new ReadDataError(key, subKey);
+        }
+
+        private static bool WriteJsonValue(JTokenWriter writer, DbDataType dataType, string value)
+        {
+            switch (dataType)
+            {
+                case DbDataType.Null:
+                    writer.WriteNull();
+                    break;
+
+                case DbDataType.Integer:
+                    writer.WriteValue(Convert.ToInt64(value));
+                    break;
+
+                case DbDataType.Float:
+                    writer.WriteValue(Convert.ToDouble(value));
+                    break;
+
+                case DbDataType.Boolean:
+                    writer.WriteValue(value.Equals("true", StringComparison.CurrentCultureIgnoreCase));
+                    break;
+
+                case DbDataType.String:
+                    writer.WriteValue(value);
+                    break;
+
+                case DbDataType.Array:
+                    JArray.Parse(value).WriteTo(writer);
+                    break;
+
+                case DbDataType.Object:
+                    JObject.Parse(value).WriteTo(writer);
+                    break;
+
+                case DbDataType.Date:
+                    writer.WriteValue(Convert.ToDateTime(value));
+                    break;
+
+                case DbDataType.Bytes:
+                    writer.WriteValue(Convert.FromBase64String(value));
+                    break;
+
+                default:
+                    return false;
+            }
+            return true;
         }
 
         public async Task<JObject> ReadJsonFromData(string uuid, ArraySegment<string> keys, string? subKey = null)
@@ -232,12 +235,10 @@ namespace BowlFrame.Database
             await _client.CommitTranAsync();
         }
 
-        public async Task SafeChangeDataNumber(ChangeInfo change, CancellationToken cancellationToken = default)
+        public async Task SafeChangeDataNumber(ChangeInfo change, bool _a = true, CancellationToken cancellationToken = default)
         {
             try
             {
-                ISugarQueryable<DbData>? query;
-
                 if (cancellationToken.IsCancellationRequested)
                     cancellationToken.ThrowIfCancellationRequested();
 
@@ -249,7 +250,7 @@ namespace BowlFrame.Database
                 var value = Convert.ChangeType(change.Value, isDouble ? typeof(decimal) : typeof(long));
 
                 //创建查询对象
-                query = _client.Queryable<DbData>()
+                ISugarQueryable<DbData> query = _client.Queryable<DbData>()
                         .Where(a => a.UUID == change.UUID && a.Key == change.Key && a.SubKey == change.SubKey);
 
                 if (cancellationToken.IsCancellationRequested)
@@ -262,23 +263,30 @@ namespace BowlFrame.Database
                     throw new WriteDataError(change.Key, change.SubKey);
                 //插入数据
                 else if (data.Length == 0)
-                    await _client.Insertable(new DbData()
+                    _client.Insertable(new DbData()
                     {
                         UUID = change.UUID,
                         Key = change.Key,
                         SubKey = change.SubKey,
                         DataType = isDouble ? DbDataType.Float : DbDataType.Integer,
                         Value = value.ToString()!,
-                    }).ExecuteCommandAsync(cancellationToken);
+                    }).AddQueue();
                 //更新数据
                 else if (data[0].DataType == DbDataType.Integer || data[0].DataType == DbDataType.Float)
-                    await _client.Updateable<DbData>()
+                    _client.Updateable<DbData>()
                         .SetColumns(a => a.Value == a.Value + value)
                         .SetColumns(a => a.DataType == (a.DataType == DbDataType.Float ? DbDataType.Float : (isDouble ? DbDataType.Float : DbDataType.Integer)))
                         .Where(a => a.UUID == change.UUID && a.Key == change.Key && a.SubKey == change.SubKey)
-                        .ExecuteCommandAsync(cancellationToken);
+                        .AddQueue();
                 else
                     throw new WriteDataError(change.Key, change.SubKey);
+
+                if (cancellationToken.IsCancellationRequested)
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                //直接提交
+                if (_a)
+                    await _client.SaveQueuesAsync();
             }
             catch (OperationCanceledException e)
             {
@@ -303,7 +311,8 @@ namespace BowlFrame.Database
             try
             {
                 foreach (ChangeInfo change in changes)
-                    await SafeChangeDataNumber(change, cancellationToken);
+                    await SafeChangeDataNumber(change, false, cancellationToken);
+                await _client.SaveQueuesAsync();
             }
             catch (OperationCanceledException e)
             {
