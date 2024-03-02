@@ -14,7 +14,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
         private static readonly AdapterInfo _adapterInfo = new()
         {
             Name = "TencentQQ_Offical",
-            ID = "1",
+            ID = "cn.kokobot.tencentqqapi",
             Platform = "TencentQQ",
             Description = "腾讯QQ官方API",
         };
