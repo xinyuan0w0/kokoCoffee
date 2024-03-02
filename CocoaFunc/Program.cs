@@ -7,8 +7,8 @@ namespace CocoaFunc
     {
         private static async Task Main(string[] args)
         {
-            BowlService.Initialization();
-            BowlService.Start();
+            await BowlService.Initialization();
+            await BowlService.Start();
 
             if (Debugger.IsAttached)
                 BowlService.Debug();
