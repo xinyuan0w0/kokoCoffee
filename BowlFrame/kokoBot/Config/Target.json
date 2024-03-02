@@ -1,0 +1,69 @@
+﻿{
+  "CreateTarget": {
+    "Global": {
+      "User": {
+        "Register": {
+          "Status": 1,
+          "Timestamp": "{Number_Timestamp}"
+        },
+        "Ban": {
+          "Status": 0,
+          "BanTime": 0,
+          "EndTime": -1
+        },
+        "Eco": {
+          "Money_1": 300,
+          "Money_2": 0,
+          "Intimacy": 0,
+          "IntimacyLevel": 1
+        }
+      },
+      "Group": {
+        "Register": {
+          "Status": 1,
+          "Timestamp": "{Number_Timestamp}"
+        },
+        "Ban": {
+          "Status": 0,
+          "BanTime": 0,
+          "EndTime": -1
+        },
+        "Switch": {
+          "Global": true,
+          "List": {
+          }
+        }
+      },
+      "Channel": {
+        "Register": {
+          "Status": 1,
+          "Timestamp": "{Number_Timestamp}"
+        },
+        "Ban": {
+          "Status": 0,
+          "BanTime": 0,
+          "EndTime": -1
+        },
+        "Switch": {
+          "Global": true,
+          "List": {
+          }
+        }
+      },
+      "Guild": {
+        "Switch": {
+          "Global": false,
+          "List": {
+          }
+        }
+      }
+    },
+    "Test": {
+      "User": {
+        "Eco": {
+          "Money_1": 99999
+        }
+      }
+    }
+  }
+}
