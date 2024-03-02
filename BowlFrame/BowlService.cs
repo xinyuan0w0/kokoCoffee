@@ -2,6 +2,7 @@
 using BowlFrame.Config;
 using BowlFrame.Database;
 using BowlFrame.Database.TableStruct;
+using BowlFrame.Perm;
 using NanoidDotNet;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -12,7 +13,7 @@ namespace BowlFrame
 {
     public class BowlService
     {
-        public static void Initialization()
+        public static async Task Initialization()
         {
             Console.WriteLine(PathConfig.Path);
             LogManager.Configuration = new NLog.Config.XmlLoggingConfiguration(Path.Combine(PathConfig.ConfigPath, "nlog.config"));
@@ -20,13 +21,13 @@ namespace BowlFrame
             Console.WriteLine(" ___  __    ________  ___  __    ________  ________  ________  _________   \r\n|\\  \\|\\  \\ |\\   __  \\|\\  \\|\\  \\ |\\   __  \\|\\   __  \\|\\   __  \\|\\___   ___\\ \r\n\\ \\  \\/  /|\\ \\  \\|\\  \\ \\  \\/  /|\\ \\  \\|\\  \\ \\  \\|\\ /\\ \\  \\|\\  \\|___ \\  \\_| \r\n \\ \\   ___  \\ \\  \\\\\\  \\ \\   ___  \\ \\  \\\\\\  \\ \\   __  \\ \\  \\\\\\  \\   \\ \\  \\  \r\n  \\ \\  \\\\ \\  \\ \\  \\\\\\  \\ \\  \\\\ \\  \\ \\  \\\\\\  \\ \\  \\|\\  \\ \\  \\\\\\  \\   \\ \\  \\ \r\n   \\ \\__\\\\ \\__\\ \\_______\\ \\__\\\\ \\__\\ \\_______\\ \\_______\\ \\_______\\   \\ \\__\\\r\n    \\|__| \\|__|\\|_______|\\|__| \\|__|\\|_______|\\|_______|\\|_______|    \\|__|\r\n                                                                           \r\n                                                                           \r\n                                                                           ");
             Log.Info("Hello, I'm kokoBot!");
 
-            ConfigLoad.AddFile("Target", Path.Combine(PathConfig.ConfigPath, "Target.json"));
+            await ConfigLoad.AddFileFromPath("Target", Path.Combine(PathConfig.ConfigPath, "Target.json"));
         }
 
-        public static void Start()
+        public static async Task Start()
         {
             AdapterManagerEx.CreateAdapterFromFile(Path.Combine(PathConfig.ConfigPath, "Adapter.json"));
-            AdapterManagerEx.StartAllAdapter().Wait();
+            await AdapterManagerEx.StartAllAdapter();
         }
 
         public static void Stop()
@@ -34,35 +35,28 @@ namespace BowlFrame
 
         public static async void Debug()
         {
-            DatabaseClient database = new();
-            DatabaseClient database2 = new();
-
-            DatabaseClient database3 = new();
-
-            DatabaseClient database4 = new();
+            IPlatform platform = new BasePlatform();
+            Permission database = new(platform);
+            Permission database2 = new(platform);
+            Permission database3 = new(platform);
+            Permission database4 = new(platform);
 
             List<Task> tasks = [];
 
-            int count = await database.Client.Queryable<DbPlatformID>().CountAsync();
+            //database.CreateTarget("test", TargetType.User, platform).Wait();
 
-            Log.Trace($"数据库对象数量: {count}");
+            //int count = await database.Client.Queryable<DbPlatformID>().CountAsync();
 
-            ChangeInfo changeInfo = new()
-            {
-                UUID = "test",
-                Key = "test",
-                SubKey = "test2",
-                Value = 2,
-            };
+            //Log.Trace($"数据库对象数量: {count}");
 
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 80; i += 4)
             {
                 tasks.Clear();
 
-                tasks.Add(database.SafeChangeDataNumber(changeInfo));
-                tasks.Add(database2.SafeChangeDataNumber(changeInfo));
-                tasks.Add(database3.SafeChangeDataNumber(changeInfo));
-                tasks.Add(database4.SafeChangeDataNumber(changeInfo));
+                tasks.Add(database.CreateTarget(i.ToString(), TargetType.User, platform));
+                tasks.Add(database2.CreateTarget((i - 1).ToString(), TargetType.User, platform));
+                tasks.Add(database3.CreateTarget((i - 2).ToString(), TargetType.User, platform));
+                tasks.Add(database4.CreateTarget((i - 3).ToString(), TargetType.User, platform));
 
                 Task.WaitAll([.. tasks]);
             }
