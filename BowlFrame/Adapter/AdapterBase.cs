@@ -5,7 +5,7 @@
         private static readonly AdapterInfo _adapterInfo = new()
         {
             Name = "Test",
-            ID = "0",
+            ID = "cn.kokobot.test",
             Platform = "Test",
             Description = "测试",
         };
