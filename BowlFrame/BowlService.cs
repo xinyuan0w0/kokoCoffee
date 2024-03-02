@@ -19,6 +19,8 @@ namespace BowlFrame
 
             Console.WriteLine(" ___  __    ________  ___  __    ________  ________  ________  _________   \r\n|\\  \\|\\  \\ |\\   __  \\|\\  \\|\\  \\ |\\   __  \\|\\   __  \\|\\   __  \\|\\___   ___\\ \r\n\\ \\  \\/  /|\\ \\  \\|\\  \\ \\  \\/  /|\\ \\  \\|\\  \\ \\  \\|\\ /\\ \\  \\|\\  \\|___ \\  \\_| \r\n \\ \\   ___  \\ \\  \\\\\\  \\ \\   ___  \\ \\  \\\\\\  \\ \\   __  \\ \\  \\\\\\  \\   \\ \\  \\  \r\n  \\ \\  \\\\ \\  \\ \\  \\\\\\  \\ \\  \\\\ \\  \\ \\  \\\\\\  \\ \\  \\|\\  \\ \\  \\\\\\  \\   \\ \\  \\ \r\n   \\ \\__\\\\ \\__\\ \\_______\\ \\__\\\\ \\__\\ \\_______\\ \\_______\\ \\_______\\   \\ \\__\\\r\n    \\|__| \\|__|\\|_______|\\|__| \\|__|\\|_______|\\|_______|\\|_______|    \\|__|\r\n                                                                           \r\n                                                                           \r\n                                                                           ");
             Log.Info("Hello, I'm kokoBot!");
+
+            ConfigLoad.AddFile("Target", Path.Combine(PathConfig.ConfigPath, "Target.json"));
         }
 
         public static void Start()
@@ -62,7 +64,7 @@ namespace BowlFrame
                 tasks.Add(database3.SafeChangeDataNumber(changeInfo));
                 tasks.Add(database4.SafeChangeDataNumber(changeInfo));
 
-                Task.WaitAll(tasks.ToArray());
+                Task.WaitAll([.. tasks]);
             }
 
             //var query = database.Client.Queryable<DbPlatformID>();
