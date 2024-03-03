@@ -10,12 +10,12 @@ namespace BowlFrame.Adapter
     {
         public AdapterInfo AdapterInfo { get; } = new()
         {
-            Name = "Test",
-            ID = "cn.kokobot.test",
-            Platform = "Test",
-            Description = "测试",
+            Name = "BowlFrame",
+            ID = "cn.kokobot",
+            Platform = "BowlFrame",
+            Description = "内部使用",
         };
 
-        public string ID => "Test";
+        public string ID { get; init; } = "BowlFrame";
     }
 }
