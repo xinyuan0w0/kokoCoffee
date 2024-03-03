@@ -20,6 +20,7 @@ namespace BowlFrame.Database.TableStruct
 
     public enum TargetType
     {
+        Remove = -1,
         Groups = 0,
         User = 1,
         Group = 2,
