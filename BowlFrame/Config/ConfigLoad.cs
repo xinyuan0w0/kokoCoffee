@@ -48,9 +48,7 @@ namespace BowlFrame.Config
 
         public static byte[]? GetFileBytes(string name)
         {
-            byte[]? bytes;
-
-            files.TryGetValue(name, out bytes);
+            files.TryGetValue(name, out byte[]? bytes);
 
             return bytes;
         }
