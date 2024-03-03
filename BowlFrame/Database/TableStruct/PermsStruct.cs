@@ -29,6 +29,9 @@ namespace BowlFrame.Database.TableStruct
 
         public string? Content { get; set; }
 
+        [SugarColumn(IsIgnore = true)]
+        public static DbPerms Empty { get; } = new();
+
         public PermissionInfo ToPermissionInfo() => new()
         {
             ID = ID,
