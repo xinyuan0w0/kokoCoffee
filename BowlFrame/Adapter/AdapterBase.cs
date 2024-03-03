@@ -1,6 +1,6 @@
 ﻿namespace BowlFrame.Adapter
 {
-    internal abstract class AdapterBase : IAdapter
+    public abstract class AdapterBase : IAdapter
     {
         private static readonly AdapterInfo _adapterInfo = new()
         {

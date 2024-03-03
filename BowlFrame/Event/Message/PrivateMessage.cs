@@ -3,7 +3,7 @@ using BowlFrame.Target;
 
 namespace BowlFrame.Event.Message
 {
-    internal abstract class PrivateMessage(IPlatform platform) : MessageBase(platform, SourceType.Private)
+    public abstract class PrivateMessage(IPlatform platform) : MessageBase(platform, SourceType.Private)
     {
         public abstract User User { get; }
     }

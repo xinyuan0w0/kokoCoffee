@@ -9,7 +9,7 @@ using static BowlFrame.Tools.Logger;
 
 namespace BowlFrame.Adapter.TencentQQAdapter
 {
-    internal class TencentQQ : AdapterBase
+    public class TencentQQ : AdapterBase
     {
         private static readonly AdapterInfo _adapterInfo = new()
         {
@@ -35,9 +35,9 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 
         private readonly Uri baseUrl;
 
-        public delegate void ReflushAppAccessTokenHandle(GetAppAccessToken appAccessToken);
+        internal delegate void ReflushAppAccessTokenHandle(GetAppAccessToken appAccessToken);
 
-        public event ReflushAppAccessTokenHandle? ReflushAppAccessTokenEvent;
+        internal event ReflushAppAccessTokenHandle? ReflushAppAccessTokenEvent;
 
         public TencentQQ(JObject args)
         {
@@ -219,7 +219,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             return result;
         }
 
-        private async Task<HttpResponseMessage?> Send(HttpRequestMessage httpRequestMessage)
+        public async Task<HttpResponseMessage?> Send(HttpRequestMessage httpRequestMessage)
         {
             short retryCount = 0;
             int retryInterval = 2000;

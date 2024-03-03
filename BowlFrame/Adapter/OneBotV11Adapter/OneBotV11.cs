@@ -6,7 +6,7 @@ using static BowlFrame.Tools.Logger;
 
 namespace BowlFrame.Adapter.OneBotV11Adapter
 {
-    internal class OneBotV11 : AdapterBase
+    public class OneBotV11 : AdapterBase
     {
         private static readonly AdapterInfo _adapterInfo = new()
         {
