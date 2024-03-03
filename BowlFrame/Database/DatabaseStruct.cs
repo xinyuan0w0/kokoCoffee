@@ -12,7 +12,7 @@ namespace BowlFrame.Database
         private long? _int = null;
         private double? _double = null;
 
-        public string UUID { get; set; }
+        public string? UUID { get; set; }
         public string Key { get; set; }
         public string SubKey { get; set; }
 
