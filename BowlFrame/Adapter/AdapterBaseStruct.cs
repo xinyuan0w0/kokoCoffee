@@ -16,6 +16,9 @@ namespace BowlFrame.Adapter
             Description = "内部使用",
         };
 
+        /// <summary>
+        /// 用于内部构造使用
+        /// </summary>
         public string ID { get; init; } = "BowlFrame";
     }
 }
