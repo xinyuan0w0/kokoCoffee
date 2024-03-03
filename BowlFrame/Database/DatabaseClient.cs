@@ -3,12 +3,8 @@ using BowlFrame.Database.TableStruct;
 using BowlFrame.Exceptions.Database.DatabaseEx;
 using Newtonsoft.Json.Linq;
 using SqlSugar;
-using System.Threading;
-using System;
 using static BowlFrame.Database.TableStruct.DataTypeToJTokenType;
 using static BowlFrame.Tools.Logger;
-using SqlSugar.Extensions;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace BowlFrame.Database
 {
@@ -16,8 +12,9 @@ namespace BowlFrame.Database
     {
         protected SqlSugarClient _client;
 
-        public SqlSugarClient Client
-        { get { return _client; } }
+        public SqlSugarClient Client => _client;
+
+        public string? UUID { get; set; }
 
         public DatabaseClient()
         {
@@ -60,8 +57,14 @@ namespace BowlFrame.Database
             _client.Dispose();
         }
 
-        public async Task<JObject> ReadJsonFromData(string uuid, string key, string? subKey = null, CancellationToken cancellationToken = default)
+        public async Task<JObject> ReadJsonFromData(string key, string? subKey = null, string? uuid = null, CancellationToken cancellationToken = default)
         {
+            if (uuid is null)
+                if (UUID is not null)
+                    uuid = UUID;
+                else
+                    throw new NullReferenceException();
+
             ISugarQueryable<DbData> query = _client.Queryable<DbData>()
                 .Where(a => a.UUID == uuid && a.Key == key && (subKey == null || a.SubKey == subKey));
 
@@ -140,26 +143,37 @@ namespace BowlFrame.Database
             return true;
         }
 
-        public async Task<JObject> ReadJsonFromData(string uuid, ArraySegment<string> keys, string? subKey = null)
+        public async Task<JObject> ReadJsonFromData(ArraySegment<string> keys, string? subKey = null, string? uuid = null)
         {
+            if (uuid is null)
+                if (UUID is not null)
+                    uuid = UUID;
+                else
+                    throw new NullReferenceException();
+
             JObject value = [];
             foreach (string key in keys)
                 value.Merge(await ReadJsonFromData(uuid, key, subKey));
             return value;
         }
 
-        public async Task WriteJsonIntoData(string uuid, JObject values, CancellationToken cancellationToken = default)
+        public async Task WriteJsonIntoData(JObject values, string? uuid = null, CancellationToken cancellationToken = default)
         {
-            await _client.BeginTranAsync(System.Data.IsolationLevel.ReadUncommitted);
-
-            List<DbData> list = [];
-
-            foreach (JProperty property in values.Properties())
-                //锁行
-                _ = _client.Queryable<DbData>().TranLock(DbLockType.Wait).Where(a => a.UUID == uuid && a.Key == property.Name).ToList();
+            if (uuid is null)
+                if (UUID is not null)
+                    uuid = UUID;
+                else
+                    throw new NullReferenceException();
 
             try
             {
+                await _client.BeginTranAsync(System.Data.IsolationLevel.ReadUncommitted);
+
+                List<DbData> list = [];
+
+                foreach (JProperty property in values.Properties())
+                    //锁行
+                    _ = _client.Queryable<DbData>().TranLock(DbLockType.Wait).Where(a => a.UUID == uuid && a.Key == property.Name).ToList();
                 //第一层Json循环
                 foreach (JProperty property in values.Properties())
                 {
@@ -237,6 +251,12 @@ namespace BowlFrame.Database
 
         public async Task SafeChangeDataNumber(ChangeInfo change, bool _a = true, CancellationToken cancellationToken = default)
         {
+            if (change.UUID is null)
+                if (UUID is not null)
+                    change.UUID = UUID;
+                else
+                    throw new NullReferenceException();
+
             try
             {
                 if (cancellationToken.IsCancellationRequested)
