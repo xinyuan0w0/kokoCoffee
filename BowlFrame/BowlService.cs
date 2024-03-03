@@ -36,10 +36,10 @@ namespace BowlFrame
         public static async void Debug()
         {
             IPlatform platform = new BasePlatform();
-            Permission database = new(platform);
-            Permission database2 = new(platform);
-            Permission database3 = new(platform);
-            Permission database4 = new(platform);
+            Permission database = new() { Platform = platform };
+            Permission database2 = new() { Platform = platform };
+            Permission database3 = new() { Platform = platform };
+            Permission database4 = new() { Platform = platform };
 
             List<Task> tasks = [];
 
