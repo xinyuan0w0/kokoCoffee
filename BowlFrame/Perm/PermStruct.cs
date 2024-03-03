@@ -1,4 +1,5 @@
-﻿using SqlSugar;
+﻿using BowlFrame.Database.TableStruct;
+using SqlSugar;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,5 +23,16 @@ namespace BowlFrame.Perm
         public long? Expir { get; set; }
 
         public string? Content { get; set; }
+
+        public readonly DbPerms ToDbPerms() => new()
+        {
+            ID = ID,
+            UUID = UUID,
+            Permission = Permission,
+            Value = Value,
+            Area = Area,
+            Expir = Expir,
+            Content = Content
+        };
     }
 }
