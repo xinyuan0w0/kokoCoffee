@@ -2,7 +2,7 @@
 
 namespace BowlFrame.Target
 {
-    public abstract class User(string uuid)
+    public abstract class User(string uuid) : ITarget
     {
         public string UUID { get; } = uuid;
 

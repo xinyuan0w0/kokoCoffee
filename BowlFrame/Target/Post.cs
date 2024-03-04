@@ -11,7 +11,7 @@ namespace BowlFrame.Target
     /// 预留功能
     /// </summary>
     /// <param name="uuid"></param>
-    public abstract class Post(string uuid)
+    public abstract class Post(string uuid) : ITarget
     {
         public string UUID { get; } = uuid;
 
