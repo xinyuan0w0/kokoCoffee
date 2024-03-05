@@ -18,6 +18,8 @@
 
         string IAdapter.ConnectID { get => connectID ?? "Null"; set => connectID = value; }
 
+        public abstract string AccountID { get; }
+
         public event IAdapter.ConnectedEventHandler? ConnectedEvent;
 
         public event IAdapter.DisconnectEventHandler? DisconnectEvent;

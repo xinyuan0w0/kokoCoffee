@@ -29,6 +29,8 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 
         public override bool IsConnected { get => isConnected; }
 
+        public override string AccountID => account.Account;
+
         private TencentQQAccount account;
 
         private GetAppAccessToken? appAccessToken;

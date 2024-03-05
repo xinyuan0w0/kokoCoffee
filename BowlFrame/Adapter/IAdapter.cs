@@ -6,6 +6,8 @@
         bool IsConnected { get; }
         string ConnectID { internal set; get; }
 
+        string AccountID { get; }
+
         public ValueTask<bool> Start();
 
         public ValueTask<bool> Stop();
