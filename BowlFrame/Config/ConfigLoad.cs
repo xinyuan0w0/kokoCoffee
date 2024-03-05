@@ -13,6 +13,8 @@ namespace BowlFrame.Config
     {
         private static readonly ConcurrentDictionary<string, byte[]> files = new();
 
+        public static bool IsHaveFile(string name) => files.ContainsKey(name);
+
         public static async Task<bool> AddFileFromPath(string name, string filePath, CancellationToken cancellationToken = default)
         {
             try
