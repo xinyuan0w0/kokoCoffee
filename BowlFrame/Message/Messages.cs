@@ -4,6 +4,8 @@
     {
         private readonly List<MessageBlock> messageBlocks = [];
 
+        public List<MessageBlock> MessageBlocks => messageBlocks;
+
         public bool Add(ArraySegment<MessageBlock> messageBlocks)
         {
             foreach (MessageBlock messageBlock in messageBlocks)
@@ -101,7 +103,7 @@
         public static bool IsMulitBlock(MessageBlock messageBlock)
         {
             //部分字段不允许重复内容
-            if (messageBlock.Name == "Text" || messageBlock.Name == "AtBot" || messageBlock.Name == "AtAll")
+            if (messageBlock.Name == "Text" || messageBlock.Name == "RawText" || messageBlock.Name == "AtBot" || messageBlock.Name == "AtAll")
                 messageBlock.HaveMulit = false;
 
             return messageBlock.HaveMulit;
