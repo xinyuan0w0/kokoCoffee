@@ -95,7 +95,7 @@ namespace BowlFrame.Perm
                 await _database.Client.SaveQueuesAsync();
 
                 JToken rawValue = JObject.Parse(
-                    TextHelper.ReplacePlaceholder(
+                    TextHelper.ReplacePlaceholders(
                         ConfigLoad.GetFileString("Target") ?? throw new NullReferenceException()
                         )
                     )["CreateTarget"] ?? throw new NullReferenceException("Target.json 缺少 CreateTarget 对象");

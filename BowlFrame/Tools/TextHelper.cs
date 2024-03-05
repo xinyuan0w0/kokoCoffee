@@ -11,7 +11,7 @@ namespace BowlFrame.Tools
         /// <param name="placeholders"></param>
         /// <param name="disableInsidePlaceholders"></param>
         /// <returns></returns>
-        public static string ReplacePlaceholder(string? text, Dictionary<string, (string, int?)>? placeholders = null, bool disableInsidePlaceholders = false)
+        public static string ReplacePlaceholders(string? text, Dictionary<string, (string, int?)>? placeholders = null, bool disableInsidePlaceholders = false)
         {
             if (text is null) return "";
 
