@@ -22,6 +22,7 @@ namespace BowlFrame
             Log.Info("Hello, I'm kokoBot!");
 
             await ConfigLoad.AddFileFromPath("Target", Path.Combine(PathConfig.ConfigPath, "Target.json"));
+            await ConfigLoad.AddFileFromPath("S3.json", Path.Combine(PathConfig.ConfigPath, "S3.json"));
         }
 
         public static async Task Start()
