@@ -24,6 +24,8 @@ namespace BowlFrame.Adapter.OneBotV11Adapter
 
         public override bool IsConnected { get => isConnected; }
 
+        public override string AccountID => account.Account;
+
         public OneBotV11(JObject args)
         {
             //反序列化

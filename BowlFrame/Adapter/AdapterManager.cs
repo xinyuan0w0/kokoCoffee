@@ -13,7 +13,17 @@ namespace BowlFrame.Adapter
         {
             if (!adapterDictionary.TryGetValue(connectID, out IAdapter? adapter))
                 return null;
+
             return adapter;
+        }
+
+        public static IAdapter? GetAdapterWithAccount(string accountID)
+        {
+            foreach (IAdapter adapter in adapterDictionary.Values)
+                if (adapter.AccountID == accountID)
+                    return adapter;
+
+            return null;
         }
 
         public static string? CreateAdapter(string name, params object[]? args)
