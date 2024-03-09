@@ -11,7 +11,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 {
     public class TencentQQ : AdapterBase
     {
-        private static readonly AdapterInfo _adapterInfo = new()
+        public new static readonly AdapterInfo _AdapterInfo = new()
         {
             Name = "TencentQQ_Offical",
             ID = "cn.kokobot.tencentqqapi",
@@ -50,7 +50,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             };
             account = args.ToObject<TencentQQAccount>(jsonSerializer);
 
-            Log.Debug($"创建了 {_adapterInfo.Name} 适配器");
+            Log.Debug($"创建了 {_AdapterInfo.Name} 适配器");
 
             //大概率是被遗弃的内容,但是还是保留了
             baseUrl = new Uri(account.Sandbox ? "https://sandbox.api.sgroup.qq.com" : "https://api.sgroup.qq.com");
@@ -81,7 +81,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             _httpClient.Dispose();
             manager.Dispose();
 
-            Log.Debug($"释放了 {_adapterInfo.Name}({connectID}) 适配器");
+            Log.Debug($"释放了 {_AdapterInfo.Name}({connectID}) 适配器");
             GC.SuppressFinalize(this);
         }
 
@@ -308,18 +308,18 @@ namespace BowlFrame.Adapter.TencentQQAdapter
         protected void OnConnected()
         {
             isConnected = true;
-            OnConnectedEvent(connectID ?? "Null", _adapterInfo);
+            OnConnectedEvent(connectID ?? "Null", _AdapterInfo);
         }
 
         protected void OnDisconnect(Exception? exception = null)
         {
             isConnected = false;
-            OnDisconnectEvent(connectID ?? "Null", _adapterInfo, exception);
+            OnDisconnectEvent(connectID ?? "Null", _AdapterInfo, exception);
         }
 
         protected void OnError(Exception exception)
         {
-            OnErrorEvent(connectID ?? "Null", _adapterInfo, exception);
+            OnErrorEvent(connectID ?? "Null", _AdapterInfo, exception);
         }
     }
 }

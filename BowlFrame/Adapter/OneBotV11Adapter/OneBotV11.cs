@@ -8,7 +8,7 @@ namespace BowlFrame.Adapter.OneBotV11Adapter
 {
     public class OneBotV11 : AdapterBase
     {
-        private static readonly AdapterInfo _adapterInfo = new()
+        public new static readonly AdapterInfo _AdapterInfo = new()
         {
             Name = "OneBotV11",
             ID = "cn.kokobot.onebotv11_gocqhttp",
@@ -35,7 +35,7 @@ namespace BowlFrame.Adapter.OneBotV11Adapter
             };
             account = args.ToObject<OneBotV11Account>(jsonSerializer);
 
-            Log.Debug($"创建了 {_adapterInfo.Name} 适配器");
+            Log.Debug($"创建了 {_AdapterInfo.Name} 适配器");
 
             socket = new(new Uri(account.ConnectInfo.WebSocket), account.AccessToken);
 
@@ -53,7 +53,7 @@ namespace BowlFrame.Adapter.OneBotV11Adapter
         {
             socket.Dispose();
 
-            Log.Debug($"释放了 {_adapterInfo.Name}({connectID}) 适配器");
+            Log.Debug($"释放了 {_AdapterInfo.Name}({connectID}) 适配器");
             GC.SuppressFinalize(this);
         }
 
@@ -109,18 +109,18 @@ namespace BowlFrame.Adapter.OneBotV11Adapter
         protected void OnConnected()
         {
             isConnected = true;
-            OnConnectedEvent(connectID ?? "Null", _adapterInfo);
+            OnConnectedEvent(connectID ?? "Null", _AdapterInfo);
         }
 
         protected void OnDisconnect(Exception? exception = null)
         {
             isConnected = false;
-            OnDisconnectEvent(connectID ?? "Null", _adapterInfo, exception);
+            OnDisconnectEvent(connectID ?? "Null", _AdapterInfo, exception);
         }
 
         protected void OnError(Exception exception)
         {
-            OnErrorEvent(connectID ?? "Null", _adapterInfo, exception);
+            OnErrorEvent(connectID ?? "Null", _AdapterInfo, exception);
         }
     }
 }
