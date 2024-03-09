@@ -74,4 +74,56 @@ namespace BowlFrame.Adapter.TencentQQAdapter
         [JsonProperty(PropertyName = "max_concurrency")]
         public int MaxConcurrency { get; set; }
     }
+
+#pragma warning disable CS8618 // 在退出构造函数时，不可为 null 的字段必须包含非 null 值。请考虑声明为可以为 null。
+
+    public abstract class WebSocket
+    {
+        /// <summary>
+        /// 操作码
+        /// </summary>
+        [JsonProperty(PropertyName = "op")]
+        public int OpCode { get; set; }
+
+        /// <summary>
+        /// 序列号，标志消息的唯一性
+        /// </summary>
+        [JsonProperty(PropertyName = "s")]
+        public int Sequence { get; set; }
+
+        /// <summary>
+        /// 事件类型
+        /// </summary>
+        [JsonProperty(PropertyName = "t")]
+        public string Type { get; set; }
+    }
+
+#pragma warning restore CS8618 // 在退出构造函数时，不可为 null 的字段必须包含非 null 值。请考虑声明为可以为 null。
+
+    internal struct Files
+    {
+        /// <summary>
+        /// 文件 ID
+        /// </summary>
+        [JsonProperty(PropertyName = "file_uuid")]
+        public string FileUUID { get; set; }
+
+        /// <summary>
+        /// 文件信息，用于发消息接口的 media 字段使用
+        /// </summary>
+        [JsonProperty(PropertyName = "file_info")]
+        public string FileInfo { get; set; }
+
+        /// <summary>
+        /// 有效期，表示剩余多少秒到期，到期后 file_info 失效，当等于 0 时，表示可长期使用
+        /// </summary>
+        [JsonProperty(PropertyName = "ttl")]
+        public int TTL { get; set; }
+
+        /// <summary>
+        /// 过期时间
+        /// </summary>
+        [JsonIgnore]
+        public long TTLTime { get; set; }
+    }
 }
