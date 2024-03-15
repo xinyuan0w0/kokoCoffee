@@ -11,6 +11,7 @@ using BowlFrame.Config;
 using Newtonsoft.Json.Linq;
 using System.Net.Sockets;
 using Amazon.Runtime.Internal;
+using System.IO;
 
 namespace BowlFrame.Tools
 {
@@ -45,9 +46,9 @@ namespace BowlFrame.Tools
             Bucket = bucket;
         }
 
-        public async Task<(bool, string?)?> UploadFile(string key, string filePath)
+        public async Task<bool?> UploadFile(string key, string filePath)
         {
-            if (await IsHasFile(key) == true) return (true, key);
+            if (await IsHasFile(key) == true) return true;
 
             try
             {
@@ -61,9 +62,9 @@ namespace BowlFrame.Tools
                 PutObjectResponse response = await _client.PutObjectAsync(request);
 
                 if (response.HttpStatusCode == System.Net.HttpStatusCode.OK)
-                    return (true, request.Key);
+                    return true;
 
-                return (false, null);
+                return false;
             }
             catch (Exception e)
             {
@@ -72,9 +73,9 @@ namespace BowlFrame.Tools
             }
         }
 
-        public async Task<(bool, string?)?> UploadFile(string key, Stream fileStream, string? ContentType = null)
+        public async Task<bool?> UploadFile(string key, Stream fileStream, string? ContentType = null)
         {
-            if (await IsHasFile(key) == true) return (true, key);
+            if (await IsHasFile(key) == true) return true;
 
             try
             {
@@ -89,9 +90,9 @@ namespace BowlFrame.Tools
                 PutObjectResponse response = await _client.PutObjectAsync(request);
 
                 if (response.HttpStatusCode == System.Net.HttpStatusCode.OK)
-                    return (true, request.Key);
+                    return true;
 
-                return (false, null);
+                return false;
             }
             catch (Exception e)
             {
@@ -100,7 +101,33 @@ namespace BowlFrame.Tools
             }
         }
 
-        public async Task<(bool, string?)?> UploadFile(string key, byte[] fileBytes, string? ContentType = null) => await UploadFile(key, new MemoryStream(fileBytes), ContentType);
+        public async Task<bool?> UploadFile(string key, byte[] fileBytes, string? ContentType = null)
+        {
+            if (await IsHasFile(key) == true) return true;
+
+            try
+            {
+                PutObjectRequest request = new()
+                {
+                    BucketName = Bucket,
+                    Key = key,
+                    ContentType = ContentType ?? GetMimeType(fileBytes).Item1,
+                    InputStream = new MemoryStream(fileBytes),
+                };
+
+                PutObjectResponse response = await _client.PutObjectAsync(request);
+
+                if (response.HttpStatusCode == System.Net.HttpStatusCode.OK)
+                    return true;
+
+                return false;
+            }
+            catch (Exception e)
+            {
+                Log.Warn(e);
+                return null;
+            }
+        }
 
         public async Task<string?> GetTempLink(string key)
         {
@@ -145,6 +172,9 @@ namespace BowlFrame.Tools
                     Log.Warn(e);
                     return null;
                 }
+            }
+            catch (InvalidOperationException) {
+                return true;
             }
             catch (Exception e)
             {

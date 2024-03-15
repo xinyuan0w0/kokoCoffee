@@ -35,7 +35,7 @@ namespace BowlFrame.Tools
         public static (string, string) GetMimeType(string hex)
         {
             foreach (KeyValuePair<string, (string, string)> mime in MimeTypeMappings)
-                if (mime.Key.StartsWith(hex))
+                if (hex.StartsWith(mime.Key))
                     return mime.Value;
 
             return ("application/octet-stream", "bytes");
