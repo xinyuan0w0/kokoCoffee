@@ -1,4 +1,5 @@
-﻿using BowlFrame.Message;
+﻿using BowlFrame.Adapter;
+using BowlFrame.Message;
 
 namespace BowlFrame.Target
 {
@@ -6,9 +7,13 @@ namespace BowlFrame.Target
     {
         public string UUID { get; } = uuid;
 
+        public abstract string ID { get; }
+
+        public abstract IPlatform Platform { get; }
+        
         public abstract string Nickname { get; }
 
-        public abstract byte[] Avatar { get; }
+        public abstract byte[] Avatar { get; }     
 
         /// <summary>
         /// 主动发送

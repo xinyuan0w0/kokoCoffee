@@ -1,18 +1,19 @@
-﻿using BowlFrame.Message;
+﻿using BowlFrame.Adapter;
+using BowlFrame.Message;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace BowlFrame.Target
 {
-    public abstract class Guild(string uuid, string fatherUUID) : ITarget
+    public abstract class Guild(string uuid) : ITarget
     {
         public string UUID { get; } = uuid;
 
-        public string FatherUUID { get; } = fatherUUID;
+        public abstract string ID { get; }
 
-        /// <summary>
-        /// 主动发送
-        /// </summary>
-        /// <param name="messages"></param>
-        /// <returns></returns>
-        public abstract Task<bool> SendAsync(Messages messages);
+        public abstract IPlatform Platform { get; }
     }
 }
