@@ -12,6 +12,6 @@ namespace BowlFrame.Event
 
         public DateTime Time { get; } = time ?? DateTime.UtcNow;
 
-        public Messages? Messages { get; }
+        public Messages? Messages { get; protected set; }
     }
 }
