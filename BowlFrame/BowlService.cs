@@ -36,49 +36,7 @@ namespace BowlFrame
 
         public static async void Debug()
         {
-            IPlatform platform = new BasePlatform();
-            Permission database = new() { Platform = platform };
-            Permission database2 = new() { Platform = platform };
-            Permission database3 = new() { Platform = platform };
-            Permission database4 = new() { Platform = platform };
-
-            List<Task> tasks = [];
-
-            //database.CreateTarget("test", TargetType.User, platform).Wait();
-
-            //int count = await database.Client.Queryable<DbPlatformID>().CountAsync();
-
-            //Log.Trace($"数据库对象数量: {count}");
-
-            for (int i = 0; i < 80; i += 4)
-            {
-                tasks.Clear();
-
-                tasks.Add(database.CreateTarget(i.ToString(), TargetType.User, platform));
-                tasks.Add(database2.CreateTarget((i - 1).ToString(), TargetType.User, platform));
-                tasks.Add(database3.CreateTarget((i - 2).ToString(), TargetType.User, platform));
-                tasks.Add(database4.CreateTarget((i - 3).ToString(), TargetType.User, platform));
-
-                Task.WaitAll([.. tasks]);
-            }
-
-            //var query = database.Client.Queryable<DbPlatformID>();
-
-            //var result =
-            //     from n in query
-            //     where n.ID == "16581252311272482171"
-            //     select n;
-
-            //JObject a = await database.ReadJsonFromData("5qySHjU2oPR_hHK0l8BGc", new[] { "Register", "Check", "Sign" });
-
-            //for (int i = 0; i < 1000; i++)
-            //{
-            //    tasks.Clear();
-
-            //    tasks.Add(database.WriteJsonIntoData(Nanoid.Generate(), a));
-
-            //    Task.WaitAll(tasks.ToArray());
-            //}
+            
         }
     }
 }
