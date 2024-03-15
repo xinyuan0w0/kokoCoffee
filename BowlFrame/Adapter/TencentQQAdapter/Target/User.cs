@@ -1,34 +1,46 @@
-﻿using BowlFrame.Message;
-using BowlFrame.Target;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using BowlFrame.Adapter.TencentQQAdapter.Struct;
+using BowlFrame.Exceptions.Permission;
+using BowlFrame.Message;
+using BowlFrame.Perm;
 
 namespace BowlFrame.Adapter.TencentQQAdapter.Target
 {
-    internal class User(string uuid) : BowlFrame.Target.User(uuid)
+    public class User : BowlFrame.Target.User
     {
-        public override string Nickname => "稻谷";
-
-        public override byte[] Avatar => ;
-
-        public override Task<bool> SendAsync(Messages messages)
+        public User(string botid, string uuid, C2C_MESSAGE_CREATE_Data? data = null) : base(uuid)
         {
-            throw new NotImplementedException();
+            _botid = botid;
+            _data = data;
+            TencentQQ tencentQQ = (AdapterManager.GetAdapterWithAccount(_botid) ?? throw new NullReferenceException($"无 {_botid} ID的适配器")) as TencentQQ
+                ?? throw new NullReferenceException($"{_botid} 非匹配的适配器");
+            tencentQQApi = new(tencentQQ, this);
+            permission = new() { Platform = platform };
+
+            if (_data is null)
+                _openid = permission.GetPlatformID(uuid).Result?.ID ?? throw new NotFoundTargetPlatform(uuid);
+            else
+                _openid = _data.Author.OpenID;
         }
-    }
 
-    internal class ChannelUser(string uuid) : BowlFrame.Target.User(uuid)
-    {
-        public override string Nickname => throw new NotImplementedException();
+        private static readonly IPlatform platform = new TencentQQ_Offical_Common();
 
-        public override byte[] Avatar => throw new NotImplementedException();
+        private readonly HttpClient _client = new();
+        public readonly TencentQQApi tencentQQApi;
+        public readonly Permission permission;
 
-        public override Task<bool> SendAsync(Messages messages)
-        {
-            throw new NotImplementedException();
-        }
+        private readonly string _botid;
+        private readonly string _openid;
+        private readonly C2C_MESSAGE_CREATE_Data? _data;
+
+        public override string Nickname => $"稻穗 #{_openid.Remove(6)}#";
+
+        //https://q.qlogo.cn/qqapp/{这里写你的机器人id}/{这里写你的机器人对应对方的openid}/640
+        public override byte[] Avatar => _client.GetByteArrayAsync($"https://q.qlogo.cn/qqapp/{_botid}/{_openid}/640").Result;
+
+        public override string ID => _openid;
+
+        public override IPlatform Platform => platform;
+
+        public override async Task<bool> SendAsync(Messages messages) => await tencentQQApi.Send(messages) == true;
     }
 }
