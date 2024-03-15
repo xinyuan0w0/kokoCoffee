@@ -159,7 +159,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
                     break;
 
                 default:
-                    Log.Debug("未使用的事件 {0}", t);
+                    //Log.Debug("未使用的事件 {0}", t);
                     break;
             }
         }
