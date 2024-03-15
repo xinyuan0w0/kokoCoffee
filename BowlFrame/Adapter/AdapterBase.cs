@@ -10,7 +10,7 @@
             Description = "内部使用",
         };
 
-        public AdapterInfo AdapterInfo { get => _adapterInfo; }
+        public AdapterInfo AdapterInfo { get => _AdapterInfo; }
 
         public abstract bool IsConnected { get; }
 
