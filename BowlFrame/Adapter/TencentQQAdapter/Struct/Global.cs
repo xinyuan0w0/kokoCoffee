@@ -1,9 +1,4 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BowlFrame.Adapter.TencentQQAdapter.Struct
 {
@@ -49,6 +44,39 @@ namespace BowlFrame.Adapter.TencentQQAdapter.Struct
         /// </summary>
         [JsonProperty(PropertyName = "avatar")]
         public string Avatar { get; set; }
+    }
+
+    public class MessageData
+    {
+        /// <summary>
+        /// 消息id
+        /// </summary>
+        [JsonProperty(PropertyName = "id")]
+        public string ID { get; set; }
+
+        /// <summary>
+        /// 文本消息
+        /// </summary>
+        [JsonProperty(PropertyName = "content")]
+        public string Content { get; set; }
+
+        /// <summary>
+        /// 附件信息
+        /// </summary>
+        [JsonProperty(PropertyName = "attachments")]
+        public Attachments[]? Attachments { get; set; }
+
+        /// <summary>
+        /// 提及所有人
+        /// </summary>
+        [JsonProperty(PropertyName = "mention_everyone")]
+        public bool MentionEveryone { get; set; } = false;
+
+        /// <summary>
+        /// 发送时间
+        /// </summary>
+        [JsonProperty(PropertyName = "timestamp")]
+        public DateTime Timestamp { get; set; }
     }
 
     public struct Attachments
