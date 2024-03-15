@@ -10,6 +10,8 @@
                     continue;
                 if (!StartClient(keyValuePair.Key))
                     return false;
+                //等待一会
+                Task.Delay(500).Wait();
             }
             return true;
         }
