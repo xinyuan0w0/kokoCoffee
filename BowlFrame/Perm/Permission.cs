@@ -43,7 +43,7 @@ namespace BowlFrame.Perm
         /// </summary>
         public Permission? LinkTarget { get; init; }
 
-        public IPlatform Platform { get; init; }
+        public required IPlatform Platform { get; init; }
 
         public SourceType? SourceType { get; set; }
 
@@ -129,7 +129,7 @@ namespace BowlFrame.Perm
         /// <returns></returns>
         public async Task<bool?> RemoveTarget(string? uuid = null)
         {
-            if (UUID is null)
+            if (uuid is null)
                 if (UUID is not null)
                     uuid = UUID;
                 else
@@ -199,7 +199,7 @@ namespace BowlFrame.Perm
         /// <returns></returns>
         public async Task<DbPlatformID?> GetPlatformID(string? uuid = null)
         {
-            if (UUID is null)
+            if (uuid is null)
                 if (UUID is not null)
                     uuid = UUID;
                 else
@@ -255,7 +255,7 @@ namespace BowlFrame.Perm
         /// <returns></returns>
         public async Task<DbPlatformID[]?> GetAllPlatformID(string? uuid = null)
         {
-            if (UUID is null)
+            if (uuid is null)
                 if (UUID is not null)
                     uuid = UUID;
                 else
