@@ -1,9 +1,4 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BowlFrame.Adapter.TencentQQAdapter.Struct
 {
@@ -24,20 +19,8 @@ namespace BowlFrame.Adapter.TencentQQAdapter.Struct
         public GROUP_AT_MESSAGE_CREATE_Data Data { get; set; }
     }
 
-    public struct GROUP_AT_MESSAGE_CREATE_Data
+    public class GROUP_AT_MESSAGE_CREATE_Data : C2C_MESSAGE_CREATE_Data
     {
-        /// <summary>
-        /// 消息id
-        /// </summary>
-        [JsonProperty(PropertyName = "id")]
-        public string ID { get; set; }
-
-        /// <summary>
-        /// 用户信息
-        /// </summary>
-        [JsonProperty(PropertyName = "author")]
-        public GroupAuthor Author { get; set; }
-
         /// <summary>
         /// 群id
         /// </summary>
@@ -49,24 +32,30 @@ namespace BowlFrame.Adapter.TencentQQAdapter.Struct
         /// </summary>
         [JsonProperty(PropertyName = "group_openid")]
         public string GroupOpenID { get; set; }
+    }
+
+    public class C2C_MESSAGE_CREATE : WebSocket
+    {
+        /// <summary>
+        /// 消息id
+        /// </summary>
+        [JsonProperty(PropertyName = "id")]
+        public string ID { get; set; }
 
         /// <summary>
-        /// 文本消息
+        /// 数据结构
         /// </summary>
-        [JsonProperty(PropertyName = "content")]
-        public string Content { get; set; }
+        [JsonProperty(PropertyName = "d")]
+        public C2C_MESSAGE_CREATE_Data Data { get; set; }
+    }
 
+    public class C2C_MESSAGE_CREATE_Data : MessageData
+    {
         /// <summary>
-        /// 附件信息
+        /// 用户信息
         /// </summary>
-        [JsonProperty(PropertyName = "attachments")]
-        public Attachments[]? Attachments { get; set; }
-
-        /// <summary>
-        /// 发送时间
-        /// </summary>
-        [JsonProperty(PropertyName = "timestamp")]
-        public DateTime Timestamp { get; set; }
+        [JsonProperty(PropertyName = "author")]
+        public GroupAuthor Author { get; set; }
     }
 
 #pragma warning restore CS8618 // 在退出构造函数时，不可为 null 的字段必须包含非 null 值。请考虑声明为可以为 null。
