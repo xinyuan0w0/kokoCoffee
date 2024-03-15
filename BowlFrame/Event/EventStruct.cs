@@ -11,7 +11,8 @@
     {
         Private = 0,
         Group = 1,
-        Channel = 2,
-        Post = 3,
+        Guild = 2,
+        Channel = 3,
+        Post = 4,
     }
 }

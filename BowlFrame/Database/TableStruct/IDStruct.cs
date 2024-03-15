@@ -27,8 +27,8 @@ namespace BowlFrame.Database.TableStruct
         Groups = 0,
         User = 1,
         Group = 2,
-        Channel = 3,
-        SubChannel = 4,
+        Guild = 3,
+        Channel = 4,
         Func = 5,
     }
 }
