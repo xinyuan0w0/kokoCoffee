@@ -126,4 +126,30 @@ namespace BowlFrame.Adapter.TencentQQAdapter
         [JsonIgnore]
         public long TTLTime { get; set; }
     }
+
+    public struct DMS
+    {
+        //私信会话关联的频道 id
+        [JsonProperty(PropertyName = "guild_id")]
+        public string GuildID { get; set; }
+        //私信会话关联的子频道 id
+        [JsonProperty(PropertyName = "channel_id")]
+        public string ChannelID { get; set; }
+        //创建私信会话时间戳
+        [JsonProperty(PropertyName = "create_time")]
+        public string Timestamp { get; set; }
+    }
+    public struct TencentQQ_Offical_Common : IPlatform
+    {
+        public readonly AdapterInfo AdapterInfo => TencentQQ._AdapterInfo;
+
+        public readonly string ID => "TencentQQ_Offical_Common";
+    }
+
+    public struct TencentQQ_Offical_Guild : IPlatform
+    {
+        public readonly AdapterInfo AdapterInfo => TencentQQ._AdapterInfo;
+
+        public readonly string ID => "TencentQQ_Offical_Guild";
+    }
 }
