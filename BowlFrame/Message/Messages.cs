@@ -103,7 +103,7 @@
         public static bool IsMulitBlock(MessageBlock messageBlock)
         {
             //部分字段不允许重复内容
-            if (messageBlock.Name == "Text" || messageBlock.Name == "RawText" || messageBlock.Name == "AtBot" || messageBlock.Name == "AtAll")
+            if (messageBlock.Name == "RawText" || messageBlock.Name == "AtAll")
                 messageBlock.HaveMulit = false;
 
             return messageBlock.HaveMulit;
