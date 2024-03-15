@@ -1,10 +1,16 @@
-﻿using BowlFrame.Net.WebSocket;
+﻿using BowlFrame.Adapter.TencentQQAdapter.Event.Message;
+using BowlFrame.Adapter.TencentQQAdapter.Struct;
+using BowlFrame.Event;
+using BowlFrame.Message;
+using BowlFrame.Net.WebSocket;
 using BowlFrame.Tools;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.ComponentModel.DataAnnotations;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Net.WebSockets;
+using System.Text;
 using static BowlFrame.Tools.Logger;
 
 namespace BowlFrame.Adapter.TencentQQAdapter
@@ -29,13 +35,17 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 
         public override bool IsConnected { get => isConnected; }
 
-        public override string AccountID => account.Account;
+        public override string AccountID => account.AppID;
+
+        public string? ID { get; private set; }
+
+        public string? Nickname { get; private set; }
 
         private TencentQQAccount account;
 
         private GetAppAccessToken? appAccessToken;
 
-        private readonly Uri baseUrl;
+        public readonly Uri BaseUrl;
 
         internal delegate void ReflushAppAccessTokenHandle(GetAppAccessToken appAccessToken);
 
@@ -53,7 +63,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             Log.Debug($"创建了 {_AdapterInfo.Name} 适配器");
 
             //大概率是被遗弃的内容,但是还是保留了
-            baseUrl = new Uri(account.Sandbox ? "https://sandbox.api.sgroup.qq.com" : "https://api.sgroup.qq.com");
+            BaseUrl = new Uri(account.Sandbox ? "https://sandbox.api.sgroup.qq.com" : "https://api.sgroup.qq.com");
 
             //初始化定时器
             _accessTokenTimer.Elapsed += AccessTokenTimerCallback;
@@ -210,7 +220,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 
         private async Task<GatewayWithShards?> GetGatewayWithShards()
         {
-            HttpRequestMessage httpRequest = new(HttpMethod.Get, new Uri(baseUrl, "/gateway/bot"));
+            HttpRequestMessage httpRequest = new(HttpMethod.Get, new Uri(BaseUrl, "/gateway/bot"));
             HttpResponseMessage? responseMessage = await Send(httpRequest);
 
             if (responseMessage is null)
@@ -251,8 +261,17 @@ namespace BowlFrame.Adapter.TencentQQAdapter
                 retryCount++;
             } while (retryCount <= 5);
 
-            if (responseMessage is null || !responseMessage.IsSuccessStatusCode)
+            if (responseMessage is null)
                 return null;
+
+            Log.Trace("Headers: {0}\nContent: {1}", responseMessage.Headers.ToString(), await responseMessage.Content.ReadAsStringAsync());
+
+            if (!responseMessage.IsSuccessStatusCode)
+            {
+                Log.Warn("Headers: {0}\nContent: {1}", responseMessage.Headers.ToString(), await responseMessage.Content.ReadAsStringAsync());
+                return null;
+            }
+
             return responseMessage;
         }
 
@@ -303,6 +322,70 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 
         private void ListenReceiveEvent(WSClient client, byte[] bytes, WebSocketReceiveResult receiveResult)
         {
+            if (receiveResult.MessageType == WebSocketMessageType.Text)
+            {
+                //转换为文本
+                string receivedMessage = Encoding.UTF8.GetString(bytes);
+                JObject value = JObject.Parse(receivedMessage);
+
+                //Log.Trace(receivedMessage);
+
+                short op = (short?)value["op"] ?? 9;
+
+                switch (op)
+                {
+                    //Dispatch 服务端进行消息推送
+                    case 0:
+                        Dispatch(value);
+                        break;
+                }
+            }
+        }
+
+        private void Dispatch(JObject value)
+        {
+            string? t = (string?)value["t"];
+            BowlFrame.Event.Message.MessageBase? evnet = null;
+
+            try
+            {
+                switch (t)
+                {
+                    case "AT_MESSAGE_CREATE":
+                        evnet = new ChannelMessage(this, value.ToObject<AT_MESSAGE_CREATE>() ?? throw new NullReferenceException());
+                        break;
+
+                    case "DIRECT_MESSAGE_CREATE":
+                        evnet = new GuildPrivateMessage(this, value.ToObject<DIRECT_MESSAGE_CREATE>() ?? throw new NullReferenceException());
+                        break;
+
+                    case "GROUP_AT_MESSAGE_CREATE":
+                        evnet = new GroupMessage(this, value.ToObject<GROUP_AT_MESSAGE_CREATE>() ?? throw new NullReferenceException());
+                        break;
+
+                    case "C2C_MESSAGE_CREATE":
+                        evnet = new PrivateMessage(this, value.ToObject<C2C_MESSAGE_CREATE>() ?? throw new NullReferenceException());
+                        break;
+
+                    case "READY":
+                        ID = (string?)value["d"]?["user"]?["id"];
+                        Nickname = (string?)value["d"]?["user"]?["username"];
+                        break;
+
+                    default:
+                        Log.Debug("未使用的事件 {0}", t);
+                        break;
+                }
+
+                if (evnet is not null)
+                {
+                   
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Error(e);
+            }
         }
 
         protected void OnConnected()
