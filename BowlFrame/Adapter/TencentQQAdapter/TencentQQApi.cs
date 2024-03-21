@@ -31,7 +31,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 
         public async Task<bool?> Send(Messages messages, string? msgid = null)
         {
-            
+
 
             //判断是否为支持的对象
             if (target is not Group && target is not User)
@@ -73,29 +73,35 @@ namespace BowlFrame.Adapter.TencentQQAdapter
                                 break;
 
                             case "Voice":
+                                if (messageBlock.Value is null || (byte[])messageBlock.Value == Array.Empty<byte>())
+                                    break;
                                 content = JObject.FromObject(new
                                 {
                                     msg_type = 7,
                                     content = " ",
-                                    media = await UploadMedia.GetFiles(tencentQQ, (byte[]?)messageBlock.Value ?? [], 3, target),
+                                    media = await UploadMedia.GetFiles(tencentQQ, (byte[])messageBlock.Value, 3, target),
                                 });
                                 break;
 
                             case "Picture":
+                                if (messageBlock.Value is null || (byte[])messageBlock.Value == Array.Empty<byte>())
+                                    break;
                                 content = JObject.FromObject(new
                                 {
                                     msg_type = 7,
                                     content = " ",
-                                    media = await UploadMedia.GetFiles(tencentQQ, (byte[]?)messageBlock.Value ?? [], 1, target),
+                                    media = await UploadMedia.GetFiles(tencentQQ, (byte[])messageBlock.Value, 1, target),
                                 });
                                 break;
 
                             case "Vidio":
+                                if (messageBlock.Value is null || (byte[])messageBlock.Value == Array.Empty<byte>())
+                                    break;
                                 content = JObject.FromObject(new
                                 {
                                     msg_type = 7,
                                     content = " ",
-                                    media = await UploadMedia.GetFiles(tencentQQ, (byte[]?)messageBlock.Value ?? [], 2, target),
+                                    media = await UploadMedia.GetFiles(tencentQQ, (byte[])messageBlock.Value, 2, target),
                                 });
                                 break;
 
@@ -129,9 +135,9 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 
                 content.Add("msg_seq", ++count);
 
-                
 
-                bool? result = await _send(new StringContent(JsonConvert.SerializeObject(content, settings),Encoding.UTF8, "application/json"));
+
+                bool? result = await _send(new StringContent(JsonConvert.SerializeObject(content, settings), Encoding.UTF8, "application/json"));
                 if (result != true)
                     return result;
             }
@@ -211,7 +217,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
                                     break;
                                 }
 
-                                if (pic is null)
+                                if (pic is null || pic == Array.Empty<byte>())
                                     break;
 
                                 content = new MultipartFormDataContent
@@ -244,7 +250,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 
             if (text.Length != 0)
             {
-                if (firstpic is null)
+                if (firstpic is null || firstpic == Array.Empty<byte>())
                 {
                     JsonContent jsonContent;
                     jsonContent = JsonContent.Create(new
