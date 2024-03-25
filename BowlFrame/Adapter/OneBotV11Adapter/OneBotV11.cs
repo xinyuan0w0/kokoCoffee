@@ -11,9 +11,13 @@ namespace BowlFrame.Adapter.OneBotV11Adapter
         public new static readonly AdapterInfo _AdapterInfo = new()
         {
             Name = "OneBotV11",
-            ID = "cn.kokobot.onebotv11_gocqhttp",
+            ID = "cn.kokobot.onebotv11",
             Platform = "TencentQQ",
             Description = "腾讯QQ第三方API",
+            Method = new()
+            {
+                Interaction = true
+            }
         };
 
         private readonly OneBotV11Account account;

@@ -1,12 +1,9 @@
 ﻿using BowlFrame.Adapter.TencentQQAdapter.Event.Message;
 using BowlFrame.Adapter.TencentQQAdapter.Struct;
-using BowlFrame.Event;
-using BowlFrame.Message;
 using BowlFrame.Net.WebSocket;
 using BowlFrame.Tools;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.ComponentModel.DataAnnotations;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Net.WebSockets;
@@ -23,33 +20,20 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             ID = "cn.kokobot.tencentqqapi",
             Platform = "TencentQQ",
             Description = "腾讯QQ官方API",
+            Method = new()
+            {
+                Interaction = true
+            }
         };
 
-        private readonly HttpClient _httpClient = new();
-
+        public readonly Uri BaseUrl;
         private readonly System.Timers.Timer _accessTokenTimer = new();
-
+        private readonly HttpClient _httpClient = new();
         private readonly WSManagerEx manager = new();
 
-        private bool isConnected;
-
-        public override bool IsConnected { get => isConnected; }
-
-        public override string AccountID => account.AppID;
-
-        public string? ID { get; private set; }
-
-        public string? Nickname { get; private set; }
-
         private TencentQQAccount account;
-
         private GetAppAccessToken? appAccessToken;
-
-        public readonly Uri BaseUrl;
-
-        internal delegate void ReflushAppAccessTokenHandle(GetAppAccessToken appAccessToken);
-
-        internal event ReflushAppAccessTokenHandle? ReflushAppAccessTokenEvent;
+        private bool isConnected;
 
         public TencentQQ(JObject args)
         {
@@ -80,6 +64,15 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             Dispose();
         }
 
+        internal delegate void ReflushAppAccessTokenHandle(GetAppAccessToken appAccessToken);
+
+        internal event ReflushAppAccessTokenHandle? ReflushAppAccessTokenEvent;
+
+        public override string AccountID => account.AppID;
+        public string? ID { get; private set; }
+        public override bool IsConnected { get => isConnected; }
+        public string? Nickname { get; private set; }
+
         public override void Dispose()
         {
             manager.ReceiveEvent -= ListenReceiveEvent;
@@ -104,6 +97,50 @@ namespace BowlFrame.Adapter.TencentQQAdapter
                 return false;
             }
             return true;
+        }
+
+        public async Task<HttpResponseMessage?> Send(HttpRequestMessage httpRequestMessage)
+        {
+            short retryCount = 0;
+            int retryInterval = 2000;
+            HttpResponseMessage? responseMessage = null;
+
+            //添加请求头
+            httpRequestMessage.Headers.Authorization = new AuthenticationHeaderValue("QQBot", appAccessToken?.AccessToken);
+            httpRequestMessage.Headers.Add("X-Union-Appid", account.AppID);
+            do
+            {
+                HttpRequestMessage requestMessage = await Copyer.CopyHttpRequestMessage(httpRequestMessage);
+
+                try
+                {
+                    responseMessage = await _httpClient.SendAsync(requestMessage);
+                }
+                catch (Exception e)
+                {
+                    Log.Warn(e);
+                    retryCount++;
+                    await Task.Delay(retryInterval);
+                    continue;
+                }
+
+                if (responseMessage.IsSuccessStatusCode)
+                    break;
+                retryCount++;
+            } while (retryCount <= 5);
+
+            if (responseMessage is null)
+                return null;
+
+            Log.Trace("Headers: {0}\nContent: {1}", responseMessage.Headers.ToString(), await responseMessage.Content.ReadAsStringAsync());
+
+            if (!responseMessage.IsSuccessStatusCode)
+            {
+                Log.Warn("Headers: {0}\nContent: {1}", responseMessage.Headers.ToString(), await responseMessage.Content.ReadAsStringAsync());
+                return null;
+            }
+
+            return responseMessage;
         }
 
         public override async ValueTask<bool> Start()
@@ -144,15 +181,21 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             return new ValueTask<bool>(true);
         }
 
-        private async ValueTask<bool> StartGetAccessToken()
+        protected void OnConnected()
         {
-            //获取Token并启动定时器
-            appAccessToken = await GetAppAccessToken();
-            if (appAccessToken is null)
-                return false;
-            _accessTokenTimer.Interval = (appAccessToken?.ExpiresIn ?? 1) * 1000;
-            _accessTokenTimer.Start();
-            return true;
+            isConnected = true;
+            OnConnected(connectID ?? "Null", _AdapterInfo);
+        }
+
+        protected void OnDisconnect(Exception? exception = null)
+        {
+            isConnected = false;
+            OnDisconnect(connectID ?? "Null", _AdapterInfo, exception);
+        }
+
+        protected void OnError(Exception exception)
+        {
+            OnError(connectID ?? "Null", _AdapterInfo, exception);
         }
 
         private async void AccessTokenTimerCallback(object? sender, System.Timers.ElapsedEventArgs e)
@@ -183,6 +226,51 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             } while (retryCount < 5);
 
             OnError(new Exception("AppAccessToken 获取失败"));
+        }
+
+        private void Dispatch(JObject value)
+        {
+            string? t = (string?)value["t"];
+            BowlFrame.Event.Message.MessageBase? evnet = null;
+
+            try
+            {
+                switch (t)
+                {
+                    case "AT_MESSAGE_CREATE":
+                        evnet = new ChannelMessage(this, value.ToObject<AT_MESSAGE_CREATE>() ?? throw new NullReferenceException());
+                        break;
+
+                    case "DIRECT_MESSAGE_CREATE":
+                        evnet = new GuildPrivateMessage(this, value.ToObject<DIRECT_MESSAGE_CREATE>() ?? throw new NullReferenceException());
+                        break;
+
+                    case "GROUP_AT_MESSAGE_CREATE":
+                        evnet = new GroupMessage(this, value.ToObject<GROUP_AT_MESSAGE_CREATE>() ?? throw new NullReferenceException());
+                        break;
+
+                    case "C2C_MESSAGE_CREATE":
+                        evnet = new PrivateMessage(this, value.ToObject<C2C_MESSAGE_CREATE>() ?? throw new NullReferenceException());
+                        break;
+
+                    case "READY":
+                        ID = (string?)value["d"]?["user"]?["id"];
+                        Nickname = (string?)value["d"]?["user"]?["username"];
+                        break;
+
+                    default:
+                        Log.Debug("未使用的事件 {0}", t);
+                        break;
+                }
+
+                if (evnet is not null)
+                {
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Error(e);
+            }
         }
 
         private async Task<GetAppAccessToken?> GetAppAccessToken()
@@ -229,50 +317,6 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             GatewayWithShards result = JsonConvert.DeserializeObject<GatewayWithShards>(await responseMessage.Content.ReadAsStringAsync());
             Log.Debug($"获取 Gateway 成功, Url: {result.Url} 建议分片: {result.Shards}");
             return result;
-        }
-
-        public async Task<HttpResponseMessage?> Send(HttpRequestMessage httpRequestMessage)
-        {
-            short retryCount = 0;
-            int retryInterval = 2000;
-            HttpResponseMessage? responseMessage = null;
-
-            //添加请求头
-            httpRequestMessage.Headers.Authorization = new AuthenticationHeaderValue("QQBot", appAccessToken?.AccessToken);
-            httpRequestMessage.Headers.Add("X-Union-Appid", account.AppID);
-            do
-            {
-                HttpRequestMessage requestMessage = await Copyer.CopyHttpRequestMessage(httpRequestMessage);
-
-                try
-                {
-                    responseMessage = await _httpClient.SendAsync(requestMessage);
-                }
-                catch (Exception e)
-                {
-                    Log.Warn(e);
-                    retryCount++;
-                    await Task.Delay(retryInterval);
-                    continue;
-                }
-
-                if (responseMessage.IsSuccessStatusCode)
-                    break;
-                retryCount++;
-            } while (retryCount <= 5);
-
-            if (responseMessage is null)
-                return null;
-
-            Log.Trace("Headers: {0}\nContent: {1}", responseMessage.Headers.ToString(), await responseMessage.Content.ReadAsStringAsync());
-
-            if (!responseMessage.IsSuccessStatusCode)
-            {
-                Log.Warn("Headers: {0}\nContent: {1}", responseMessage.Headers.ToString(), await responseMessage.Content.ReadAsStringAsync());
-                return null;
-            }
-
-            return responseMessage;
         }
 
         private void ListenConnectedEvent(WSClient client)
@@ -342,67 +386,15 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             }
         }
 
-        private void Dispatch(JObject value)
+        private async ValueTask<bool> StartGetAccessToken()
         {
-            string? t = (string?)value["t"];
-            BowlFrame.Event.Message.MessageBase? evnet = null;
-
-            try
-            {
-                switch (t)
-                {
-                    case "AT_MESSAGE_CREATE":
-                        evnet = new ChannelMessage(this, value.ToObject<AT_MESSAGE_CREATE>() ?? throw new NullReferenceException());
-                        break;
-
-                    case "DIRECT_MESSAGE_CREATE":
-                        evnet = new GuildPrivateMessage(this, value.ToObject<DIRECT_MESSAGE_CREATE>() ?? throw new NullReferenceException());
-                        break;
-
-                    case "GROUP_AT_MESSAGE_CREATE":
-                        evnet = new GroupMessage(this, value.ToObject<GROUP_AT_MESSAGE_CREATE>() ?? throw new NullReferenceException());
-                        break;
-
-                    case "C2C_MESSAGE_CREATE":
-                        evnet = new PrivateMessage(this, value.ToObject<C2C_MESSAGE_CREATE>() ?? throw new NullReferenceException());
-                        break;
-
-                    case "READY":
-                        ID = (string?)value["d"]?["user"]?["id"];
-                        Nickname = (string?)value["d"]?["user"]?["username"];
-                        break;
-
-                    default:
-                        Log.Debug("未使用的事件 {0}", t);
-                        break;
-                }
-
-                if (evnet is not null)
-                {
-                   
-                }
-            }
-            catch (Exception e)
-            {
-                Log.Error(e);
-            }
-        }
-
-        protected void OnConnected()
-        {
-            isConnected = true;
-            OnConnected(connectID ?? "Null", _AdapterInfo);
-        }
-
-        protected void OnDisconnect(Exception? exception = null)
-        {
-            isConnected = false;
-            OnDisconnect(connectID ?? "Null", _AdapterInfo, exception);
-        }
-
-        protected void OnError(Exception exception)
-        {
-            OnError(connectID ?? "Null", _AdapterInfo, exception);
+            //获取Token并启动定时器
+            appAccessToken = await GetAppAccessToken();
+            if (appAccessToken is null)
+                return false;
+            _accessTokenTimer.Interval = (appAccessToken?.ExpiresIn ?? 1) * 1000;
+            _accessTokenTimer.Start();
+            return true;
         }
     }
 }
