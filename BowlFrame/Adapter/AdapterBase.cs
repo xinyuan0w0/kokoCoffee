@@ -36,19 +36,10 @@
 
         public abstract ValueTask<bool> Stop();
 
-        protected virtual void OnConnectedEvent(string connectID, AdapterInfo adapterInfo)
-        {
-            ConnectedEvent?.Invoke(connectID, adapterInfo);
-        }
+        protected virtual void OnConnected(string connectID, AdapterInfo adapterInfo) => ConnectedEvent?.Invoke(connectID, adapterInfo);
 
-        protected virtual void OnDisconnectEvent(string connectID, AdapterInfo adapterInfo, Exception? exception = null)
-        {
-            DisconnectEvent?.Invoke(connectID, adapterInfo, exception);
-        }
+        protected virtual void OnDisconnect(string connectID, AdapterInfo adapterInfo, Exception? exception = null) => DisconnectEvent?.Invoke(connectID, adapterInfo, exception);
 
-        protected virtual void OnErrorEvent(string connectID, AdapterInfo adapterInfo, Exception exception)
-        {
-            ErrorEvent?.Invoke(connectID, adapterInfo, exception);
-        }
+        protected virtual void OnError(string connectID, AdapterInfo adapterInfo, Exception exception) => ErrorEvent?.Invoke(connectID, adapterInfo, exception);
     }
 }

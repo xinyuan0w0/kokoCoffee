@@ -109,18 +109,18 @@ namespace BowlFrame.Adapter.OneBotV11Adapter
         protected void OnConnected()
         {
             isConnected = true;
-            OnConnectedEvent(connectID ?? "Null", _AdapterInfo);
+            OnConnected(connectID ?? "Null", _AdapterInfo);
         }
 
         protected void OnDisconnect(Exception? exception = null)
         {
             isConnected = false;
-            OnDisconnectEvent(connectID ?? "Null", _AdapterInfo, exception);
+            OnDisconnect(connectID ?? "Null", _AdapterInfo, exception);
         }
 
         protected void OnError(Exception exception)
         {
-            OnErrorEvent(connectID ?? "Null", _AdapterInfo, exception);
+            OnError(connectID ?? "Null", _AdapterInfo, exception);
         }
     }
 }
