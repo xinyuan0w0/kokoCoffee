@@ -8,6 +8,11 @@
             ID = "cn.kokobot",
             Platform = "BowlFrame",
             Description = "内部使用",
+            Method = new()
+            {
+                Interaction = true,
+                Process = true
+            }
         };
 
         public AdapterInfo AdapterInfo { get => _AdapterInfo; }
