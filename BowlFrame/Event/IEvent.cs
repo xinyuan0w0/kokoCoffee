@@ -11,5 +11,7 @@ namespace BowlFrame.Event
         public SourceType SourceType { get; }
 
         public Messages? Messages { get; }
+
+        public DateTime Time { get; }
     }
 }
