@@ -1,6 +1,6 @@
 ﻿namespace BowlFrame.Event
 {
-    public enum MsgType
+    public enum EventType
     {
         Event = 0,
         Message = 1,

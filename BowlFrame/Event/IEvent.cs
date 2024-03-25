@@ -6,7 +6,7 @@ namespace BowlFrame.Event
     {
         public Adapter.IPlatform Platform { get; }
 
-        public MsgType MsgType { get; }
+        public EventType EventType { get; }
 
         public SourceType SourceType { get; }
 
