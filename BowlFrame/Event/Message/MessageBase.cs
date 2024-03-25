@@ -3,7 +3,7 @@ using BowlFrame.Message;
 
 namespace BowlFrame.Event.Message
 {
-    public abstract class MessageBase(IPlatform platform, SourceType sourceType) : EventBase(platform, MsgType.Message, sourceType)
+    public abstract class MessageBase(IPlatform platform, SourceType sourceType) : EventBase(platform, EventType.Message, sourceType)
     {
         public abstract string RawMessage { get; }
 
