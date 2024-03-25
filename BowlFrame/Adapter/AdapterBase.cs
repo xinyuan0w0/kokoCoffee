@@ -26,9 +26,7 @@
 
         public event IAdapter.ErrorEventHandler? ErrorEvent;
 
-        public virtual void Dispose()
-        {
-        }
+        public virtual void Dispose() => GC.SuppressFinalize(this);
 
         public abstract ValueTask<bool> Restart();
 
