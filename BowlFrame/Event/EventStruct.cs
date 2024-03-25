@@ -2,9 +2,10 @@
 {
     public enum EventType
     {
-        Event = 0,
-        Message = 1,
-        Timer = 2
+        System = 0,
+        Event = 1,
+        Message = 2,
+        Timer = 3,
     }
 
     public enum SourceType
