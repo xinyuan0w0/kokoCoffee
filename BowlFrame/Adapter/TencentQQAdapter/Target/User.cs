@@ -7,7 +7,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter.Target
 {
     public class User : BowlFrame.Target.User
     {
-        public User(string botid, string uuid, C2C_MESSAGE_CREATE_Data? data = null) : base(uuid)
+        public User(string botid, string uuid, CommonMsgData? data = null) : base(uuid)
         {
             _botid = botid;
             _data = data;
@@ -30,7 +30,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter.Target
 
         private readonly string _botid;
         private readonly string _openid;
-        private readonly C2C_MESSAGE_CREATE_Data? _data;
+        private readonly CommonMsgData? _data;
 
         public override string Nickname => $"稻穗 #{_openid.Remove(6)}#";
 

@@ -40,21 +40,6 @@ namespace BowlFrame.Adapter.TencentQQAdapter.Struct
         public ChannelAuthor[] Mentions { get; set; }
     }
 
-    public class GuildMember : Member
-    {
-        /// <summary>
-        /// 频道昵称
-        /// </summary>
-        [JsonProperty(PropertyName = "nick")]
-        public string Nick { get; set; }
-
-        /// <summary>
-        /// 角色
-        /// </summary>
-        [JsonProperty(PropertyName = "roles")]
-        public string[] Roles { get; set; }
-    }
-
     public class DIRECT_MESSAGE_CREATE : WebSocket
     {
         /// <summary>
@@ -89,6 +74,21 @@ namespace BowlFrame.Adapter.TencentQQAdapter.Struct
         /// </summary>
         [JsonProperty(PropertyName = "src_guild_id")]
         public string SrcGuildID { get; set; }
+    }
+
+    public class GuildMember : Member
+    {
+        /// <summary>
+        /// 频道昵称
+        /// </summary>
+        [JsonProperty(PropertyName = "nick")]
+        public string Nick { get; set; }
+
+        /// <summary>
+        /// 角色
+        /// </summary>
+        [JsonProperty(PropertyName = "roles")]
+        public string[] Roles { get; set; }
     }
 
     public class GuildMsgData : MessageData

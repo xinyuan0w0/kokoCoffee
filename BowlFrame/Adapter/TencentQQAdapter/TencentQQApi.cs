@@ -31,8 +31,6 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 
         public async Task<bool?> Send(Messages messages, string? msgid = null)
         {
-
-
             //判断是否为支持的对象
             if (target is not Group && target is not User)
                 throw new NotSupportedException(target.GetType().Name);
@@ -134,8 +132,6 @@ namespace BowlFrame.Adapter.TencentQQAdapter
                     content.Add("msg_id", msgid);
 
                 content.Add("msg_seq", ++count);
-
-
 
                 bool? result = await _send(new StringContent(JsonConvert.SerializeObject(content, settings), Encoding.UTF8, "application/json"));
                 if (result != true)
