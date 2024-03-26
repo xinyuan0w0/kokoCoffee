@@ -61,7 +61,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter.Event.Message
             _channel = new(tencentQQ.AccountID, uuid, _guild.UUID, data: message.Data);
         }
 
-        public override string RoomID => _message.Data.ChannelID;
+        public override string Room => _message.Data.ChannelID;
 
         private readonly GuildUser _user;
 
