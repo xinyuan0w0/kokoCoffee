@@ -10,7 +10,7 @@ namespace BowlFrame.Target
 {
     public abstract class Guild(string uuid) : ITarget
     {
-        public string UUID { get; } = uuid;
+        public string UUID { get; } = string.IsNullOrEmpty(uuid) ? throw new ArgumentNullException() : uuid;
 
         public abstract string ID { get; }
 
