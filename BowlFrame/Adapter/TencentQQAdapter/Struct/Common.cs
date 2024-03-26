@@ -19,7 +19,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter.Struct
         public GROUP_AT_MESSAGE_CREATE_Data Data { get; set; }
     }
 
-    public class GROUP_AT_MESSAGE_CREATE_Data : C2C_MESSAGE_CREATE_Data
+    public class GROUP_AT_MESSAGE_CREATE_Data : CommonMsgData
     {
         /// <summary>
         /// 群id
@@ -46,10 +46,10 @@ namespace BowlFrame.Adapter.TencentQQAdapter.Struct
         /// 数据结构
         /// </summary>
         [JsonProperty(PropertyName = "d")]
-        public C2C_MESSAGE_CREATE_Data Data { get; set; }
+        public CommonMsgData Data { get; set; }
     }
 
-    public class C2C_MESSAGE_CREATE_Data : MessageData
+    public class CommonMsgData : MessageData
     {
         /// <summary>
         /// 用户信息
