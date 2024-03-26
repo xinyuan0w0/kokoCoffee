@@ -3,11 +3,9 @@ using BowlFrame.Message;
 
 namespace BowlFrame.Event.Message
 {
-    public abstract class MessageBase(IPlatform platform, SourceType sourceType) : EventBase(platform, EventType.Message, sourceType)
+    public abstract class MessageBase(IPlatform platform, SourceType sourceType) : TargetEventBase(platform, sourceType, EventType.Message)
     {
         public abstract string RawMessage { get; }
-
-        public abstract string Target { get; }
 
         /// <summary>
         /// 被动发送
