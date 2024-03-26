@@ -18,7 +18,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter.Tools
             string content = message.Content;
             //判断平台
             IPlatform platform =
-                message is GROUP_AT_MESSAGE_CREATE_Data || message is C2C_MESSAGE_CREATE_Data
+                message is GROUP_AT_MESSAGE_CREATE_Data || message is CommonMsgData
                 ? new TencentQQ_Offical_Common()
                 : new TencentQQ_Offical_Guild();
 
