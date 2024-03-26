@@ -8,8 +8,6 @@ namespace BowlFrame.Event
 
         public EventType EventType { get; }
 
-        public SourceType SourceType { get; }
-
         public Messages? Messages { get; }
 
         public DateTime Time { get; }
