@@ -4,6 +4,39 @@ namespace BowlFrame.Adapter.TencentQQAdapter.Struct
 {
 #pragma warning disable CS8618 // 在退出构造函数时，不可为 null 的字段必须包含非 null 值。请考虑声明为可以为 null。
 
+    public class MessageData
+    {
+        /// <summary>
+        /// 消息id
+        /// </summary>
+        [JsonProperty(PropertyName = "id")]
+        public string ID { get; set; }
+
+        /// <summary>
+        /// 文本消息
+        /// </summary>
+        [JsonProperty(PropertyName = "content")]
+        public string Content { get; set; }
+
+        /// <summary>
+        /// 附件信息
+        /// </summary>
+        [JsonProperty(PropertyName = "attachments")]
+        public Attachments[]? Attachments { get; set; }
+
+        /// <summary>
+        /// 提及所有人
+        /// </summary>
+        [JsonProperty(PropertyName = "mention_everyone")]
+        public bool MentionEveryone { get; set; } = false;
+
+        /// <summary>
+        /// 发送时间
+        /// </summary>
+        [JsonProperty(PropertyName = "timestamp")]
+        public DateTime Timestamp { get; set; }
+    }
+
     public struct GroupAuthor
     {
         /// <summary>
@@ -44,39 +77,6 @@ namespace BowlFrame.Adapter.TencentQQAdapter.Struct
         /// </summary>
         [JsonProperty(PropertyName = "avatar")]
         public string Avatar { get; set; }
-    }
-
-    public class MessageData
-    {
-        /// <summary>
-        /// 消息id
-        /// </summary>
-        [JsonProperty(PropertyName = "id")]
-        public string ID { get; set; }
-
-        /// <summary>
-        /// 文本消息
-        /// </summary>
-        [JsonProperty(PropertyName = "content")]
-        public string Content { get; set; }
-
-        /// <summary>
-        /// 附件信息
-        /// </summary>
-        [JsonProperty(PropertyName = "attachments")]
-        public Attachments[]? Attachments { get; set; }
-
-        /// <summary>
-        /// 提及所有人
-        /// </summary>
-        [JsonProperty(PropertyName = "mention_everyone")]
-        public bool MentionEveryone { get; set; } = false;
-
-        /// <summary>
-        /// 发送时间
-        /// </summary>
-        [JsonProperty(PropertyName = "timestamp")]
-        public DateTime Timestamp { get; set; }
     }
 
     public struct Attachments
