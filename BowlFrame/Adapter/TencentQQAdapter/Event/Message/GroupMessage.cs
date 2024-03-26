@@ -22,29 +22,21 @@ namespace BowlFrame.Adapter.TencentQQAdapter.Event.Message
             _message = message;
             Messages = Tools.MsgHelper.GetMessages(tencentQQ, message.Data).Result;
 
-            string? uuid;
+            string uuid;
 
+            //用户
             DbPlatformID platformID = permission.FindTarget(message.Data.Author.OpenID).Result ?? throw new NullReferenceException();
-            if (platformID == DbPlatformID.Empty)
-            {
-                uuid = permission.CreateTarget(message.Data.Author.OpenID, TargetType.User).Result ?? throw new NullReferenceException();
-                if (uuid == "")
-                    throw new NullReferenceException();
-            }
-            else
-                uuid = platformID.UUID;
+            uuid = platformID == DbPlatformID.Empty
+                ? permission.CreateTarget(message.Data.Author.OpenID, TargetType.User).Result ?? throw new NullReferenceException()
+                : platformID.UUID;
 
             _user = new(tencentQQ.AccountID, uuid, data: message.Data);
 
+            //群
             platformID = permission.FindTarget(message.Data.GroupOpenID).Result ?? throw new NullReferenceException();
-            if (platformID == DbPlatformID.Empty)
-            {
-                uuid = permission.CreateTarget(message.Data.GroupOpenID, TargetType.Group).Result ?? throw new NullReferenceException();
-                if (uuid == "")
-                    throw new NullReferenceException();
-            }
-            else
-                uuid = platformID.UUID;
+            uuid = platformID == DbPlatformID.Empty
+                ? permission.CreateTarget(message.Data.GroupOpenID, TargetType.Group).Result ?? throw new NullReferenceException()
+                : platformID.UUID;
 
             _group = new(tencentQQ.AccountID, uuid, data: message.Data);
         }

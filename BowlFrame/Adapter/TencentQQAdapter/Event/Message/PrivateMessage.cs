@@ -22,16 +22,12 @@ namespace BowlFrame.Adapter.TencentQQAdapter.Event.Message
             _message = message;
             Messages = Tools.MsgHelper.GetMessages(tencentQQ, message.Data).Result;
 
-            string? uuid;
-
+            //用户
             DbPlatformID platformID = permission.FindTarget(message.Data.Author.OpenID).Result ?? throw new NullReferenceException();
-            if (platformID == DbPlatformID.Empty)
-                uuid = permission.CreateTarget(message.Data.Author.OpenID, TargetType.User).Result ?? throw new NullReferenceException();
-            else
-                uuid = platformID.UUID;
 
-            if (uuid == "")
-                throw new NullReferenceException();
+            string uuid = platformID == DbPlatformID.Empty
+                ? permission.CreateTarget(message.Data.Author.OpenID, TargetType.User).Result ?? throw new NullReferenceException()
+                : platformID.UUID;
 
             _user = new(tencentQQ.AccountID, uuid, data: message.Data);
         }
