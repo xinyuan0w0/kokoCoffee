@@ -11,7 +11,7 @@ namespace BowlFrame.Config
 {
     public static class ConfigLoad
     {
-        private static readonly ConcurrentDictionary<string, byte[]> files = new();
+        private static readonly ConcurrentDictionary<string, (byte[], string?)> files = new();
 
         public static bool IsHaveFile(string name) => files.ContainsKey(name);
 
@@ -24,7 +24,7 @@ namespace BowlFrame.Config
                     return false;
                 byte[] bytes = Encoding.UTF8.GetBytes(await File.ReadAllTextAsync(filePath, cancellationToken));
 
-                return AddFile(name, bytes);
+                return AddFile(name, bytes, filePath);
             }
             catch (Exception e)
             {
@@ -33,14 +33,14 @@ namespace BowlFrame.Config
             }
         }
 
-        public static bool AddFile(string name, string content)
+        public static bool AddFile(string name, string content, string? filePath = null)
         {
-            return AddFile(name, Encoding.UTF8.GetBytes(content));
+            return AddFile(name, Encoding.UTF8.GetBytes(content), filePath);
         }
 
-        public static bool AddFile(string name, byte[] content)
+        public static bool AddFile(string name, byte[] content, string? filePath = null)
         {
-            return files.TryAdd(name, content);
+            return files.TryAdd(name, (content, filePath));
         }
 
         public static bool RemoveFile(string name)
@@ -50,9 +50,9 @@ namespace BowlFrame.Config
 
         public static byte[]? GetFileBytes(string name)
         {
-            files.TryGetValue(name, out byte[]? bytes);
+            files.TryGetValue(name, out (byte[], string?) value);
 
-            return bytes;
+            return value.Item1;
         }
 
         public static string? GetFileString(string name)
@@ -73,6 +73,24 @@ namespace BowlFrame.Config
                     Log.Error(e);
                     return null;
                 }
+        }
+
+        public async static Task<bool> Reload()
+        {
+            foreach (KeyValuePair<string, (byte[], string?)> value in files)
+            {
+                if (value.Value.Item2 is not null)
+                {
+                    if (!Path.Exists(value.Value.Item2))
+                        continue;
+
+                    RemoveFile(value.Key);
+
+                    if (await AddFileFromPath(value.Key, value.Value.Item2) != true)
+                        return false;
+                }
+            }
+            return true;
         }
     }
 }
