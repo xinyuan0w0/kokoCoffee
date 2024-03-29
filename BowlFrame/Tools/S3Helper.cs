@@ -133,10 +133,12 @@ namespace BowlFrame.Tools
         {
             try
             {
-                GetPreSignedUrlRequest request = new();
-                request.BucketName = Bucket;
-                request.Key = key;
-                request.Expires = DateTime.Now.AddMinutes(30);
+                GetPreSignedUrlRequest request = new()
+                {
+                    BucketName = Bucket,
+                    Key = key,
+                    Expires = DateTime.Now.AddMinutes(30)
+                };
 
                 string response = await _client.GetPreSignedURLAsync(request);
                 return response;
@@ -173,7 +175,8 @@ namespace BowlFrame.Tools
                     return null;
                 }
             }
-            catch (InvalidOperationException) {
+            catch (InvalidOperationException)
+            {
                 return true;
             }
             catch (Exception e)
