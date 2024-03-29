@@ -22,11 +22,6 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             MissingMemberHandling = MissingMemberHandling.Error
         };
 
-        private static JsonSerializerSettings settings = new()
-        {
-            StringEscapeHandling = StringEscapeHandling.EscapeNonAscii
-        };
-
         private int count = 0;
 
         public async Task<bool?> Send(Messages messages, string? msgid = null)
@@ -133,7 +128,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 
                 content.Add("msg_seq", ++count);
 
-                bool? result = await _send(new StringContent(JsonConvert.SerializeObject(content, settings), Encoding.UTF8, "application/json"));
+                bool? result = await _send(new StringContent(JsonConvert.SerializeObject(content), Encoding.UTF8, "application/json"));
                 if (result != true)
                     return result;
             }
