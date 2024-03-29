@@ -33,11 +33,11 @@
 
         public virtual void Dispose() => GC.SuppressFinalize(this);
 
-        public abstract ValueTask<bool> Restart();
+        public abstract Task<bool> Restart();
 
-        public abstract ValueTask<bool> Start();
+        public abstract Task<bool> Start();
 
-        public abstract ValueTask<bool> Stop();
+        public abstract Task<bool> Stop();
 
         protected virtual void OnConnected(string connectID, AdapterInfo adapterInfo) => ConnectedEvent?.Invoke(connectID, adapterInfo);
 

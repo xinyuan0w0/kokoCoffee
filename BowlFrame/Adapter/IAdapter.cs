@@ -8,11 +8,11 @@
 
         string AccountID { get; }
 
-        public ValueTask<bool> Start();
+        public Task<bool> Start();
 
-        public ValueTask<bool> Stop();
+        public Task<bool> Stop();
 
-        public ValueTask<bool> Restart(); //QQ频道具有重连功能的此方法不等同于先Stop再Start
+        public Task<bool> Restart(); //QQ频道具有重连功能的此方法不等同于先Stop再Start
 
         public delegate void ConnectedEventHandler(string connectID, AdapterInfo adapterInfo);
 

@@ -61,14 +61,14 @@ namespace BowlFrame.Adapter.OneBotV11Adapter
             GC.SuppressFinalize(this);
         }
 
-        public override async ValueTask<bool> Restart()
+        public override async Task<bool> Restart()
         {
             bool result = await Stop();
             result = result && await Start();
             return result;
         }
 
-        public override async ValueTask<bool> Start()
+        public override async Task<bool> Start()
         {
             try
             {
@@ -83,10 +83,10 @@ namespace BowlFrame.Adapter.OneBotV11Adapter
             return true;
         }
 
-        public override ValueTask<bool> Stop()
+        public override async Task<bool> Stop()
         {
-            socket.CloseAsync().Wait();
-            return new ValueTask<bool>(true);
+            await socket.CloseAsync();
+            return true;
         }
 
         private void ListenConnectedEvent(WSClient client)

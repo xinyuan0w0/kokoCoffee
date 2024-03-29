@@ -88,7 +88,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             GC.SuppressFinalize(this);
         }
 
-        public override async ValueTask<bool> Restart()
+        public override async Task<bool> Restart()
         {
             await StartGetAccessToken();
             if (!manager.StartAllClient())
@@ -143,7 +143,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             return responseMessage;
         }
 
-        public override async ValueTask<bool> Start()
+        public override async Task<bool> Start()
         {
             bool result = true;
             result = result && await StartGetAccessToken();
@@ -169,16 +169,19 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             return result;
         }
 
-        public override ValueTask<bool> Stop()
+        public override async Task<bool> Stop()
         {
             isConnected = false;
-            manager.StopAllClient();
-            //停止Token定时器
-            _accessTokenTimer?.Stop();
+            await Task.Run(() =>
+            {
+                manager.StopAllClient();
+                //停止Token定时器
+                _accessTokenTimer?.Stop();
 
-            //释放所有WSClient
-            manager.DisposeAllClient();
-            return new ValueTask<bool>(true);
+                //释放所有WSClient
+                manager.DisposeAllClient();
+            });
+            return true;
         }
 
         protected void OnConnected()
