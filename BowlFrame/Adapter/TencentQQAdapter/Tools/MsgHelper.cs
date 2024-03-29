@@ -4,12 +4,16 @@ using BowlFrame.Message;
 using BowlFrame.Message.Struct;
 using BowlFrame.Perm;
 using Newtonsoft.Json.Linq;
+using System.Buffers;
 using static BowlFrame.Tools.Logger;
 
 namespace BowlFrame.Adapter.TencentQQAdapter.Tools
 {
     internal static class MsgHelper
     {
+        //缓存字符
+        private static readonly SearchValues<char> s_myChars = SearchValues.Create("@everyone");
+
         public static async Task<Messages> GetMessages(TencentQQ tencentQQ, MessageData message)
         {
             //屎山警告
@@ -39,7 +43,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter.Tools
 
             //群和频道At全体
             if (message is GROUP_AT_MESSAGE_CREATE_Data || message is AT_MESSAGE_CREATE_Data)
-                if (content.IndexOfAny("@everyone".ToCharArray()) != -1)
+                if (content.AsSpan().IndexOfAny(s_myChars) != -1)
                 {
                     if (message.MentionEveryone)
                     {
