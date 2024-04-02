@@ -17,7 +17,7 @@
 
         public AdapterInfo AdapterInfo { get => _AdapterInfo; }
 
-        public abstract bool IsConnected { get; }
+        public abstract bool IsStarted { get; }
 
         protected string? connectID;
 

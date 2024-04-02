@@ -26,7 +26,7 @@ namespace BowlFrame.Adapter.OneBotV11Adapter
 
         private bool isConnected;
 
-        public override bool IsConnected { get => isConnected; }
+        public override bool IsStarted { get => isConnected; }
 
         public override string AccountID => account.Account;
 

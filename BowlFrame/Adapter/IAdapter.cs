@@ -3,7 +3,7 @@
     public interface IAdapter : IDisposable
     {
         AdapterInfo AdapterInfo { get; }
-        bool IsConnected { get; }
+        bool IsStarted { get; }
         string ConnectID { internal set; get; }
 
         string AccountID { get; }

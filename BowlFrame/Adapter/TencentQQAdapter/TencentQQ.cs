@@ -70,7 +70,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 
         public override string AccountID => account.AppID;
         public string? ID { get; private set; }
-        public override bool IsConnected { get => isConnected; }
+        public override bool IsStarted { get => isConnected; }
         public string? Nickname { get; private set; }
 
         public override void Dispose()

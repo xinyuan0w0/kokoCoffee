@@ -25,7 +25,7 @@ namespace BowlFrame.Adapter
         {
             foreach (IAdapter adapter in AdapterManager.adapterDictionary.Values)
             {
-                if (adapter.IsConnected)
+                if (adapter.IsStarted)
                     continue;
                 if (!await adapter.Start())
                     return false;
