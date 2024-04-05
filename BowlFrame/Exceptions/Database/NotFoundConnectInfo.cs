@@ -1,6 +1,6 @@
 ﻿namespace BowlFrame.Exceptions.Database
 {
-    public class NotFoundConnectInfo : DatabaseException
+    internal class NotFoundConnectInfo : DatabaseException
     {
         public NotFoundConnectInfo() : base("未找到数据库连接信息")
         {

@@ -1,6 +1,6 @@
 ﻿namespace BowlFrame.Exceptions.Database.DatabaseEx
 {
-    public class WriteDataError : DatabaseException
+    internal class WriteDataError : DatabaseException
     {
         public WriteDataError() : base("从数据库写入Data结构数据出现错误")
         {

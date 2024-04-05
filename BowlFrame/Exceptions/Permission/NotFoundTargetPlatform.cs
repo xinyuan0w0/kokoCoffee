@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace BowlFrame.Exceptions.Permission
 {
-    public class NotFoundTargetPlatform : PermissionException
+    internal class NotFoundTargetPlatform : PermissionException
     {
         public NotFoundTargetPlatform() : base("未找到某个对象映射的平台信息")
         {
