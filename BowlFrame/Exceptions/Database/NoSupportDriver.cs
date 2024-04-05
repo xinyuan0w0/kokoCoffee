@@ -1,6 +1,6 @@
 ﻿namespace BowlFrame.Exceptions.Database
 {
-    public class NoSupportDriver : DatabaseException
+    internal class NoSupportDriver : DatabaseException
     {
         public NoSupportDriver() : base("不支持的数据库驱动")
         {

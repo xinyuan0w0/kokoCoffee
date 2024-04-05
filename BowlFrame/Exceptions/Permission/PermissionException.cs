@@ -1,6 +1,6 @@
 ﻿namespace BowlFrame.Exceptions.Permission
 {
-    public class PermissionException : Exception
+    internal class PermissionException : Exception
     {
         public PermissionException() : base("发生权限异常")
         {

@@ -1,6 +1,6 @@
 ﻿namespace BowlFrame.Exceptions.Database.DatabaseEx
 {
-    public class ReadDataError : DatabaseException
+    internal class ReadDataError : DatabaseException
     {
         public ReadDataError() : base("从数据库读取Data结构数据出现错误")
         {

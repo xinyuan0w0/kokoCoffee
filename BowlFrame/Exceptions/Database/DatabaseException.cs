@@ -1,6 +1,6 @@
 ﻿namespace BowlFrame.Exceptions.Database
 {
-    public class DatabaseException : Exception
+    internal class DatabaseException : Exception
     {
         public DatabaseException() : base("发生数据库异常")
         {
