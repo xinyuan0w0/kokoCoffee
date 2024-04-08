@@ -5,7 +5,7 @@ namespace BowlFrame.Adapter
 {
     internal static class AdapterManagerEx
     {
-        public static bool CreateAdapterFromFile(string filePath)
+        public static bool CreateAdapterFromConfigFile(string filePath)
         {
             if (!File.Exists(filePath))
                 return false;
