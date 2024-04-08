@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
+using static BowlFrame.Tools.Logger;
 
 namespace BowlFrame.Adapter
 {
@@ -27,8 +28,16 @@ namespace BowlFrame.Adapter
             {
                 if (adapter.IsStarted)
                     continue;
-                if (!await adapter.Start())
+                try
+                {
+                    if (!await adapter.Start())
+                        return false;
+                }
+                catch (Exception e)
+                {
+                    Log.Error(e);
                     return false;
+                }
             }
             return true;
         }
