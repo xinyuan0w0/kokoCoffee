@@ -13,5 +13,6 @@ namespace BowlFrame.Target
         Guild = 2,
         Channel = 3,
         Post = 4,
+        Other = 5,
     }
 }
