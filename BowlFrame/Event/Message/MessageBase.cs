@@ -1,5 +1,6 @@
 ﻿using BowlFrame.Adapter;
 using BowlFrame.Message;
+using BowlFrame.Target;
 
 namespace BowlFrame.Event.Message
 {

@@ -1,5 +1,6 @@
 ﻿using BowlFrame.Adapter;
 using BowlFrame.Message;
+using BowlFrame.Target;
 using System;
 using System.Collections.Generic;
 using System.Linq;
