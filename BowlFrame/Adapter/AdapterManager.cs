@@ -1,4 +1,5 @@
-﻿using NanoidDotNet;
+﻿using BowlFrame.Event;
+using NanoidDotNet;
 using System.Collections.Concurrent;
 using System.Reflection;
 using static BowlFrame.Tools.Logger;
@@ -8,6 +9,16 @@ namespace BowlFrame.Adapter
     public static class AdapterManager
     {
         public static readonly ConcurrentDictionary<string, IAdapter> adapterDictionary = new();
+
+        /// <summary>
+        /// 广播事件
+        /// </summary>
+        /// <param name="connectID"></param>
+        /// <param name="adapterInfo"></param>
+        /// <param name="exception"></param>
+        public delegate void EventHandler(IEvent @event, AdapterInfo adapterInfo);
+
+        public static event EventHandler? BroadcastEvent;
 
         public static IAdapter? GetAdapter(string connectID)
         {
@@ -98,7 +109,6 @@ namespace BowlFrame.Adapter
                 _ = DisposeAdapter(connectID);
         }
 
-        //ValueTask不规范用法可能有问题
         public static bool StartAdapter(string connectID)
         {
             adapterDictionary.TryGetValue(connectID, out IAdapter? adapter);
@@ -107,7 +117,6 @@ namespace BowlFrame.Adapter
             return adapter.Start().Result;
         }
 
-        //ValueTask不规范用法可能有问题
         public static bool StopAdapter(string connectID)
         {
             adapterDictionary.TryGetValue(connectID, out IAdapter? adapter);
@@ -115,6 +124,8 @@ namespace BowlFrame.Adapter
                 return false;
             return adapter.Stop().Result;
         }
+
+        public static void OnBroadcastEvent(IEvent @event, AdapterInfo adapterInfo) => BroadcastEvent?.Invoke(@event, adapterInfo);
 
         private static void ListenConnectedEvent(string connectID, AdapterInfo adapterInfo)
         {
