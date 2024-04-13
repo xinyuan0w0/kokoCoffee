@@ -267,8 +267,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
                 }
 
                 if (evnet is not null)
-                {
-                }
+                    AdapterManager.OnBroadcastEvent(evnet, _AdapterInfo);
             }
             catch (Exception e)
             {
