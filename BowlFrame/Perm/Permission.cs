@@ -4,6 +4,7 @@ using BowlFrame.Database;
 using BowlFrame.Database.TableStruct;
 using BowlFrame.Event;
 using BowlFrame.Tools;
+using BowlFrame.Target;
 using NanoidDotNet;
 using Newtonsoft.Json.Linq;
 using SqlSugar;
