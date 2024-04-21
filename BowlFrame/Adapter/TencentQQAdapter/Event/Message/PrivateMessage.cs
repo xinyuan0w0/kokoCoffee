@@ -40,6 +40,6 @@ namespace BowlFrame.Adapter.TencentQQAdapter.Event.Message
 
         public override string Target => _message.Data.Author.OpenID;
 
-        public override async Task<bool> SendAsync(Messages messages) => await User.tencentQQApi.Send(messages, _message.Data.ID) == true;
+        public override async Task<bool> SendAsync(Messages messages) => await User.tencentQQApi.SendMessage(messages, _message.Data.ID) == true;
     }
 }
