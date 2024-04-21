@@ -144,14 +144,14 @@ namespace BowlFrame.Adapter.TencentQQAdapter.Tools
                     Value = content,
                 });
 
-            //图片转内嵌
+            //文件转内嵌
             if (message.Attachments is not null)
                 foreach (Attachments attachment in message.Attachments)
                     messages.Add(new MessageBlock()
                     {
                         HaveMulit = true,
                         MetaType = MetaType.Normal,
-                        Name = "File",
+                        Name = "Picture", //只可能接收图片
                         Value = new Filelink()
                         {
                             MimeType = attachment.MimeType,
@@ -167,7 +167,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter.Tools
                 Value = message.Content,
             });
 
-            Log.Debug(JArray.FromObject(messages.MessageBlocks).ToString());
+            //Log.Debug(JArray.FromObject(messages.MessageBlocks).ToString());
 
             return messages;
         }
