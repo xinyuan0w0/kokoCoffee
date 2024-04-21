@@ -24,7 +24,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 
         private int count = 0;
 
-        public async Task<bool?> Send(Messages messages, string? msgid = null)
+        public async Task<bool?> SendMessage(Messages messages, string? msgid = null)
         {
             //判断是否为支持的对象
             if (target is not Group && target is not User)
@@ -151,7 +151,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             }
         }
 
-        public async Task<bool?> GuildSend(Messages messages, string? msgid = null)
+        public async Task<bool?> GuildSendMessage(Messages messages, string? msgid = null)
         {
             //判断是否为支持的对象
             if (target is not Channel && target is not GuildUser)

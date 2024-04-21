@@ -8,7 +8,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter.Event.Message
 {
     public class GroupMessage : BowlFrame.Event.Message.GroupMessage
     {
-        private readonly TencentQQ _tencentQQ;
+        //private readonly TencentQQ _tencentQQ;
 
         private readonly GROUP_AT_MESSAGE_CREATE _message;
 
@@ -18,7 +18,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter.Event.Message
 
         public GroupMessage(TencentQQ tencentQQ, GROUP_AT_MESSAGE_CREATE message) : base(platform)
         {
-            _tencentQQ = tencentQQ;
+            //_tencentQQ = tencentQQ;
             _message = message;
             Messages = Tools.MsgHelper.GetMessages(tencentQQ, message.Data).Result;
 
@@ -55,6 +55,6 @@ namespace BowlFrame.Adapter.TencentQQAdapter.Event.Message
 
         public override string Target => _message.Data.Author.OpenID;
 
-        public override async Task<bool> SendAsync(Messages messages) => await _group.tencentQQApi.Send(messages, _message.Data.ID) == true;
+        public override async Task<bool> SendAsync(Messages messages) => await _group.tencentQQApi.SendMessage(messages, _message.Data.ID) == true;
     }
 }

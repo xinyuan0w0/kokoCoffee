@@ -79,6 +79,6 @@ namespace BowlFrame.Adapter.TencentQQAdapter.Target
 
         public override IPlatform Platform => platform;
 
-        public override async Task<bool> SendAsync(Messages messages) => await tencentQQApi.GuildSend(messages) == true;
+        public override async Task<bool> SendAsync(Messages messages) => await tencentQQApi.GuildSendMessage(messages) == true;
     }
 }
