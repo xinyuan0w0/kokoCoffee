@@ -51,7 +51,7 @@ namespace BowlFrame.Adapter.OneBotV11Adapter
             if (func is not null)
             {
                 content = [];
-                value.Add("action", JValue.CreateString(func));
+                content.Add("action", JValue.CreateString(func));
                 content.Add("params", value);
             }
             else
