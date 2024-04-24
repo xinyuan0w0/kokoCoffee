@@ -90,25 +90,25 @@ namespace BowlFrame.Adapter.OneBotV11Adapter
                         switch (messageBlock.Name)
                         {
                             case "Text":
-                                mainContent.Add(new
+                                mainContent.Add(JObject.FromObject(new
                                 {
                                     type = "text",
                                     data = new
                                     {
                                         text = (string?)messageBlock.Value,
                                     }
-                                });
+                                }));
                                 break;
 
                             case "AtBot":
-                                mainContent.Add(new
+                                mainContent.Add(JObject.FromObject(new
                                 {
                                     type = "at",
                                     data = new
                                     {
                                         qq = oneBotV11.AccountID,
                                     }
-                                });
+                                }));
                                 break;
 
                             case "At":
@@ -117,76 +117,76 @@ namespace BowlFrame.Adapter.OneBotV11Adapter
                                 if (ats is not null)
                                     foreach (At at in ats)
                                         if (target is User)
-                                            mainContent.Add(new
+                                            mainContent.Add(JObject.FromObject(new
                                             {
                                                 type = "text",
                                                 data = new
                                                 {
                                                     text = $"@{(await permission.GetPlatformID(at.UUID) ?? throw new NotFoundTargetPlatform(at.UUID)).ID} ",
                                                 }
-                                            });
+                                            }));
                                         else
-                                            mainContent.Add(new
+                                            mainContent.Add(JObject.FromObject(new
                                             {
                                                 type = "at",
                                                 data = new
                                                 {
                                                     qq = (await permission.GetPlatformID(at.UUID) ?? throw new NotFoundTargetPlatform(at.UUID)).ID,
                                                 }
-                                            });
+                                            }));
                                 break;
 
                             case "AtAll":
-                                mainContent.Add(new
+                                mainContent.Add(JObject.FromObject(new
                                 {
                                     type = "at",
                                     data = new
                                     {
                                         qq = "all",
                                     }
-                                });
+                                }));
                                 break;
 
                             case "Voice":
                                 if (messageBlock.Value is null || (byte[])messageBlock.Value == Array.Empty<byte>())
                                     break;
                                 content = [];
-                                content.Add(new
+                                content.Add(JObject.FromObject(new
                                 {
                                     type = "record",
                                     data = new
                                     {
                                         file = "base64://" + Convert.ToBase64String((byte[])messageBlock.Value),
                                     }
-                                });
+                                }));
                                 break;
 
                             case "Picture":
                                 if (messageBlock.Value is null || (byte[])messageBlock.Value == Array.Empty<byte>())
                                     break;
                                 content = [];
-                                content.Add(new
+                                content.Add(JObject.FromObject(new
                                 {
                                     type = "image",
                                     data = new
                                     {
                                         file = "base64://" + Convert.ToBase64String((byte[])messageBlock.Value),
                                     }
-                                });
+                                }));
                                 break;
 
                             case "Vidio":
                                 if (messageBlock.Value is null || (byte[])messageBlock.Value == Array.Empty<byte>())
                                     break;
                                 content = [];
-                                content.Add(new
+                                content.Add(JObject.FromObject(new
                                 {
                                     type = "video",
                                     data = new
                                     {
                                         file = "base64://" + Convert.ToBase64String((byte[])messageBlock.Value),
                                     }
-                                });
+                                }));
                                 break;
 
                             default:
