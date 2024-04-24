@@ -6,7 +6,7 @@ using static BowlFrame.Tools.Logger;
 
 namespace BowlFrame.Net.WebSocket
 {
-    internal class WSManager : IDisposable
+    public class WSManager : IDisposable
     {
         protected readonly ConcurrentDictionary<string, WSClient> websocketDictionary = new();
 
