@@ -79,7 +79,7 @@ namespace BowlFrame.Adapter.OneBotV11Adapter.Struct
         public string GroupID { get; set; }
 
         [JsonProperty(PropertyName = "anonymous")]
-        public Anonymous Anonymous { get; set; }
+        public Anonymous? Anonymous { get; set; }
     }
 
     public struct Anonymous
