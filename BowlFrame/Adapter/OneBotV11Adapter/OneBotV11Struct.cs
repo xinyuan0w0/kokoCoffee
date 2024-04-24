@@ -12,4 +12,11 @@
         public string WebSocket { get; set; }
         public string Http { get; set; }
     }
+
+    public struct TencentQQ_Common : IPlatform
+    {
+        public readonly AdapterInfo AdapterInfo => OneBotV11._AdapterInfo;
+
+        public readonly string ID => "TencentQQ_Common";
+    }
 }
