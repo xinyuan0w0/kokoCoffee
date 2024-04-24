@@ -8,7 +8,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter.Event.Message
 {
     public class PrivateMessage : BowlFrame.Event.Message.PrivateMessage
     {
-        private readonly TencentQQ _tencentQQ;
+        //private readonly TencentQQ _tencentQQ;
 
         private readonly C2C_MESSAGE_CREATE _message;
 
@@ -18,7 +18,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter.Event.Message
 
         public PrivateMessage(TencentQQ tencentQQ, C2C_MESSAGE_CREATE message) : base(platform)
         {
-            _tencentQQ = tencentQQ;
+            //_tencentQQ = tencentQQ;
             _message = message;
             Messages = Tools.MsgHelper.GetMessages(tencentQQ, message.Data).Result;
 
