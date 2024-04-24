@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace BowlFrame.Adapter.CocoaPlugin
+﻿namespace BowlFrame.Adapter.CocoaPlugin
 {
     internal struct CocoaAccount
     {
@@ -30,5 +24,12 @@ namespace BowlFrame.Adapter.CocoaPlugin
         public string? Website { get; set; }
 
         public string? Content { get; set; }
+    }
+
+    public class CocoaPlatform(string id) : IPlatform
+    {
+        public AdapterInfo AdapterInfo => Cocoa._AdapterInfo;
+
+        public string ID => id;
     }
 }

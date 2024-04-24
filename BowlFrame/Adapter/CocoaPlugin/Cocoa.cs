@@ -1,6 +1,9 @@
-﻿using BowlFrame.Adapter.CocoaPlugin.Exceptions;
+﻿using BowlFrame.Adapter.CocoaPlugin.Event;
+using BowlFrame.Adapter.CocoaPlugin.Exceptions;
 using BowlFrame.Config;
 using BowlFrame.Event;
+using BowlFrame.Event.Message;
+using BowlFrame.Message;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Collections.Concurrent;
@@ -42,19 +45,25 @@ namespace BowlFrame.Adapter.CocoaPlugin
             Log.Debug($"创建了 {_AdapterInfo.Name} 适配器");
 
             _pluginsPath = Path.Combine(PathConfig.PluginsPath, "Cocoa");
+
+            Platform = new CocoaPlatform(_account.Account);
         }
 
-        private bool _isStarted;
+        ~Cocoa()
+        {
+            Dispose();
+        }
 
         private readonly string _pluginsPath;
 
+        private bool _isStarted;
         public override bool IsStarted => _isStarted;
+
+        internal IPlatform Platform { get; }
 
         private readonly CocoaAccount _account;
 
         public override string AccountID => _account.Account;
-
-        public void Test(IEvent @event) => cocoaEvent.OnMainEvent(@event);
 
         public override Task<bool> Restart()
         {
@@ -118,12 +127,97 @@ namespace BowlFrame.Adapter.CocoaPlugin
 
             Log.Info("载入了 {0} 个插件", _plugins.Count);
 
+            AdapterManager.BroadcastEvent += ReciveEvent;
+
+            _isStarted = true;
+
             return true;
         }
 
-        public override Task<bool> Stop()
+        public override async Task<bool> Stop()
         {
-            throw new NotImplementedException();
+            if (!_isStarted)
+                return false;
+
+            AdapterManager.BroadcastEvent -= ReciveEvent;
+
+            foreach (string key in _plugins.Keys)
+            {
+                try
+                {
+                    DisablePlugin(key);
+                }
+                catch (Exception e)
+                {
+                    Log.Warn(e);
+                }
+            }
+
+            _plugins.Clear();
+
+            _isStarted = false;
+
+            return true;
+        }
+
+        public override void Dispose()
+        {
+            foreach (string key in _plugins.Keys)
+            {
+                try
+                {
+                    DisablePlugin(key);
+                }
+                catch (Exception e)
+                {
+                    Log.Warn(e);
+                }
+            }
+
+            _plugins.Clear();
+
+            base.Dispose();
+            GC.SuppressFinalize(this);
+        }
+
+        private void ReciveEvent(IEvent @event, AdapterInfo adapterInfo)
+        {
+            cocoaEvent.OnMainEvent(@event);
+
+            switch (@event.EventType)
+            {
+                case EventType.System:
+                    cocoaEvent.OnMetaEvent(@event);
+                    break;
+
+                case EventType.Event:
+                    cocoaEvent.OnEvent(@event);
+                    break;
+
+                case EventType.Message:
+                    cocoaEvent.OnMessageEvent(@event as MessageBase ?? throw new NullReferenceException());
+                    switch (@event as MessageBase)
+                    {
+                        case GroupMessage groupMessage:
+                            cocoaEvent.OnGroupMessage(groupMessage);
+                            break;
+
+                        case PrivateMessage privateMessage:
+                            cocoaEvent.OnPrivateMessage(privateMessage);
+                            break;
+
+                        case ChannelMessage channelMessage:
+                            cocoaEvent.OnChannelMessage(channelMessage);
+                            break;
+
+                        default:
+                            break;
+                    }
+                    break;
+
+                default:
+                    break;
+            }
         }
 
         public void LoadPlugin(string filePath)
@@ -189,7 +283,7 @@ namespace BowlFrame.Adapter.CocoaPlugin
             }
 
             if (!_plugins.TryAdd(config.ID, (config, plugin)))
-                throw new Exception("添加插件至列表失败，可能是同时载入多个插件");
+                throw new Exception("添加插件至列表失败，可能是同时载入插件");
         }
 
         private void RegisterEventWithAttribute(CocoaEventAttribute attribute, ICocoaPlugin plugin, MethodInfo methodInfo)
@@ -197,13 +291,11 @@ namespace BowlFrame.Adapter.CocoaPlugin
             RegisterEventHandler(typeof(CocoaEventHandler), methodInfo, plugin, attribute.MainEvent, handler => cocoaEvent.MainEvent += handler as CocoaEventHandler);
             RegisterEventHandler(typeof(CocoaEventHandler), methodInfo, plugin, attribute.MetaEvent, handler => cocoaEvent.MetaEvent += handler as CocoaEventHandler);
             RegisterEventHandler(typeof(CocoaBroadcastHandler), methodInfo, plugin, attribute.Broadcast, handler => cocoaEvent.Broadcast += handler as CocoaBroadcastHandler);
-            RegisterEventHandler(typeof(CocoaEventHandler), methodInfo, plugin, attribute.MessageEvent, handler => cocoaEvent.MessageEvent += handler as CocoaEventHandler);
-            RegisterEventHandler(typeof(CocoaEventHandler), methodInfo, plugin, attribute.GroupMessage, handler => cocoaEvent.GroupMessage += handler as CocoaEventHandler);
-            RegisterEventHandler(typeof(CocoaEventHandler), methodInfo, plugin, attribute.PrivateMessage, handler => cocoaEvent.PrivateMessage += handler as CocoaEventHandler);
-            RegisterEventHandler(typeof(CocoaEventHandler), methodInfo, plugin, attribute.GuildMessage, handler => cocoaEvent.GuildMessage += handler as CocoaEventHandler);
-            RegisterEventHandler(typeof(CocoaEventHandler), methodInfo, plugin, attribute.ChannelMessage, handler => cocoaEvent.ChannelMessage += handler as CocoaEventHandler);
-            RegisterEventHandler(typeof(CocoaEventHandler), methodInfo, plugin, attribute.GuildPrivateMessage, handler => cocoaEvent.GuildPrivateMessage += handler as CocoaEventHandler);
-            RegisterEventHandler(typeof(CocoaEventHandler), methodInfo, plugin, attribute.PostMessage, handler => cocoaEvent.PostMessage += handler as CocoaEventHandler);
+            RegisterEventHandler(typeof(CocoaMessageEventHandler), methodInfo, plugin, attribute.MessageEvent, handler => cocoaEvent.MessageEvent += handler as CocoaMessageEventHandler);
+            RegisterEventHandler(typeof(CocoaMessageEventHandler), methodInfo, plugin, attribute.GroupMessage, handler => cocoaEvent.GroupMessage += handler as CocoaMessageEventHandler);
+            RegisterEventHandler(typeof(CocoaMessageEventHandler), methodInfo, plugin, attribute.PrivateMessage, handler => cocoaEvent.PrivateMessage += handler as CocoaMessageEventHandler);
+            RegisterEventHandler(typeof(CocoaMessageEventHandler), methodInfo, plugin, attribute.ChannelMessage, handler => cocoaEvent.ChannelMessage += handler as CocoaMessageEventHandler);
+            RegisterEventHandler(typeof(CocoaMessageEventHandler), methodInfo, plugin, attribute.PostMessage, handler => cocoaEvent.PostMessage += handler as CocoaMessageEventHandler);
         }
 
         private static void RegisterEventHandler(Type eventType, MethodInfo methodInfo, ICocoaPlugin plugin, bool condition, Action<Delegate> registerAction)
@@ -212,6 +304,51 @@ namespace BowlFrame.Adapter.CocoaPlugin
             {
                 var handler = methodInfo.CreateDelegate(eventType, plugin);
                 registerAction(handler);
+            }
+        }
+
+        public void DisablePlugin(string pluginID)
+        {
+            if (!_plugins.TryGetValue(pluginID, out (CocoaPluginConfig, ICocoaPlugin) plugin))
+                throw new NotFoundPlugin(pluginID);
+
+            BroadcastEvent broadcastEvent = new(Platform);
+
+            broadcastEvent.Messages?.Add(new MessageBlock()
+            {
+                HaveMulit = false,
+                MetaType = MetaType.Normal,
+                Name = "DisablePlugin",
+            });
+
+            cocoaEvent.OnBroadcast(broadcastEvent, plugin.Item2);
+
+            plugin.Item2.Dispose();
+
+            UnregisterEvent(plugin.Item2);
+
+            if (_plugins.TryRemove(pluginID, out _))
+                throw new Exception("移除插件出列表失败，可能是同时卸载插件");
+        }
+
+        private static void UnregisterEvent(ICocoaPlugin cocoaPlugin)
+        {
+            Type type = cocoaPlugin.GetType();
+
+            foreach (EventInfo eventInfo in type.GetEvents())
+            {
+                FieldInfo? field = type.GetField(eventInfo.Name, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public | BindingFlags.Static);
+                if (field is null)
+                    continue;
+
+                Delegate? del = field.GetValue(cocoaPlugin) as Delegate;
+                if (del is not null)
+                {
+                    foreach (Delegate subDel in del.GetInvocationList())
+                    {
+                        eventInfo.RemoveEventHandler(cocoaPlugin, subDel);
+                    }
+                }
             }
         }
     }
