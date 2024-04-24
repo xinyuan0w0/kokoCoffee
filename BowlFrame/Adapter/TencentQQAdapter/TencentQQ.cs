@@ -234,26 +234,26 @@ namespace BowlFrame.Adapter.TencentQQAdapter
         private void Dispatch(JObject value)
         {
             string? t = (string?)value["t"];
-            BowlFrame.Event.Message.MessageBase? evnet = null;
+            BowlFrame.Event.Message.MessageBase? @event = null;
 
             try
             {
                 switch (t)
                 {
                     case "AT_MESSAGE_CREATE":
-                        evnet = new ChannelMessage(this, value.ToObject<AT_MESSAGE_CREATE>() ?? throw new NullReferenceException());
+                        @event = new ChannelMessage(this, value.ToObject<AT_MESSAGE_CREATE>() ?? throw new NullReferenceException());
                         break;
 
                     case "DIRECT_MESSAGE_CREATE":
-                        evnet = new GuildPrivateMessage(this, value.ToObject<DIRECT_MESSAGE_CREATE>() ?? throw new NullReferenceException());
+                        @event = new GuildPrivateMessage(this, value.ToObject<DIRECT_MESSAGE_CREATE>() ?? throw new NullReferenceException());
                         break;
 
                     case "GROUP_AT_MESSAGE_CREATE":
-                        evnet = new GroupMessage(this, value.ToObject<GROUP_AT_MESSAGE_CREATE>() ?? throw new NullReferenceException());
+                        @event = new GroupMessage(this, value.ToObject<GROUP_AT_MESSAGE_CREATE>() ?? throw new NullReferenceException());
                         break;
 
                     case "C2C_MESSAGE_CREATE":
-                        evnet = new PrivateMessage(this, value.ToObject<C2C_MESSAGE_CREATE>() ?? throw new NullReferenceException());
+                        @event = new PrivateMessage(this, value.ToObject<C2C_MESSAGE_CREATE>() ?? throw new NullReferenceException());
                         break;
 
                     case "READY":
@@ -266,8 +266,8 @@ namespace BowlFrame.Adapter.TencentQQAdapter
                         break;
                 }
 
-                if (evnet is not null)
-                    AdapterManager.OnBroadcastEvent(evnet, _AdapterInfo);
+                if (@event is not null)
+                    AdapterManager.OnBroadcastEvent(@event, _AdapterInfo);
             }
             catch (Exception e)
             {
