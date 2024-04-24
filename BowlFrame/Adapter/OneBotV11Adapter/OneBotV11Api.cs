@@ -31,7 +31,7 @@ namespace BowlFrame.Adapter.OneBotV11Adapter
 
         public OneBotV11Api(OneBotV11 oneBotV11, BowlFrame.Target.ITarget target)
         {
-            if (target is not Group or User)
+            if (target is not Group && target is not User)
                 throw new NotSupportedException();
             this.oneBotV11 = oneBotV11;
             this.target = target;
