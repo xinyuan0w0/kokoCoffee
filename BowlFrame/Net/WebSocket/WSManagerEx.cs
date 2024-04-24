@@ -1,6 +1,6 @@
 ﻿namespace BowlFrame.Net.WebSocket
 {
-    internal class WSManagerEx : WSManager
+    public class WSManagerEx : WSManager
     {
         public bool StartAllClient()
         {

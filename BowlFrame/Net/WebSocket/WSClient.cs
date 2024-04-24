@@ -4,7 +4,7 @@ using static BowlFrame.Tools.Logger;
 
 namespace BowlFrame.Net.WebSocket
 {
-    internal class WSClient(Uri uri) : IDisposable
+    public class WSClient(Uri uri) : IDisposable
     {
         protected ClientWebSocket? socket;
         protected Task? ReceiveTask;

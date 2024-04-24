@@ -3,7 +3,7 @@ using static BowlFrame.Tools.Logger;
 
 namespace BowlFrame.Adapter
 {
-    internal static class AdapterManagerEx
+    public static class AdapterManagerEx
     {
         public static bool CreateAdapterFromConfigFile(string filePath)
         {
