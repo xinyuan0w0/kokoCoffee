@@ -1,6 +1,6 @@
 ﻿namespace BowlFrame.Adapter.CocoaPlugin
 {
-    public interface ICocoaPlugin
+    public interface ICocoaPlugin : IDisposable
     {
         public bool Init();
 

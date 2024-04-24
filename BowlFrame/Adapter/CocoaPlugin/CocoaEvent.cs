@@ -1,33 +1,50 @@
 ﻿using BowlFrame.Event;
+using BowlFrame.Event.Message;
 
 namespace BowlFrame.Adapter.CocoaPlugin
 {
     internal class CocoaEvent
     {
-        public delegate void CocoaEventHandler(IEvent @Event);
+        public delegate void CocoaEventHandler(IEvent @event);
 
-        public delegate void CocoaBroadcastHandler(IEvent @Event, ICocoaPlugin plugin);
+        public delegate void CocoaMessageEventHandler(MessageBase message);
+
+        public delegate void CocoaBroadcastHandler(IEvent @event, ICocoaPlugin plugin);
 
         public event CocoaEventHandler? MainEvent;
 
         public event CocoaBroadcastHandler? Broadcast;
 
-        public event CocoaEventHandler? MessageEvent;
+        public event CocoaMessageEventHandler? MessageEvent;
 
-        public event CocoaEventHandler? PrivateMessage;
+        public event CocoaMessageEventHandler? PrivateMessage;
 
-        public event CocoaEventHandler? GroupMessage;
+        public event CocoaMessageEventHandler? GroupMessage;
 
-        public event CocoaEventHandler? GuildMessage;
+        public event CocoaMessageEventHandler? ChannelMessage;
 
-        public event CocoaEventHandler? ChannelMessage;
-
-        public event CocoaEventHandler? GuildPrivateMessage;
-
-        public event CocoaEventHandler? PostMessage;
+        public event CocoaMessageEventHandler? PostMessage;
 
         public event CocoaEventHandler? MetaEvent;
 
+        public event CocoaEventHandler? Event;
+
         public void OnMainEvent(IEvent @event) => MainEvent?.Invoke(@event);
+
+        public void OnBroadcast(IEvent @event, ICocoaPlugin plugin) => Broadcast?.Invoke(@event, plugin);
+
+        public void OnMessageEvent(MessageBase @event) => MessageEvent?.Invoke(@event);
+
+        public void OnPrivateMessage(MessageBase @event) => PrivateMessage?.Invoke(@event);
+
+        public void OnGroupMessage(MessageBase @event) => GroupMessage?.Invoke(@event);
+
+        public void OnChannelMessage(MessageBase @event) => ChannelMessage?.Invoke(@event);
+
+        public void OnPostMessage(MessageBase @event) => PostMessage?.Invoke(@event);
+
+        public void OnMetaEvent(IEvent @event) => MetaEvent?.Invoke(@event);
+
+        public void OnEvent(IEvent @event) => Event?.Invoke(@event);
     }
 }
