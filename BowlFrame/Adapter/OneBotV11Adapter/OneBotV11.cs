@@ -58,7 +58,7 @@ namespace BowlFrame.Adapter.OneBotV11Adapter
             };
 
             if (_account.AccessToken is not null)
-                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer " + _account.AccessToken);
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _account.AccessToken);
         }
 
         ~OneBotV11()
