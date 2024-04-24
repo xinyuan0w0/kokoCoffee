@@ -5,7 +5,7 @@ using System.Text;
 
 namespace BowlFrame.Tools
 {
-    public static class Tools
+    internal static class Tools
     {
         public static (string, string) GetMimeType(byte[] bytes)
         {
