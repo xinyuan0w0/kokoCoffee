@@ -8,7 +8,7 @@ namespace BowlFrame.Message.Struct
 {
     public struct Filelink
     {
-        public string MimeType { get; set; }
+        public string? MimeType { get; set; }
 
         public byte[]? Bytes { get; set; }
 
