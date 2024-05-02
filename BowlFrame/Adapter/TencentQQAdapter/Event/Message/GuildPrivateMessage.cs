@@ -12,34 +12,40 @@ namespace BowlFrame.Adapter.TencentQQAdapter.Event.Message
 
         private readonly DIRECT_MESSAGE_CREATE _message;
 
-        private readonly Permission permission = new() { Platform = platform };
+        private readonly Permission _permission = new() { Platform = _platform };
 
-        private static readonly IPlatform platform = new TencentQQ_Offical_Guild();
+        private static readonly IPlatform _platform = new TencentQQ_Offical_Guild();
 
-        public GuildPrivateMessage(TencentQQ tencentQQ, DIRECT_MESSAGE_CREATE message) : base(platform)
+        public GuildPrivateMessage(TencentQQ tencentQQ, DIRECT_MESSAGE_CREATE message) : base(_platform)
         {
             //_tencentQQ = tencentQQ;
             _message = message;
             Messages = Tools.MsgHelper.GetMessages(tencentQQ, message.Data).Result;
 
-            DbPlatformID platformID = permission.FindTarget(message.Data.Author.ID).Result ?? throw new NullReferenceException();
+            DbPlatformID platformID = _permission.FindTarget(message.Data.Author.ID).Result ?? throw new NullReferenceException();
 
             //用户
             string uuid = platformID == DbPlatformID.Empty
-                ? permission.CreateTarget(message.Data.Author.ID, TargetType.User).Result ?? throw new NullReferenceException()
+                ? _permission.CreateTarget(message.Data.Author.ID, TargetType.User).Result ?? throw new NullReferenceException()
                 : platformID.UUID;
 
-            _user = new(tencentQQ.AccountID, uuid, data: message.Data);
+            user = new(tencentQQ.AccountID, uuid, data: message.Data);
+
+            permission = user.permission;
         }
 
-        private readonly GuildUser _user;
+        private readonly Permission permission;
 
-        public override GuildUser User => _user;
+        public override Permission Permission => permission;
+
+        private readonly GuildUser user;
+
+        public override GuildUser User => user;
 
         public override string RawMessage => _message.Data.Content;
 
         public override string Target => _message.Data.Author.ID;
 
-        public override async Task<bool> SendAsync(Messages messages) => await _user.tencentQQApi.GuildSendMessage(messages, _message.Data.ID) == true;
+        public override async Task<bool> SendAsync(Messages messages) => await user.tencentQQApi.GuildSendMessage(messages, _message.Data.ID) == true;
     }
 }

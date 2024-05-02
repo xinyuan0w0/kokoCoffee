@@ -1,5 +1,6 @@
 ﻿using BowlFrame.Adapter;
 using BowlFrame.Message;
+using BowlFrame.Perm;
 using BowlFrame.Target;
 using System;
 using System.Collections.Generic;
@@ -14,5 +15,7 @@ namespace BowlFrame.Event
         public SourceType SourceType { get; } = sourceType;
 
         public abstract string Target { get; }
+
+        public abstract Permission Permission { get; }
     }
 }

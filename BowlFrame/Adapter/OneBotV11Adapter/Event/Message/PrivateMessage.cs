@@ -17,7 +17,7 @@ namespace BowlFrame.Adapter.OneBotV11Adapter.Event.Message
     {
         private readonly MessageBase _message;
 
-        private readonly Permission permission = new() { Platform = platform };
+        private readonly Permission _permission = new() { Platform = platform };
 
         private static readonly IPlatform platform = new TencentQQ_Offical_Common();
 
@@ -30,17 +30,23 @@ namespace BowlFrame.Adapter.OneBotV11Adapter.Event.Message
             string uuid;
 
             //用户
-            DbPlatformID platformID = permission.FindTarget(message.UserID).Result ?? throw new NullReferenceException();
+            DbPlatformID platformID = _permission.FindTarget(message.UserID).Result ?? throw new NullReferenceException();
             uuid = platformID == DbPlatformID.Empty
-                ? permission.CreateTarget(message.UserID, TargetType.User).Result ?? throw new NullReferenceException()
+                ? _permission.CreateTarget(message.UserID, TargetType.User).Result ?? throw new NullReferenceException()
                 : platformID.UUID;
 
             user = new(oneBotV11.AccountID, uuid, data: message);
+
+            permission = user.permission;
         }
+
+        private readonly Permission permission;
 
         private readonly User user;
 
         public override User User => user;
+
+        public override Permission Permission => permission;
 
         public override string RawMessage => _message.RawMessage;
 
