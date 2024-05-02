@@ -12,29 +12,35 @@ namespace BowlFrame.Adapter.TencentQQAdapter.Event.Message
 
         private readonly C2C_MESSAGE_CREATE _message;
 
-        private readonly Permission permission = new() { Platform = platform };
+        private readonly Permission _permission = new() { Platform = _platform };
 
-        private static readonly IPlatform platform = new TencentQQ_Offical_Common();
+        private static readonly IPlatform _platform = new TencentQQ_Offical_Common();
 
-        public PrivateMessage(TencentQQ tencentQQ, C2C_MESSAGE_CREATE message) : base(platform)
+        public PrivateMessage(TencentQQ tencentQQ, C2C_MESSAGE_CREATE message) : base(_platform)
         {
             //_tencentQQ = tencentQQ;
             _message = message;
             Messages = Tools.MsgHelper.GetMessages(tencentQQ, message.Data).Result;
 
             //用户
-            DbPlatformID platformID = permission.FindTarget(message.Data.Author.OpenID).Result ?? throw new NullReferenceException();
+            DbPlatformID platformID = _permission.FindTarget(message.Data.Author.OpenID).Result ?? throw new NullReferenceException();
 
             string uuid = platformID == DbPlatformID.Empty
-                ? permission.CreateTarget(message.Data.Author.OpenID, TargetType.User).Result ?? throw new NullReferenceException()
+                ? _permission.CreateTarget(message.Data.Author.OpenID, TargetType.User).Result ?? throw new NullReferenceException()
                 : platformID.UUID;
 
-            _user = new(tencentQQ.AccountID, uuid, data: message.Data);
+            user = new(tencentQQ.AccountID, uuid, data: message.Data);
+
+            permission = user.permission;
         }
 
-        private readonly User _user;
+        private readonly Permission permission;
 
-        public override User User => _user;
+        public override Permission Permission => permission;
+
+        private readonly User user;
+
+        public override User User => user;
 
         public override string RawMessage => _message.Data.Content;
 

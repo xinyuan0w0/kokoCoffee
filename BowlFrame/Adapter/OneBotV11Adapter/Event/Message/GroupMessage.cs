@@ -17,7 +17,7 @@ namespace BowlFrame.Adapter.OneBotV11Adapter.Event.Message
 
         private readonly Struct.GroupMessage _message;
 
-        private readonly Permission permission = new() { Platform = _platform };
+        private readonly Permission _permission = new() { Platform = _platform };
 
         public GroupMessage(OneBotV11 oneBotV11, Struct.GroupMessage message) : base(_platform)
         {
@@ -28,21 +28,25 @@ namespace BowlFrame.Adapter.OneBotV11Adapter.Event.Message
             string uuid;
 
             //用户
-            DbPlatformID platformID = permission.FindTarget(message.UserID).Result ?? throw new NullReferenceException();
+            DbPlatformID platformID = _permission.FindTarget(message.UserID).Result ?? throw new NullReferenceException();
             uuid = platformID == DbPlatformID.Empty
-                ? permission.CreateTarget(message.UserID, TargetType.User).Result ?? throw new NullReferenceException()
+                ? _permission.CreateTarget(message.UserID, TargetType.User).Result ?? throw new NullReferenceException()
                 : platformID.UUID;
 
             user = new(oneBotV11.AccountID, uuid, data: message);
 
             //群
-            platformID = permission.FindTarget(message.GroupID).Result ?? throw new NullReferenceException();
+            platformID = _permission.FindTarget(message.GroupID).Result ?? throw new NullReferenceException();
             uuid = platformID == DbPlatformID.Empty
-                ? permission.CreateTarget(message.GroupID, TargetType.Group).Result ?? throw new NullReferenceException()
+                ? _permission.CreateTarget(message.GroupID, TargetType.Group).Result ?? throw new NullReferenceException()
                 : platformID.UUID;
 
             group = new(oneBotV11.AccountID, uuid, data: message);
+
+            permission = new(user.UUID, linkTarget: new(group.UUID) { Platform = _platform }) { Platform = _platform };
         }
+
+        private readonly Permission permission;
 
         private readonly User user;
 
@@ -53,6 +57,8 @@ namespace BowlFrame.Adapter.OneBotV11Adapter.Event.Message
         public override User User => user;
 
         public override Group Group => group;
+
+        public override Permission Permission => permission;
 
         public override string RawMessage => _message.RawMessage;
 
