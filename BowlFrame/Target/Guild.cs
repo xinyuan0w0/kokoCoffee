@@ -1,5 +1,6 @@
 ﻿using BowlFrame.Adapter;
 using BowlFrame.Message;
+using BowlFrame.Perm;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,5 +16,7 @@ namespace BowlFrame.Target
         public abstract string ID { get; }
 
         public abstract IPlatform Platform { get; }
+
+        public abstract Permission Permission { get; }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using BowlFrame.Adapter;
+using BowlFrame.Perm;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,5 +15,7 @@ namespace BowlFrame.Target
         public string UUID { get; }
 
         public IPlatform Platform { get; }
+
+        public Permission Permission { get; }
     }
 }

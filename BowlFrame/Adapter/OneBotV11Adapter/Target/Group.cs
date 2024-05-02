@@ -40,6 +40,8 @@ namespace BowlFrame.Adapter.OneBotV11Adapter.Target
 
         public override IPlatform Platform => platform;
 
+        public override Permission Permission => permission;
+
         public override async Task<bool> SendAsync(Messages messages) => await oneBotV11Api.SendMessage(messages) == true;
     }
 }
