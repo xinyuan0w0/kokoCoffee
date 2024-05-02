@@ -1,5 +1,6 @@
 ﻿using BowlFrame.Adapter;
 using BowlFrame.Message;
+using BowlFrame.Perm;
 
 namespace BowlFrame.Target
 {
@@ -10,6 +11,8 @@ namespace BowlFrame.Target
         public abstract string ID { get; }
 
         public abstract IPlatform Platform { get; }
+
+        public abstract Permission Permission { get; }
 
         /// <summary>
         /// 主动发送

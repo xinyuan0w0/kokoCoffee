@@ -14,7 +14,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter.Target
             _data = data;
             _guildid = guildid;
             if (_data is not null && _data is DIRECT_MESSAGE_CREATE_Data data1)
-            _chatguildid = data1.GuildID;
+                _chatguildid = data1.GuildID;
             TencentQQ tencentQQ = (AdapterManager.GetAdapterWithAccount(_botid) ?? throw new NullReferenceException($"无 {_botid} ID的适配器")) as TencentQQ
                  ?? throw new NullReferenceException($"{_botid} 非匹配的适配器");
             tencentQQApi = new(tencentQQ, this);
@@ -78,6 +78,8 @@ namespace BowlFrame.Adapter.TencentQQAdapter.Target
         }
 
         public override IPlatform Platform => platform;
+
+        public override Permission Permission => permission;
 
         public override async Task<bool> SendAsync(Messages messages) => await tencentQQApi.GuildSendMessage(messages) == true;
     }

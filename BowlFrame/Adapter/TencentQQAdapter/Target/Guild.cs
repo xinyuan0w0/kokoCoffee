@@ -33,5 +33,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter.Target
         public override string ID => _id;
 
         public override IPlatform Platform => platform;
+
+        public override Permission Permission => permission;
     }
 }

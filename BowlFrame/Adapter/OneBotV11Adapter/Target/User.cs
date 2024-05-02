@@ -43,6 +43,8 @@ namespace BowlFrame.Adapter.OneBotV11Adapter.Target
 
         public override IPlatform Platform => platform;
 
+        public override Permission Permission => permission;
+
         public override string Nickname => _data is not null ? _data.Sender.Nickname : $"稻穗 #{_id.Remove(6)}#";
 
         public override byte[] Avatar => _client.GetByteArrayAsync($"http://q.qlogo.cn/headimg_dl?dst_uin={_id}&spec=640&img_type=jpg").Result;

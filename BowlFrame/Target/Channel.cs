@@ -1,5 +1,6 @@
 ﻿using BowlFrame.Adapter;
 using BowlFrame.Message;
+using BowlFrame.Perm;
 
 namespace BowlFrame.Target
 {
@@ -12,6 +13,8 @@ namespace BowlFrame.Target
         public abstract IPlatform Platform { get; }
 
         public string FatherUUID { get; } = string.IsNullOrEmpty(fatherUUID) ? throw new ArgumentNullException() : fatherUUID;
+
+        public abstract Permission Permission { get; }
 
         /// <summary>
         /// 主动发送
