@@ -35,11 +35,11 @@ namespace BowlFrame.Adapter.CocoaPlugin
 
         public void OnMessageEvent(MessageBase @event) => MessageEvent?.Invoke(@event);
 
-        public void OnPrivateMessage(MessageBase @event) => PrivateMessage?.Invoke(@event);
+        public void OnPrivateMessage(PrivateMessage @event) => PrivateMessage?.Invoke(@event);
 
-        public void OnGroupMessage(MessageBase @event) => GroupMessage?.Invoke(@event);
+        public void OnGroupMessage(GroupMessage @event) => GroupMessage?.Invoke(@event);
 
-        public void OnChannelMessage(MessageBase @event) => ChannelMessage?.Invoke(@event);
+        public void OnChannelMessage(ChannelMessage @event) => ChannelMessage?.Invoke(@event);
 
         public void OnPostMessage(MessageBase @event) => PostMessage?.Invoke(@event);
 
