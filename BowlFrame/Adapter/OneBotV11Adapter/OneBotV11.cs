@@ -1,4 +1,5 @@
-﻿using BowlFrame.Net.WebSocket;
+﻿using BowlFrame.Event;
+using BowlFrame.Net.WebSocket;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Net.Http.Headers;
@@ -150,39 +151,60 @@ namespace BowlFrame.Adapter.OneBotV11Adapter
 
         internal void ReceiveMsg(WSClient client, byte[] bytes, WebSocketReceiveResult receiveResult)
         {
-            if (receiveResult.MessageType == WebSocketMessageType.Text)
+            try
             {
-                //转换为文本
-                string receivedMessage = Encoding.UTF8.GetString(bytes);
-                JObject value = JObject.Parse(receivedMessage);
-
-                Log.Trace(receivedMessage);
-
-                string? type = (string?)value["post_type"];
-
-                switch (type)
+                if (receiveResult.MessageType == WebSocketMessageType.Text)
                 {
-                    //消息
-                    case "message":
+                    //转换为文本
+                    string receivedMessage = Encoding.UTF8.GetString(bytes);
+                    JObject value = JObject.Parse(receivedMessage);
 
-                        break;
-                    //消息发送
-                    case "message_sent":
-                        break;
-                    //请求
-                    case "request":
-                        break;
-                    //通知
-                    case "notice":
-                        break;
-                    //元事件
-                    case "meta_event":
-                        break;
+                    Log.Trace(receivedMessage);
 
-                    default:
-                        Log.Warn($"收到了未知的Type {type}");
-                        break;
+                    string? type = (string?)value["post_type"];
+
+                    switch (type)
+                    {
+                        //消息
+                        case "message":
+                            string? msgType = (string?)value["message_type"];
+                            string? subType = (string?)value["sub_type"];
+                            IEvent? @event = null;
+
+                            if (msgType == "group" && subType == "normal")
+                            {
+                                @event = new Event.Message.GroupMessage(this, value.ToObject<Struct.GroupMessage>() ?? throw new NullReferenceException());
+                            }
+                            else if (msgType == "private" && subType == "friend")
+                            {
+                                @event = new Event.Message.PrivateMessage(this, value.ToObject<Struct.MessageBase>() ?? throw new NullReferenceException());
+                            }
+
+                            if (@event is not null)
+                                AdapterManager.OnBroadcastEvent(@event, _AdapterInfo);
+                            break;
+                        //消息发送
+                        case "message_sent":
+                            break;
+                        //请求
+                        case "request":
+                            break;
+                        //通知
+                        case "notice":
+                            break;
+                        //元事件
+                        case "meta_event":
+                            break;
+
+                        default:
+                            Log.Warn($"收到了未知的Type {type}");
+                            break;
+                    }
                 }
+            }
+            catch (Exception e)
+            {
+                Log.Error(e);
             }
         }
     }
