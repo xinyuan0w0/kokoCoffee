@@ -18,6 +18,8 @@ namespace BowlFrame.Adapter.CocoaPlugin
         //插件列表
         private readonly ConcurrentDictionary<string, (CocoaPluginConfig, ICocoaPlugin)> _plugins = new();
 
+        private readonly CocoaPluginFuncManager pluginFuncManager;
+
         private readonly CocoaEvent cocoaEvent = new();
 
         public new static readonly AdapterInfo _AdapterInfo = new()
@@ -47,6 +49,8 @@ namespace BowlFrame.Adapter.CocoaPlugin
             _pluginsPath = Path.Combine(PathConfig.PluginsPath, "Cocoa");
 
             Platform = new CocoaPlatform(_account.Account);
+
+            pluginFuncManager = new(_plugins);
         }
 
         ~Cocoa()
