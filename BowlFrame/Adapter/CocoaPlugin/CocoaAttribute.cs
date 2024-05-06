@@ -23,4 +23,10 @@
 
         public bool Broadcast { get; init; }
     }
+
+    [AttributeUsage(AttributeTargets.Method)]
+    public class CocoaFuncAttribute(string funcName) : Attribute
+    {
+        public string FuncName { get; init; } = funcName;
+    }
 }
