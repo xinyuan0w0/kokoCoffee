@@ -3,24 +3,24 @@
     [AttributeUsage(AttributeTargets.Method)]
     public class CocoaEventAttribute : Attribute
     {
-        public bool PrivateMessage { get; set; }
+        public bool PrivateMessage { get; init; }
 
-        public bool GroupMessage { get; set; }
+        public bool GroupMessage { get; init; }
 
-        public bool GuildMessage { get; set; }
+        public bool GuildMessage { get; init; }
 
-        public bool ChannelMessage { get; set; }
+        public bool ChannelMessage { get; init; }
 
-        public bool GuildPrivateMessage { get; set; }
+        public bool GuildPrivateMessage { get; init; }
 
-        public bool PostMessage { get; set; }
+        public bool PostMessage { get; init; }
 
-        public bool MessageEvent { get; set; }
+        public bool MessageEvent { get; init; }
 
-        public bool MainEvent { get; set; }
+        public bool MainEvent { get; init; }
 
-        public bool MetaEvent { get; set; }
+        public bool MetaEvent { get; init; }
 
-        public bool Broadcast { get; set; }
+        public bool Broadcast { get; init; }
     }
 }
