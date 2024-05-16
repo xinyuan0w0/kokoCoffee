@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Collections.Concurrent;
 using System.Reflection;
-using static BowlFrame.Adapter.CocoaPlugin.CocoaEvent;
+using static BowlFrame.Adapter.CocoaPlugin.CocoaGlobalEvent;
 using static BowlFrame.Tools.Logger;
 
 namespace BowlFrame.Adapter.CocoaPlugin
@@ -20,7 +20,7 @@ namespace BowlFrame.Adapter.CocoaPlugin
 
         private readonly CocoaPluginFuncManager pluginFuncManager;
 
-        private readonly CocoaEvent cocoaEvent = new();
+        private readonly CocoaGlobalEvent cocoaEvent = new();
 
         public new static readonly AdapterInfo _AdapterInfo = new()
         {
