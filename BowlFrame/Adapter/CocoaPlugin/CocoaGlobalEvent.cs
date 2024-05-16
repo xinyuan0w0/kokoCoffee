@@ -3,7 +3,7 @@ using BowlFrame.Event.Message;
 
 namespace BowlFrame.Adapter.CocoaPlugin
 {
-    internal class CocoaEvent
+    internal class CocoaGlobalEvent
     {
         public delegate void CocoaEventHandler(IEvent @event);
 
