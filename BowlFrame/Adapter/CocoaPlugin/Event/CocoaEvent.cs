@@ -12,7 +12,7 @@ using static BowlFrame.Tools.Logger;
 
 namespace BowlFrame.Adapter.CocoaPlugin.Event
 {
-    internal class CocoaEvent(Delegate @delegate)
+    internal class CocoaEvent(Type @delegate)
     {
         ~CocoaEvent()
         {
@@ -23,7 +23,7 @@ namespace BowlFrame.Adapter.CocoaPlugin.Event
         private readonly ConcurrentDictionary<string, (object, MethodInfo)> _bindList = [];
 
         //委托
-        private readonly Delegate @delegate = @delegate;
+        private readonly Type @delegate = @delegate == typeof(Delegate) ? @delegate : throw new NotSupportedException();
 
         /// <summary>
         /// 注册事件
@@ -36,7 +36,8 @@ namespace BowlFrame.Adapter.CocoaPlugin.Event
             try
             {
                 ParameterInfo[] targetParameters = methodInfo.GetParameters();
-                ParameterInfo[] parameters = @delegate.GetMethodInfo().GetParameters();
+
+                ParameterInfo[] parameters = (@delegate.GetMethod("Invoke") ?? throw new NullReferenceException()).GetParameters();
 
                 if (targetParameters.Length == parameters.Length)
                 {
@@ -44,7 +45,7 @@ namespace BowlFrame.Adapter.CocoaPlugin.Event
                         if (targetParameters[i].ParameterType != parameters[i].ParameterType)
                             return null;
 
-                    if (methodInfo.ReturnType == @delegate.GetMethodInfo().ReturnType)
+                    if (methodInfo.ReturnType == (@delegate.GetMethod("Invoke") ?? throw new NullReferenceException()).ReturnType)
                     {
                         string flag = Nanoid.Generate(size: 8);
                         if (_bindList.TryAdd(flag, (@object, methodInfo)))

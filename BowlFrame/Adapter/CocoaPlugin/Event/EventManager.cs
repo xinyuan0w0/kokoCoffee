@@ -16,7 +16,7 @@ namespace BowlFrame.Adapter.CocoaPlugin.Event
         //注册事件列表
         private readonly ConcurrentDictionary<string, ConcurrentDictionary<int, ConcurrentDictionary<int, string>>> _registerList = [];
 
-        public bool AddEvent(string eventName, Delegate @delegate)
+        public bool AddEvent(string eventName, Type @delegate)
         {
             if (_eventList.ContainsKey(eventName))
                 return false;
