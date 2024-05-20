@@ -23,7 +23,7 @@ namespace BowlFrame.Adapter.CocoaPlugin.Event
         private readonly ConcurrentDictionary<string, (object, MethodInfo)> _bindList = [];
 
         //委托
-        private readonly Type @delegate = @delegate == typeof(Delegate) ? @delegate : throw new NotSupportedException();
+        private readonly Type @delegate = @delegate.BaseType == typeof(MulticastDelegate) ? @delegate : throw new NotSupportedException();
 
         /// <summary>
         /// 注册事件
