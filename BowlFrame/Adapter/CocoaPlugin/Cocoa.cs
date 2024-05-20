@@ -273,7 +273,7 @@ namespace BowlFrame.Adapter.CocoaPlugin
 
             try
             {
-                foreach (MethodInfo methodInfo in plugin.GetType().GetMethods())
+                foreach (MethodInfo methodInfo in plugin.GetType().Assembly.GetTypes().SelectMany(x => x.GetMethods()))
                     foreach (Attribute attribute in methodInfo.GetCustomAttributes(true).Cast<Attribute>())
                         if (attribute is CocoaEventAttribute eventAttribute)
                             RegisterEventWithAttribute(eventAttribute, plugin, methodInfo);
