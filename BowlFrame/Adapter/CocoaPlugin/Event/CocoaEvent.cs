@@ -1,13 +1,6 @@
 ﻿using NanoidDotNet;
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Reflection.Metadata;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using static BowlFrame.Tools.Logger;
 
 namespace BowlFrame.Adapter.CocoaPlugin.Event
