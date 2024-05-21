@@ -53,7 +53,9 @@ namespace BowlFrame.Adapter.CocoaPlugin
 
             Platform = new CocoaPlatform(_account.Account);
 
-            pluginFuncManager = new(_plugins);
+            pluginFuncManager = new(this, _plugins);
+
+            CheckMatchMessage.BindEventManager(EventManager);
         }
 
         ~Cocoa()
@@ -220,6 +222,7 @@ namespace BowlFrame.Adapter.CocoaPlugin
                         default:
                             break;
                     }
+                    pluginFuncManager.MatchMessage(@event as MessageBase ?? throw new NullReferenceException());
                     break;
 
                 default:

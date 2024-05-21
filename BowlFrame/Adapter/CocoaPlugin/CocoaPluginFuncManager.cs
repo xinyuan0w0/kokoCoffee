@@ -1,5 +1,7 @@
 ﻿using Amazon.S3.Model.Internal.MarshallTransformations;
 using BowlFrame.Adapter.CocoaPlugin.Exceptions;
+using BowlFrame.Event.Message;
+using BowlFrame.Message;
 using BowlFrame.Target;
 using static BowlFrame.Tools.Logger;
 using Newtonsoft.Json.Linq;
@@ -10,18 +12,18 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using BowlFrame.Message;
-using BowlFrame.Event.Message;
+using static BowlFrame.Tools.Logger;
 
 namespace BowlFrame.Adapter.CocoaPlugin
 {
-    public class CocoaPluginFuncManager(ConcurrentDictionary<string, (CocoaPluginConfig, ICocoaPlugin)> plugins)
+    public class CocoaPluginFuncManager(Cocoa cocoa, ConcurrentDictionary<string, (CocoaPluginConfig, ICocoaPlugin)> plugins)
     {
         //功能名
         private readonly ConcurrentDictionary<string, CocoaPluginFunc> _funcList = new();
 
         private readonly ConcurrentDictionary<string, (CocoaPluginConfig, ICocoaPlugin)> plugins = plugins;
+
+        private readonly Cocoa cocoa = cocoa;
 
         public CocoaPluginFunc? this[string index]
         {
@@ -151,6 +153,21 @@ namespace BowlFrame.Adapter.CocoaPlugin
                 }
 
                 //广播其他功能插件判断是否拦截
+
+                cocoa.EventManager.Invoke("CheckMatchMessage", [plugins[func.Value.PluginID].Item1, func.Value.FuncConfig, message], out object?[]? bools);
+
+                bool flag_2 = false;
+
+                if (bools is not null)
+                    foreach (bool result in bools.Cast<bool>())
+                        if (!result)
+                        {
+                            flag_2 = true;
+                            break;
+                        }
+
+                if (flag_2)
+                    continue;
 
                 InvokeFunc(func.Value, message, funcArgs);
             }
