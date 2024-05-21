@@ -282,12 +282,21 @@ namespace BowlFrame.Adapter.CocoaPlugin
 
             try
             {
+                plugin.Init();
+
+                //遍历程序集方法
                 foreach (MethodInfo methodInfo in plugin.GetType().Assembly.GetTypes().SelectMany(x => x.GetMethods()))
                     foreach (Attribute attribute in methodInfo.GetCustomAttributes(true).Cast<Attribute>())
                         if (attribute is CocoaEventAttribute eventAttribute)
                             RegisterEventWithAttribute(eventAttribute, plugin, methodInfo);
-
-                plugin.Init();
+                        else if (attribute is CocoaFuncAttribute funcAttribute)
+                        {
+                            CocoaPluginFuncConfig cocoaPluginFuncConfig = JsonConvert.DeserializeObject<CocoaPluginFuncConfig>(File.ReadAllText(Path.Combine(PathConfig.ConfigPath, config.ID, funcAttribute.FuncName, "config.json")));
+                            CocoaPluginFunc cocoaPluginFunc = new(config.ID, cocoaPluginFuncConfig, methodInfo);
+                            pluginFuncManager.RegisterFunc(funcAttribute.FuncName, cocoaPluginFunc);
+                        }
+                        else if (attribute is CocoaBindEventAttribute bindEventAttribute)
+                            EventManager.RegisterEvent(bindEventAttribute.Event, plugin, methodInfo);
             }
             catch (Exception e)
             {
