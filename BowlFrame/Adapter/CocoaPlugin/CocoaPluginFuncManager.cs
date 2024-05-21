@@ -1,14 +1,9 @@
-﻿using Amazon.S3.Model.Internal.MarshallTransformations;
-using BowlFrame.Adapter.CocoaPlugin.Exceptions;
+﻿using BowlFrame.Adapter.CocoaPlugin.Exceptions;
 using BowlFrame.Event.Message;
 using BowlFrame.Message;
 using BowlFrame.Target;
-using static BowlFrame.Tools.Logger;
 using Newtonsoft.Json.Linq;
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;

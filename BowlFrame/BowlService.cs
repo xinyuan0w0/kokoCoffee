@@ -36,7 +36,6 @@ namespace BowlFrame
 
         public static async void Debug()
         {
-            
         }
     }
 }
