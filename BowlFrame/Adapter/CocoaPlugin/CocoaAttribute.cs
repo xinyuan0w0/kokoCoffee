@@ -29,4 +29,10 @@
     {
         public string FuncName { get; init; } = funcName;
     }
+
+    [AttributeUsage(AttributeTargets.Method)]
+    public class CocoaBindEventAttribute(string @event) : Attribute
+    {
+        public string Event { get; init; } = @event;
+    }
 }
