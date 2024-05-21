@@ -103,7 +103,7 @@ namespace BowlFrame.Adapter.CocoaPlugin
                 Dictionary<string, string> funcArgs = [];
 
                 if (func.Value.FuncConfig.Platform is not null)
-                    if (!func.Value.FuncConfig.Platform.Any(x => x.ID == message.Platform.ID && x.AdapterInfo.ID == message.Platform.AdapterInfo.ID))
+                    if (!func.Value.FuncConfig.Platform.Any(x => x == message.Platform.ID))
                         continue;
 
                 if (func.Value.FuncConfig.SourceType is not null)
@@ -196,7 +196,7 @@ namespace BowlFrame.Adapter.CocoaPlugin
         /// <summary>
         /// 来源平台
         /// </summary>
-        public IPlatform[]? Platform { get; set; }
+        public string[]? Platform { get; set; }
 
         /// <summary>
         /// 权限节点
