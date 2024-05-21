@@ -27,7 +27,7 @@ namespace BowlFrame
 
         public static async Task Start()
         {
-            AdapterManagerEx.CreateAdapterFromFile(Path.Combine(PathConfig.ConfigPath, "Adapter.json"));
+            AdapterManagerEx.CreateAdapterFromConfigFile(Path.Combine(PathConfig.ConfigPath, "Adapter.json"));
             await AdapterManagerEx.StartAllAdapter();
         }
 
