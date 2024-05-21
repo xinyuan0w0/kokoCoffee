@@ -56,7 +56,14 @@ namespace BowlFrame.Adapter.CocoaPlugin.Event
             //先取出插件的注册列表
             dict.TryGetValue(@object.GetHashCode(), out ConcurrentDictionary<int, string>? objectDict);
 
-            if (objectDict is null || dict.ContainsKey(methodInfo.GetHashCode()))
+            if (objectDict is null)
+            {
+                objectDict = [];
+                if (!dict.TryAdd(@object.GetHashCode(), objectDict))
+                    return false;
+            }
+
+            if (dict.ContainsKey(methodInfo.GetHashCode()))
                 return false;
 
             string? flag = cocoaEvent.RegisterEvent(@object, methodInfo);
