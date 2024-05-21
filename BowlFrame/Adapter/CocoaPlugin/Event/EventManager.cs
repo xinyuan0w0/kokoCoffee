@@ -88,5 +88,15 @@ namespace BowlFrame.Adapter.CocoaPlugin.Event
 
             return cocoaEvent.UnregisterEvent(flag);
         }
+
+        public bool Invoke(string eventName, object?[]? args, out object?[]? returns)
+        {
+            returns = null;
+
+            if (!_eventList.TryGetValue(eventName, out CocoaEvent? cocoaEvent))
+                return false;
+
+            return cocoaEvent.Invoke(args, out returns);
+        }
     }
 }
