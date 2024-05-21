@@ -277,6 +277,9 @@ namespace BowlFrame.Adapter.CocoaPlugin
             if (_plugins.TryGetValue(config.ID, out _))
                 throw new PluginAlreadyExits(config);
 
+            if (!Directory.Exists(Path.Combine(PathConfig.ConfigPath, $"{config.ID}")))
+                Directory.CreateDirectory(Path.Combine(PathConfig.ConfigPath, $"{config.ID}"));
+
             try
             {
                 foreach (MethodInfo methodInfo in plugin.GetType().Assembly.GetTypes().SelectMany(x => x.GetMethods()))
