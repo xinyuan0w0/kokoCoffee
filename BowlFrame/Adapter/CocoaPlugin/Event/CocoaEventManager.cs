@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace BowlFrame.Adapter.CocoaPlugin.Event
 {
-    public class EventManager
+    public class CocoaEventManager
     {
         //事件列表
         private readonly ConcurrentDictionary<string, CocoaEvent> _eventList = [];
