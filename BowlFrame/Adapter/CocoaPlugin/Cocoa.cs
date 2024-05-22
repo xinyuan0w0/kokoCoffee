@@ -81,7 +81,7 @@ namespace BowlFrame.Adapter.CocoaPlugin
             throw new NotImplementedException();
         }
 
-        public override async Task<bool> Start()
+        public override Task<bool> Start()
         {
             //检查路径
             if (!Path.Exists(_pluginsPath))
@@ -141,13 +141,13 @@ namespace BowlFrame.Adapter.CocoaPlugin
 
             _isStarted = true;
 
-            return true;
+            return Task.FromResult(true);
         }
 
-        public override async Task<bool> Stop()
+        public override Task<bool> Stop()
         {
             if (!_isStarted)
-                return false;
+                return Task.FromResult(false);
 
             AdapterManager.BroadcastEvent -= ReciveEvent;
 
@@ -167,7 +167,7 @@ namespace BowlFrame.Adapter.CocoaPlugin
 
             _isStarted = false;
 
-            return true;
+            return Task.FromResult(true);
         }
 
         public override void Dispose()
