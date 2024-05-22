@@ -1,5 +1,5 @@
 ﻿using BowlFrame.Adapter.CocoaPlugin.Attributes;
-﻿using BowlFrame.Adapter.CocoaPlugin.Event;
+using BowlFrame.Adapter.CocoaPlugin.Event;
 using BowlFrame.Adapter.CocoaPlugin.Event.Manager;
 using BowlFrame.Adapter.CocoaPlugin.Exceptions;
 using BowlFrame.Config;
@@ -24,7 +24,7 @@ namespace BowlFrame.Adapter.CocoaPlugin
 
         private readonly CocoaGlobalEvent cocoaEvent = new();
 
-        public readonly EventManager EventManager = new();
+        public readonly CocoaEventManager EventManager = new();
 
         public new static readonly AdapterInfo _AdapterInfo = new()
         {
