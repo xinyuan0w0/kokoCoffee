@@ -1,3 +1,4 @@
+﻿using BowlFrame.Adapter.CocoaPlugin.Attributes;
 ﻿using BowlFrame.Adapter.CocoaPlugin.Event;
 using BowlFrame.Adapter.CocoaPlugin.Event.Manager;
 using BowlFrame.Adapter.CocoaPlugin.Exceptions;
