@@ -10,6 +10,7 @@ namespace BowlFrame.Adapter.OneBotV11Adapter.Tools
         //平台
         private readonly static IPlatform _platform = new TencentQQ_Common();
 
+        //TODO: 拆！！！
         public static async Task<Messages> GetMessages(OneBotV11 oneBotV11, MessageBase message)
         {
             Messages messages = new();

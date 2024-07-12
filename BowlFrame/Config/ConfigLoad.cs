@@ -51,7 +51,6 @@ namespace BowlFrame.Config
         public static byte[]? GetFileBytes(string name)
         {
             files.TryGetValue(name, out (byte[], string?) value);
-
             return value.Item1;
         }
 
@@ -60,35 +59,29 @@ namespace BowlFrame.Config
             byte[]? bytes;
 
             bytes = GetFileBytes(name);
-
-            if (bytes is null)
+            if (bytes is null) return null;
+           
+            try
+            {
+                return Encoding.UTF8.GetString(bytes);
+            } 
+            catch (Exception e)
+            {
+                Log.Error(e);
                 return null;
-            else
-                try
-                {
-                    return Encoding.UTF8.GetString(bytes);
-                }
-                catch (Exception e)
-                {
-                    Log.Error(e);
-                    return null;
-                }
+            }
         }
 
         public async static Task<bool> Reload()
         {
             foreach (KeyValuePair<string, (byte[], string?)> value in files)
             {
-                if (value.Value.Item2 is not null)
+                if (value.Value.Item2 is null || !Path.Exists(value.Value.Item2))
                 {
-                    if (!Path.Exists(value.Value.Item2))
-                        continue;
-
-                    RemoveFile(value.Key);
-
-                    if (await AddFileFromPath(value.Key, value.Value.Item2) != true)
-                        return false;
+                    continue;
                 }
+                RemoveFile(value.Key);
+                if (await AddFileFromPath(value.Key, value.Value.Item2) != true) return false;
             }
             return true;
         }

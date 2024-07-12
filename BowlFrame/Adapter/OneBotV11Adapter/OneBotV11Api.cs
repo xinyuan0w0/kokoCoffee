@@ -76,6 +76,7 @@ namespace BowlFrame.Adapter.OneBotV11Adapter
             }
         }
 
+        //TODO: 拆分拆分拆分！！！！
         public async Task<bool?> SendMessage(Messages messages)
         {
             JArray mainContent = [];
