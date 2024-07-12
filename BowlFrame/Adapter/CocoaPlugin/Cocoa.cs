@@ -362,14 +362,12 @@ namespace BowlFrame.Adapter.CocoaPlugin
                 FieldInfo? field = type.GetField(eventInfo.Name, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public | BindingFlags.Static);
                 if (field is null)
                     continue;
-
                 Delegate? del = field.GetValue(cocoaPlugin) as Delegate;
-                if (del is not null)
+                if (del is null)
+                    continue;
+                foreach (Delegate subDel in del.GetInvocationList())
                 {
-                    foreach (Delegate subDel in del.GetInvocationList())
-                    {
-                        eventInfo.RemoveEventHandler(cocoaPlugin, subDel);
-                    }
+                    eventInfo.RemoveEventHandler(cocoaPlugin, subDel);
                 }
             }
         }
