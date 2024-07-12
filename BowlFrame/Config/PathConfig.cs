@@ -1,4 +1,6 @@
-﻿namespace BowlFrame.Config
+﻿using System.IO;
+
+namespace BowlFrame.Config
 {
     public static class PathConfig
     {
@@ -10,16 +12,16 @@
             PluginsPath = System.IO.Path.Combine(Path, "Plugins");
             TempPath = System.IO.Path.Combine(Path, "Temp");
 
-            if (Directory.Exists(Path))
-                Directory.CreateDirectory(Path);
-            if (Directory.Exists(ConfigPath))
-                Directory.CreateDirectory(ConfigPath);
-            if (Directory.Exists(DataPath))
-                Directory.CreateDirectory(DataPath);
-            if (!Directory.Exists(PluginsPath))
-                Directory.CreateDirectory(PluginsPath);
-            if (!Directory.Exists(TempPath))
-                Directory.CreateDirectory(TempPath);
+            List<string> paths = new List<string> { Path, ConfigPath, DataPath, PluginsPath, TempPath };
+
+            foreach (string dir in paths)
+            {
+                if (Directory.Exists(dir))
+                {
+                    continue;
+                }
+                Directory.CreateDirectory(dir);
+            }
         }
 
         public static string Path { get; }
