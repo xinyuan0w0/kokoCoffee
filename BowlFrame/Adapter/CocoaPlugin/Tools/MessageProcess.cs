@@ -36,8 +36,8 @@ namespace BowlFrame.Adapter.CocoaPlugin.Tools
             _lang = lang;
 
             if (!noDefaultMsg)
-                if (File.Exists(Path.Combine(PathConfig.ConfigPath, "Messages", $"Global.{lang}")))
-                    LoadMsgFromJson(JObject.Parse(Path.Combine(PathConfig.ConfigPath, "Messages", $"Global.{lang}")));
+                if (File.Exists(Path.Combine(PathConfig.ConfigPath, Cocoa._AdapterInfo.ID, "Messages", $"Global.{lang}")))
+                    LoadMsgFromJson(JObject.Parse(Path.Combine(PathConfig.ConfigPath, Cocoa._AdapterInfo.ID, "Messages", $"Global.{lang}")));
 
             _placeholders = new()       //内置占位符
             {

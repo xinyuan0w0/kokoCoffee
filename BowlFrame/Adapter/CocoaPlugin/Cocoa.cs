@@ -52,8 +52,8 @@ namespace BowlFrame.Adapter.CocoaPlugin
 
             _pluginsPath = Path.Combine(PathConfig.PluginsPath, "Cocoa");
 
-            if (!Directory.Exists(Path.Combine(PathConfig.ConfigPath, "Messages")))
-                Directory.CreateDirectory(Path.Combine(PathConfig.ConfigPath, "Messages"));
+            if (!Directory.Exists(Path.Combine(PathConfig.ConfigPath, _AdapterInfo.ID, "Messages")))
+                Directory.CreateDirectory(Path.Combine(PathConfig.ConfigPath, _AdapterInfo.ID, "Messages"));
 
             Platform = new CocoaPlatform(_account.Account);
 
