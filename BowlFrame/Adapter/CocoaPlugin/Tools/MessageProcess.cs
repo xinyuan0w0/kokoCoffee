@@ -100,6 +100,51 @@ namespace BowlFrame.Adapter.CocoaPlugin.Tools
                 }
             }
         }
+
+        public bool MsgExist(string name) => _messages.ContainsKey(name);
+
+        public bool PlaceholderExist(string name) => _placeholders.ContainsKey(name);
+
+        public string GetRandomMessages(string name)
+        {
+            if (MsgExist(name))
+                return "";
+            Random random = new();
+            List<string> strings = _messages[name];
+            return strings[random.Next(strings.Count)];
+        }
+
+        public string GetMessages(string name, int index)
+        {
+            if (MsgExist(name))
+                return "";
+            List<string> strings = _messages[name];
+            return strings[index];
+        }
+
+        public IList<string> GetMessagesAll(string name)
+        {
+            if (MsgExist(name))
+                return [];
+            return _messages[name];
+        }
+
+        public IList<string> GetAllMessage()
+        {
+            return [.. _messages.Keys];
+        }
+
+        public string GetPlacehold(string name)
+        {
+            if (PlaceholderExist(name))
+                return "";
+            return _placeholders[name];
+        }
+
+        public IList<string> GetAllPlacehold()
+        {
+            return [.. _placeholders.Keys];
+        }
     }
 
     public struct MessageOption
