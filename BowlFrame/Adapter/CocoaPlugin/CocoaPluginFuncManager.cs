@@ -59,13 +59,12 @@ namespace BowlFrame.Adapter.CocoaPlugin
                 return;
 
             //移出列表
-
             if (_funcList.TryRemove(funcID, out _))
             {
                 Log.Debug("注销功能 {0} 成功", funcID);
                 return;
             }
-            Log.Warn("注销功能 {0} 失败同时注销多个功能", funcID);
+            Log.Warn("注销功能 {0} 失败，可能同时注销多个功能", funcID);
         }
 
         public void UnregisterPlugin(string pluginID)
