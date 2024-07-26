@@ -286,7 +286,14 @@ namespace BowlFrame.Adapter.CocoaPlugin
 
             try
             {
-                plugin.Init();
+                CocoaPluginpath cocoaPluginpath = new()
+                {
+                    ConfigPath = Path.Combine(PathConfig.ConfigPath, config.ID),
+                    DataPath = Path.Combine(PathConfig.DataPath, config.ID),
+                    TempPath = Path.Combine(PathConfig.TempPath, config.ID)
+                };
+
+                plugin.Init(cocoaPluginpath);
 
                 //遍历程序集方法
                 foreach (MethodInfo methodInfo in plugin.GetType().Assembly.GetTypes().SelectMany(x => x.GetMethods()))
