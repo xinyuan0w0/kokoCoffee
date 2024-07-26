@@ -1,4 +1,6 @@
 ﻿using BowlFrame.Adapter;
+using BowlFrame.Adapter.CocoaPlugin.Tools;
+using BowlFrame.Adapter.OneBotV11Adapter;
 using BowlFrame.Config;
 using BowlFrame.Database;
 using BowlFrame.Database.TableStruct;
@@ -36,6 +38,7 @@ namespace BowlFrame
 
         public static async void Debug()
         {
+            MessageProcess messageProcess = new(Path.Combine(PathConfig.ConfigPath, "cn.kokobot.simple", "SampleFunc"), "Help", new TencentQQ_Common());
         }
     }
 }
