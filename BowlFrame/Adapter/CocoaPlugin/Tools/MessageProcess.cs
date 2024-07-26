@@ -37,7 +37,7 @@ namespace BowlFrame.Adapter.CocoaPlugin.Tools
 
             if (!noDefaultMsg)
                 if (File.Exists(Path.Combine(PathConfig.ConfigPath, Cocoa._AdapterInfo.ID, "Messages", $"Global.{lang}")))
-                    LoadMsgFromJson(JObject.Parse(Path.Combine(PathConfig.ConfigPath, Cocoa._AdapterInfo.ID, "Messages", $"Global.{lang}")));
+                    LoadMsgFromJson(JObject.Parse(File.ReadAllText(Path.Combine(PathConfig.ConfigPath, Cocoa._AdapterInfo.ID, "Messages", $"Global.{lang}"))));
 
             _placeholders = new()       //内置占位符
             {
