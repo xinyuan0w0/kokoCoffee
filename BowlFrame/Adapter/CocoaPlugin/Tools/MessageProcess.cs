@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace BowlFrame.Adapter.CocoaPlugin.Tools
 {
@@ -144,6 +145,32 @@ namespace BowlFrame.Adapter.CocoaPlugin.Tools
         public IList<string> GetAllPlacehold()
         {
             return [.. _placeholders.Keys];
+        }
+
+        public string ReplaceString(string content)
+        {
+            if (content == null)
+                return "";
+
+            int head, foot = 0;
+            string placeholder;
+            foot = content.IndexOf('}', foot + 1);
+            while (foot != -1)
+            {
+                head = content.LastIndexOf('{', foot - 1);
+                placeholder = content.Substring(head + 1, foot - head - 1);
+                if (_placeholders.TryGetValue(placeholder, out string? value))
+                {
+                    content = content.Remove(head, foot - head + 1);
+                    content = content.Insert(head, value);
+                    foot = head + value.Length;
+                }
+                if (foot + 1 > content.Length)
+                    break;
+                foot = content.IndexOf('}', foot + 1);
+            }
+
+            return content;
         }
     }
 
