@@ -10,11 +10,11 @@
             PluginsPath = System.IO.Path.Combine(Path, "Plugins");
             TempPath = System.IO.Path.Combine(Path, "Temp");
 
-            if (Directory.Exists(Path))
+            if (!Directory.Exists(Path))
                 Directory.CreateDirectory(Path);
-            if (Directory.Exists(ConfigPath))
+            if (!Directory.Exists(ConfigPath))
                 Directory.CreateDirectory(ConfigPath);
-            if (Directory.Exists(DataPath))
+            if (!Directory.Exists(DataPath))
                 Directory.CreateDirectory(DataPath);
             if (!Directory.Exists(PluginsPath))
                 Directory.CreateDirectory(PluginsPath);
