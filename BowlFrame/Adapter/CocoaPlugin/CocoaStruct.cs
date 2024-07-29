@@ -26,7 +26,7 @@
         public string? Content { get; set; }
     }
 
-    public struct CocoaPluginpath
+    public struct CocoaPluginPath
     {
         public string ConfigPath { get; set; }
 
