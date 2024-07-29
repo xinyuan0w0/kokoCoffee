@@ -286,7 +286,7 @@ namespace BowlFrame.Adapter.CocoaPlugin
 
             try
             {
-                CocoaPluginpath cocoaPluginpath = new()
+                CocoaPluginPath cocoaPluginpath = new()
                 {
                     ConfigPath = Path.Combine(PathConfig.ConfigPath, config.ID),
                     DataPath = Path.Combine(PathConfig.DataPath, config.ID),
