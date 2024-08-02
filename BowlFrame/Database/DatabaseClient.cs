@@ -199,7 +199,7 @@ namespace BowlFrame.Database
 
                         //超过一条数据
                         if (data.Length > 1)
-                            throw new WriteDataError(property.Name, property_2.Name);
+                            throw new ExtraData(property.Name, property_2.Name);
                         //插入数据
                         else if (data.Length == 0)
                             list.Add(
@@ -280,7 +280,7 @@ namespace BowlFrame.Database
 
                 //超过一条数据
                 if (data.Length > 1)
-                    throw new WriteDataError(change.Key, change.SubKey);
+                    throw new ExtraData(change.Key, change.SubKey);
                 //插入数据
                 else if (data.Length == 0)
                     _client.Insertable(new DbData()
