@@ -249,6 +249,135 @@ namespace BowlFrame.Database
             await _client.CommitTranAsync();
         }
 
+        public async Task AddData(string key, string subKey, DbDataType dbDataType, string value, string? uuid = null, CancellationToken cancellationToken = default)
+        {
+            if (uuid is null)
+                if (UUID is not null)
+                    uuid = UUID;
+                else
+                    throw new NullReferenceException();
+
+            try
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                ISugarQueryable<DbData> query = _client.Queryable<DbData>()
+                    .Where(a => a.UUID == uuid && a.Key == key && a.SubKey == subKey);
+
+                if (cancellationToken.IsCancellationRequested)
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                DbData[] data = await query.ToArrayAsync();
+
+                if (data.Length > 1)
+                    throw new ExtraData(key, subKey);
+                else if (data.Length == 0)
+                    await _client.Insertable(new DbData
+                    {
+                        UUID = uuid,
+                        Key = key,
+                        SubKey = subKey,
+                        DataType = dbDataType,
+                        Value = value
+                    }).ExecuteCommandAsync(cancellationToken);
+                else if (data[0].DataType != dbDataType || data[0].Value != value)
+                    await _client.Updateable<DbData>()
+                        .SetColumns(a => a.DataType == dbDataType)
+                        .SetColumns(a => a.Value == value)
+                        .Where(a => a.UUID == uuid && a.Key == key && a.SubKey == subKey)
+                        .ExecuteCommandAsync(cancellationToken);
+            }
+            catch (OperationCanceledException e)
+            {
+                Log.Error(e);
+                throw;
+            }
+            catch (Exception e)
+            {
+                Log.Error(e);
+                throw new WriteDataError();
+            }
+        }
+
+        public async Task RemoveData(string key, string subKey, string? uuid = null, CancellationToken cancellationToken = default)
+        {
+            if (uuid is null)
+                if (UUID is not null)
+                    uuid = UUID;
+                else
+                    throw new NullReferenceException();
+
+            try
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                ISugarQueryable<DbData> query = _client.Queryable<DbData>()
+                    .Where(a => a.UUID == uuid && a.Key == key && a.SubKey == subKey);
+
+                if (cancellationToken.IsCancellationRequested)
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                DbData[] data = await query.ToArrayAsync();
+
+                if (data.Length > 1)
+                    throw new ExtraData(key, subKey);
+                else
+                    await _client.Deleteable<DbData>()
+                        .Where(a => a.UUID == uuid && a.Key == key && a.SubKey == subKey)
+                        .ExecuteCommandAsync(cancellationToken);
+            }
+            catch (OperationCanceledException e)
+            {
+                Log.Error(e);
+                throw;
+            }
+            catch (Exception e)
+            {
+                Log.Error(e);
+                throw new RemoveDataError();
+            }
+        }
+
+        public async Task<string> ReadData(string key, string subKey, string? uuid = null, CancellationToken cancellationToken = default)
+        {
+            if (uuid is null)
+                if (UUID is not null)
+                    uuid = UUID;
+                else
+                    throw new NullReferenceException();
+
+            try
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                ISugarQueryable<DbData> query = _client.Queryable<DbData>()
+                    .Where(a => a.UUID == uuid && a.Key == key && a.SubKey == subKey);
+
+                if (cancellationToken.IsCancellationRequested)
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                DbData[] data = await query.ToArrayAsync();
+
+                if (data.Length > 1)
+                    throw new ExtraData(key, subKey);
+
+                return data[0].Value;
+            }
+            catch (OperationCanceledException e)
+            {
+                Log.Error(e);
+                throw;
+            }
+            catch (Exception e)
+            {
+                Log.Error(e);
+                throw new ReadDataError();
+            }
+        }
+
         public async Task SafeChangeDataNumber(ChangeInfo change, bool _a = true, CancellationToken cancellationToken = default)
         {
             if (change.UUID is null)
