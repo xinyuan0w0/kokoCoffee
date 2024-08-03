@@ -148,7 +148,7 @@ namespace BowlFrame.Adapter.CocoaPlugin
 
                 //广播其他功能插件判断是否拦截
 
-                cocoa.EventManager.Invoke("CheckMatchMessage", [plugins[func.Value.PluginID].Item1, func.Value.FuncConfig, message], out object?[]? bools);
+                cocoa.EventManager.Invoke("CheckMatchMessage", [plugins[func.Value.PluginID].Item1, func.Key, func.Value.FuncConfig, message], out object?[]? bools);
 
                 bool flag_2 = false;
 
