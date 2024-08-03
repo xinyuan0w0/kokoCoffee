@@ -157,7 +157,7 @@ namespace BowlFrame.Database
             return value;
         }
 
-        public async Task WriteJsonIntoData(JObject values, string? uuid = null, CancellationToken cancellationToken = default)
+        public async Task WriteJsonIntoData(JObject values, string? uuid = null, bool clearWrite = false, CancellationToken cancellationToken = default)
         {
             if (uuid is null)
                 if (UUID is not null)
@@ -200,8 +200,9 @@ namespace BowlFrame.Database
                         //超过一条数据
                         if (data.Length > 1)
                             throw new ExtraData(property.Name, property_2.Name);
+
                         //插入数据
-                        else if (data.Length == 0)
+                        if (data.Length == 0)
                             list.Add(
                                 new DbData
                                 {
@@ -215,6 +216,11 @@ namespace BowlFrame.Database
                         //判断数据是否更新
                         else if (data[0].DataType != (GetDataType(property_2.Value.Type) ?? throw new NullReferenceException())
                             || data[0].Value != (property_2.Value.Type == JTokenType.Bytes ? Convert.ToBase64String((byte[]?)property_2.Value ?? []) : property_2.Value.ToString()))
+                        {
+                            if (clearWrite)
+                                _client.Deleteable<DbData>()
+                                    .Where(a => a.UUID == uuid && a.Key == property.Name && a.SubKey == property_2.Name);
+
                             list.Add(
                                 new DbData
                                 {
@@ -224,6 +230,7 @@ namespace BowlFrame.Database
                                     DataType = GetDataType(property_2.Value!.Type) ?? throw new NullReferenceException(),
                                     Value = property_2.Value!.ToString()
                                 });
+                        }
                     }
                 }
 
