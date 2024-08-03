@@ -108,7 +108,7 @@ namespace BowlFrame.Perm
                 if (rawValue[platform.ID] is not null)
                     writer.Merge(rawValue[platform.ID]![targetType.ToString()]);
 
-                await _database.WriteJsonIntoData(writer, uuid, cancellationToken);
+                await _database.WriteJsonIntoData(writer, uuid, cancellationToken: cancellationToken);
                 await _database.Client.CommitTranAsync();
 
                 UUID = uuid;
