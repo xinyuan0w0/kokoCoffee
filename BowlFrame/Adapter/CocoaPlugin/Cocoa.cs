@@ -281,9 +281,6 @@ namespace BowlFrame.Adapter.CocoaPlugin
             if (_plugins.TryGetValue(config.ID, out _))
                 throw new PluginAlreadyExits(config);
 
-            if (!Directory.Exists(Path.Combine(PathConfig.ConfigPath, $"{config.ID}")))
-                Directory.CreateDirectory(Path.Combine(PathConfig.ConfigPath, $"{config.ID}"));
-
             try
             {
                 CocoaPluginPath cocoaPluginpath = new()
