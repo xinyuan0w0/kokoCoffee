@@ -20,6 +20,8 @@ namespace BowlFrame.Adapter.CocoaPlugin
         //插件列表
         private readonly ConcurrentDictionary<string, (CocoaPluginConfig, ICocoaPlugin)> _plugins = new();
 
+        private ConcurrentDictionary<string, (bool, bool?)> _pluginsEnableList = new();
+
         private readonly CocoaPluginFuncManager pluginFuncManager;
 
         private readonly CocoaGlobalEvent cocoaEvent = new();
@@ -147,6 +149,32 @@ namespace BowlFrame.Adapter.CocoaPlugin
             AdapterManager.BroadcastEvent += ReciveEvent;
 
             _isStarted = true;
+
+            //启用插件
+            if (File.Exists(Path.Combine(_configPath, "EnableList.json")))
+                _pluginsEnableList = JsonConvert.DeserializeObject<ConcurrentDictionary<string, (bool, bool?)>>(File.ReadAllText(Path.Combine(_configPath, "EnableList.json"))) ?? [];
+
+            foreach (string pluginID in _plugins.Keys)
+            {
+                if (_pluginsEnableList.TryGetValue(pluginID, out (bool, bool?) value) && value.Item2 == false)
+                {
+                    _pluginsEnableList.TryUpdate(pluginID, (false, value.Item2), value);
+                }
+                else
+                {
+                    try
+                    {
+                        if (EnablePlugin(pluginID) == true)
+                            _pluginsEnableList.AddOrUpdate(pluginID, (a) => (true, null), (a, b) => (true, b.Item2));
+                        else
+                            _pluginsEnableList.AddOrUpdate(pluginID, (a) => (false, null), (a, b) => (false, b.Item2));
+                    }
+                    catch (Exception)
+                    {
+                        _pluginsEnableList.AddOrUpdate(pluginID, (a) => (false, null), (a, b) => (false, b.Item2));
+                    }
+                }
+            }
 
             return Task.FromResult(true);
         }
@@ -319,6 +347,63 @@ namespace BowlFrame.Adapter.CocoaPlugin
             if (!_plugins.TryAdd(config.ID, (config, plugin)))
                 throw new Exception("添加插件至列表失败，可能是同时载入插件");
         }
+
+        public bool? EnablePlugin(string pluginID)
+        {
+            if (!_plugins.ContainsKey(pluginID))
+                return null;
+
+            if (_pluginsEnableList.TryGetValue(pluginID, out (bool, bool?) value) && value.Item1)
+                return false;
+
+            ICocoaPlugin cocoaPlugin = _plugins[pluginID].Item2;
+
+            try
+            {
+                if (!cocoaPlugin.Enable())
+                {
+                    _pluginsEnableList.AddOrUpdate(pluginID, (a) => (false, null), (a, b) => (false, b.Item2));
+                    return false;
+                }
+
+                _pluginsEnableList.AddOrUpdate(pluginID, (a) => (true, null), (a, b) => (true, b.Item2));
+            }
+            catch (Exception)
+            {
+                _pluginsEnableList.AddOrUpdate(pluginID, (a) => (false, null), (a, b) => (false, b.Item2));
+                return false;
+            }
+
+            return true;
+        }
+
+        public bool? DisablePlugin(string pluginID)
+        {
+            if (!_plugins.ContainsKey(pluginID))
+                return null;
+
+            if (_pluginsEnableList.TryGetValue(pluginID, out (bool, bool?) value) && !value.Item1)
+                return false;
+
+            ICocoaPlugin cocoaPlugin = _plugins[pluginID].Item2;
+
+            try
+            {
+                cocoaPlugin.Disable();
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+            finally
+            {
+                _pluginsEnableList.AddOrUpdate(pluginID, (a) => (false, null), (a, b) => (false, b.Item2));
+            }
+
+            return true;
+        }
+
+        public void SetPluginStatus(string pluginID, bool status) => _pluginsEnableList.AddOrUpdate(pluginID, (a) => (true, status), (a, b) => (b.Item1, status));
 
         private void RegisterEventWithAttribute(CocoaEventAttribute attribute, ICocoaPlugin plugin, MethodInfo methodInfo)
         {
