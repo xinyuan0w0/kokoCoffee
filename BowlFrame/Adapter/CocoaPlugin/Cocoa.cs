@@ -50,7 +50,7 @@ namespace BowlFrame.Adapter.CocoaPlugin
 
             Log.Debug($"创建了 {_AdapterInfo.Name} 适配器");
 
-            _pluginsPath = Path.Combine(PathConfig.PluginsPath, "Cocoa");
+            _pluginsPath = Path.Combine(PathConfig.PluginsPath, _AdapterInfo.ID);
 
             if (!Directory.Exists(Path.Combine(PathConfig.ConfigPath, _AdapterInfo.ID, "Messages")))
                 Directory.CreateDirectory(Path.Combine(PathConfig.ConfigPath, _AdapterInfo.ID, "Messages"));
