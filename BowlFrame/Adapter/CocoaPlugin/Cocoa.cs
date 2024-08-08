@@ -158,7 +158,7 @@ namespace BowlFrame.Adapter.CocoaPlugin
             {
                 try
                 {
-                    DisablePlugin(key);
+                    UnregisterPlugin(key);
                 }
                 catch (Exception e)
                 {
@@ -179,7 +179,7 @@ namespace BowlFrame.Adapter.CocoaPlugin
             {
                 try
                 {
-                    DisablePlugin(key);
+                    UnregisterPlugin(key);
                 }
                 catch (Exception e)
                 {
@@ -337,7 +337,7 @@ namespace BowlFrame.Adapter.CocoaPlugin
             }
         }
 
-        public void DisablePlugin(string pluginID)
+        public void UnregisterPlugin(string pluginID)
         {
             if (!_plugins.TryGetValue(pluginID, out (CocoaPluginConfig, ICocoaPlugin) plugin))
                 throw new NotFoundPlugin(pluginID);
