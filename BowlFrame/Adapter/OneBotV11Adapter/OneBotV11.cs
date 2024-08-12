@@ -35,6 +35,8 @@ namespace BowlFrame.Adapter.OneBotV11Adapter
 
         public override string AccountID => _account.Account;
 
+        public IPlatform Platform { get; }
+
         public OneBotV11(JObject args)
         {
             //反序列化
@@ -43,6 +45,8 @@ namespace BowlFrame.Adapter.OneBotV11Adapter
                 MissingMemberHandling = MissingMemberHandling.Error
             };
             _account = args.ToObject<OneBotV11Account>(jsonSerializer);
+
+            Platform = new TencentQQ_Common(connectID);
 
             Log.Debug($"创建了 {_AdapterInfo.Name} 适配器");
 

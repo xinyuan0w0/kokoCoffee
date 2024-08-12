@@ -59,7 +59,7 @@ namespace BowlFrame.Adapter.CocoaPlugin
             if (!Directory.Exists(Path.Combine(_configPath, "Messages")))
                 Directory.CreateDirectory(Path.Combine(_configPath, "Messages"));
 
-            Platform = new CocoaPlatform(_account.Account);
+            Platform = new CocoaPlatform(_account.Account, connectID);
 
             pluginFuncManager = new(this, _plugins);
 

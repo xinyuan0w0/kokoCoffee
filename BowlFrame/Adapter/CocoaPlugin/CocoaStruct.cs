@@ -35,10 +35,12 @@
         public string DataPath { get; set; }
     }
 
-    public class CocoaPlatform(string id) : IPlatform
+    public class CocoaPlatform(string id, string? connectID) : IPlatform
     {
         public AdapterInfo AdapterInfo => Cocoa._AdapterInfo;
 
         public string ID => id;
+
+        public string? ConnectID => connectID;
     }
 }

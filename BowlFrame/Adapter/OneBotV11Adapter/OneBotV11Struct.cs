@@ -13,10 +13,12 @@
         public string Http { get; set; }
     }
 
-    public struct TencentQQ_Common : IPlatform
+    public class TencentQQ_Common(string? connectID) : IPlatform
     {
-        public readonly AdapterInfo AdapterInfo => OneBotV11._AdapterInfo;
+        public AdapterInfo AdapterInfo { get; } = OneBotV11._AdapterInfo;
 
-        public readonly string ID => "TencentQQ_Common";
+        public string ID { get; } = "TencentQQ_Common";
+
+        public string? ConnectID { get; } = connectID;
     }
 }

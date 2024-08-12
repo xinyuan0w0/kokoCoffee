@@ -23,8 +23,8 @@ namespace BowlFrame.Adapter.TencentQQAdapter.Tools
             //判断平台
             IPlatform platform =
                 message is GROUP_AT_MESSAGE_CREATE_Data || message is CommonMsgData
-                ? new TencentQQ_Offical_Common()
-                : new TencentQQ_Offical_Guild();
+                ? tencentQQ.Platform[0]
+                : tencentQQ.Platform[1];
 
             Messages messages = new();
             Permission permission = new()

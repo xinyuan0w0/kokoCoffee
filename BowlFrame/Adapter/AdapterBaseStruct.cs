@@ -20,5 +20,10 @@ namespace BowlFrame.Adapter
         /// 用于内部构造使用
         /// </summary>
         public string ID { get; init; } = "BowlFrame";
+
+        /// <summary>
+        /// 用于内部构造使用
+        /// </summary>
+        public string? ConnectID { get; init; } = null;
     }
 }

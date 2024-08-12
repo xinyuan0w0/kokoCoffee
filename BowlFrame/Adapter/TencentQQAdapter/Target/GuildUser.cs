@@ -2,6 +2,7 @@
 using BowlFrame.Exceptions.Permission;
 using BowlFrame.Message;
 using BowlFrame.Perm;
+using System.Runtime.InteropServices;
 using static BowlFrame.Tools.Logger;
 
 namespace BowlFrame.Adapter.TencentQQAdapter.Target
@@ -18,7 +19,8 @@ namespace BowlFrame.Adapter.TencentQQAdapter.Target
             TencentQQ tencentQQ = (AdapterManager.GetAdapterWithAccount(_botid) ?? throw new NullReferenceException($"无 {_botid} ID的适配器")) as TencentQQ
                  ?? throw new NullReferenceException($"{_botid} 非匹配的适配器");
             tencentQQApi = new(tencentQQ, this);
-            permission = new() { Platform = platform };
+            _platform = tencentQQ.Platform[1];
+            permission = new() { Platform = _platform };
 
             if (_data is null)
                 _id = permission.GetPlatformID(uuid).Result?.ID ?? throw new NotFoundTargetPlatform(uuid);
@@ -26,7 +28,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter.Target
                 _id = _data.Author.ID;
         }
 
-        private static readonly IPlatform platform = new TencentQQ_Offical_Guild();
+        private readonly IPlatform _platform;
 
         private readonly HttpClient _client = new();
         public readonly TencentQQApi tencentQQApi;
@@ -77,7 +79,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter.Target
             }
         }
 
-        public override IPlatform Platform => platform;
+        public override IPlatform Platform => _platform;
 
         public override Permission Permission => permission;
 

@@ -38,7 +38,7 @@ namespace BowlFrame
 
         public static async void Debug()
         {
-            MessageProcess messageProcess = new(Path.Combine(PathConfig.ConfigPath, "cn.kokobot.simple", "SampleFunc"), "Help", new TencentQQ_Common());
+            MessageProcess messageProcess = new(Path.Combine(PathConfig.ConfigPath, "cn.kokobot.simple", "SampleFunc"), "Help", new TencentQQ_Common(null));
         }
     }
 }
