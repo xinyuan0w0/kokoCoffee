@@ -350,13 +350,13 @@ namespace BowlFrame.Adapter.CocoaPlugin
 
         public bool? EnablePlugin(string pluginID)
         {
-            if (!_plugins.ContainsKey(pluginID))
+            if (!_plugins.TryGetValue(pluginID, out (CocoaPluginConfig, ICocoaPlugin) value))
                 return null;
 
-            if (_pluginsEnableList.TryGetValue(pluginID, out (bool, bool?) value) && value.Item1)
+            if (_pluginsEnableList.TryGetValue(pluginID, out (bool, bool?) value_2) && value_2.Item1)
                 return false;
 
-            ICocoaPlugin cocoaPlugin = _plugins[pluginID].Item2;
+            ICocoaPlugin cocoaPlugin = value.Item2;
 
             try
             {
@@ -379,13 +379,13 @@ namespace BowlFrame.Adapter.CocoaPlugin
 
         public bool? DisablePlugin(string pluginID)
         {
-            if (!_plugins.ContainsKey(pluginID))
+            if (!_plugins.TryGetValue(pluginID, out (CocoaPluginConfig, ICocoaPlugin) value))
                 return null;
 
-            if (_pluginsEnableList.TryGetValue(pluginID, out (bool, bool?) value) && !value.Item1)
+            if (_pluginsEnableList.TryGetValue(pluginID, out (bool, bool?) value_2) && !value_2.Item1)
                 return false;
 
-            ICocoaPlugin cocoaPlugin = _plugins[pluginID].Item2;
+            ICocoaPlugin cocoaPlugin = value.Item2;
 
             try
             {
