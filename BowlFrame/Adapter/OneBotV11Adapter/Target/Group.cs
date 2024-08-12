@@ -19,7 +19,8 @@ namespace BowlFrame.Adapter.OneBotV11Adapter.Target
             OneBotV11 oneBotV11 = (AdapterManager.GetAdapterWithAccount(_botid) ?? throw new NullReferenceException($"无 {_botid} ID的适配器")) as OneBotV11
                 ?? throw new NullReferenceException($"{_botid} 非匹配的适配器");
             oneBotV11Api = new(oneBotV11, this);
-            permission = new() { Platform = platform };
+            _platform = oneBotV11.Platform;
+            permission = new() { Platform = _platform };
 
             if (_data is null)
                 _id = permission.GetPlatformID(uuid).Result?.ID ?? throw new NotFoundTargetPlatform(uuid);
@@ -27,7 +28,7 @@ namespace BowlFrame.Adapter.OneBotV11Adapter.Target
                 _id = _data.GroupID;
         }
 
-        private static readonly IPlatform platform = new TencentQQ_Common();
+        private readonly IPlatform _platform;
 
         public readonly OneBotV11Api oneBotV11Api;
         public readonly Permission permission;
@@ -38,7 +39,7 @@ namespace BowlFrame.Adapter.OneBotV11Adapter.Target
 
         public override string ID => _id;
 
-        public override IPlatform Platform => platform;
+        public override IPlatform Platform => _platform;
 
         public override Permission Permission => permission;
 

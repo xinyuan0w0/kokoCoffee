@@ -17,12 +17,16 @@ namespace BowlFrame.Adapter.OneBotV11Adapter.Event.Message
     {
         private readonly MessageBase _message;
 
-        private readonly Permission _permission = new() { Platform = _platform };
+        private readonly Permission _permission;
 
-        private static readonly IPlatform _platform = new TencentQQ_Common();
+        private readonly IPlatform _platform;
 
-        public PrivateMessage(OneBotV11 oneBotV11, MessageBase message) : base(_platform)
+        public PrivateMessage(OneBotV11 oneBotV11, MessageBase message) : base(oneBotV11.Platform)
         {
+            _platform = oneBotV11.Platform;
+
+            _permission = new() { Platform = _platform };
+
             _message = message;
 
             Messages = Tools.MsgHelper.GetMessages(oneBotV11, message).Result;
