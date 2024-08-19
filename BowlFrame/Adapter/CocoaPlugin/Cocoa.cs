@@ -470,5 +470,7 @@ namespace BowlFrame.Adapter.CocoaPlugin
                 }
             }
         }
+
+        public IReadOnlyDictionary<string, (CocoaPluginConfig, ICocoaPlugin)> GetPluginList() => _plugins;
     }
 }
