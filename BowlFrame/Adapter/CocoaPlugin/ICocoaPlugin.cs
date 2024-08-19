@@ -2,7 +2,7 @@
 {
     public interface ICocoaPlugin : IDisposable
     {
-        public bool Init(CocoaPluginPath cocoaPluginpath);
+        public bool Init(CocoaPluginPath cocoaPluginpath, Cocoa cocoa);
 
         public bool Enable();
 
