@@ -10,5 +10,7 @@ namespace BowlFrame.Adapter.CocoaPlugin.Attributes
     public class CocoaFuncAttribute(string funcName) : Attribute
     {
         public string FuncName { get; init; } = funcName;
+
+        public string? FuncConfigPath { get; init; } = null;
     }
 }
