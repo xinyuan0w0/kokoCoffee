@@ -20,6 +20,8 @@ namespace BowlFrame.Adapter.CocoaPlugin
 
         private readonly Cocoa cocoa = cocoa;
 
+        public IReadOnlyDictionary<string, CocoaPluginFunc> FuncList => _funcList;
+
         public CocoaPluginFunc? this[string index]
         {
             get
