@@ -474,5 +474,7 @@ namespace BowlFrame.Adapter.CocoaPlugin
         public IReadOnlyDictionary<string, (CocoaPluginConfig, ICocoaPlugin)> GetPluginList() => _plugins;
 
         public IReadOnlyDictionary<string, CocoaPluginFunc> GetFuncList() => pluginFuncManager.FuncList;
+
+        public IReadOnlyDictionary<string, (bool, bool?)> GetEnableList() => _pluginsEnableList;
     }
 }
