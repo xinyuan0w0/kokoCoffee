@@ -331,7 +331,7 @@ namespace BowlFrame.Adapter.CocoaPlugin
                             RegisterEventWithAttribute(eventAttribute, plugin, methodInfo);
                         else if (attribute is CocoaFuncAttribute funcAttribute)
                         {
-                            CocoaPluginFuncConfig cocoaPluginFuncConfig = JsonConvert.DeserializeObject<CocoaPluginFuncConfig>(File.ReadAllText(Path.Combine(PathConfig.ConfigPath, config.ID, funcAttribute.FuncName, "config.json")));
+                            CocoaPluginFuncConfig cocoaPluginFuncConfig = JsonConvert.DeserializeObject<CocoaPluginFuncConfig>(File.ReadAllText(Path.GetFullPath(funcAttribute.FuncConfigPath ?? Path.Combine(PathConfig.ConfigPath, config.ID, funcAttribute.FuncName, "Config.json"))));
                             CocoaPluginFunc cocoaPluginFunc = new(config.ID, cocoaPluginFuncConfig, methodInfo);
                             pluginFuncManager.RegisterFunc(funcAttribute.FuncName, cocoaPluginFunc);
                         }
