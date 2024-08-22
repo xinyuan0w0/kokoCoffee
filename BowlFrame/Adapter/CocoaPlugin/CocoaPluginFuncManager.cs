@@ -85,7 +85,7 @@ namespace BowlFrame.Adapter.CocoaPlugin
             if (message.Messages is not null)
                 foreach (MessageBlock messageBlock in message.Messages.MessageBlocks)
                 {
-                    if (messageBlock.MetaType != MetaType.Normal)
+                    if (messageBlock.MetaType != MetaType.Normal || messageBlock.Name == "RawText")
                         continue;
                     if (messageBlock.Name == "Text")
                         sb.Append(((string?)messageBlock.Value ?? "Null")
