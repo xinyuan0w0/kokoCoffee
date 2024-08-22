@@ -167,6 +167,12 @@ namespace BowlFrame.Adapter.CocoaPlugin.Tools
                     content = content.Insert(head, value);
                     foot = head + value.Length - 1;
                 }
+                else if (_messages.TryGetValue(placeholder, out List<string>? value_2))
+                {
+                    content = content.Remove(head, foot - head + 1);
+                    content = content.Insert(head, value_2?[0] ?? "");
+                    foot = head + (value_2?[0] ?? "").Length - 1;
+                }
                 else {
                     foot++;
                 }
