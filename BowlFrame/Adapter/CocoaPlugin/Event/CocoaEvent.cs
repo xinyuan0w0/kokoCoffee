@@ -7,13 +7,12 @@ namespace BowlFrame.Adapter.CocoaPlugin.Event
 {
     internal class CocoaEvent(Type @delegate)
     {
+        //绑定列表
+        private readonly ConcurrentDictionary<string, (object, MethodInfo, Type, bool)> _bindList = [];
         ~CocoaEvent()
         {
             _bindList.Clear();
         }
-
-        //绑定列表
-        private readonly ConcurrentDictionary<string, (object, MethodInfo)> _bindList = [];
 
         //委托
         private readonly Type @delegate = @delegate.BaseType == typeof(MulticastDelegate) ? @delegate : throw new NotSupportedException();
@@ -28,20 +27,30 @@ namespace BowlFrame.Adapter.CocoaPlugin.Event
         {
             try
             {
+                MethodInfo delegateMethod = _delegate.GetMethod("Invoke") ?? throw new NullReferenceException();
+
                 ParameterInfo[] targetParameters = methodInfo.GetParameters();
+                ParameterInfo[] delegateParameters = delegateMethod.GetParameters();
 
-                ParameterInfo[] parameters = (@delegate.GetMethod("Invoke") ?? throw new NullReferenceException()).GetParameters();
-
-                if (targetParameters.Length == parameters.Length)
+                if (targetParameters.Length == delegateParameters.Length)
                 {
                     for (int i = 0; i < targetParameters.Length; i++)
-                        if (targetParameters[i].ParameterType != parameters[i].ParameterType)
+                        if (targetParameters[i].ParameterType != delegateParameters[i].ParameterType)
                             return null;
 
-                    if (methodInfo.ReturnType == (@delegate.GetMethod("Invoke") ?? throw new NullReferenceException()).ReturnType)
+                    bool? isAsync = null;
+
+                    if (methodInfo.ReturnType == delegateMethod.ReturnType)
+                        isAsync = false;
+                    else if (delegateMethod.ReturnType == typeof(void) && methodInfo.ReturnType == typeof(Task))
+                        isAsync = true;
+                    else if (methodInfo.ReturnType is { IsGenericType: true } && methodInfo.ReturnType.GetGenericTypeDefinition() == typeof(Task<>) && methodInfo.ReturnType.GenericTypeArguments[0] == delegateMethod.ReturnType)
+                        isAsync = true;
+
+                    if (isAsync is not null)
                     {
                         string flag = Nanoid.Generate(size: 8);
-                        if (_bindList.TryAdd(flag, (@object, methodInfo)))
+                        if (_bindList.TryAdd(flag, (@object, methodInfo, delegateMethod.ReturnType, (bool)isAsync)))
                             return flag;
                     }
                 }
@@ -83,14 +92,41 @@ namespace BowlFrame.Adapter.CocoaPlugin.Event
         {
             returns = null;
 
-            (object, MethodInfo)[] list = [.. _bindList.Values];
+            //同步执行列表
+            (object, MethodInfo, Type, bool)[] list = _bindList.Select(a => a.Value).Where(b => !b.Item4).ToArray();
+            //异步执行列表
+            (object, MethodInfo, Type, bool)[] asyncList = _bindList.Select(a => a.Value).Where(b => b.Item4).ToArray();
+            //返回内容列表
             List<object?> returnList = [];
+            //返回内容列表
+            List<Task> awaitReturnList = [];
 
             try
             {
-                foreach ((object, MethodInfo) item in list)
+                foreach ((object, MethodInfo, Type, bool) item in asyncList)
                 {
-                    returnList.Add(item.Item2.Invoke(item.Item1, args));
+                    object? returnContent = item.Item2.Invoke(item.Item1, args);
+
+                    if (returnContent is null || returnContent is not Task)
+                        continue;
+
+                    Task task = (Task)returnContent;
+
+                    awaitReturnList.Add(task);
+                }
+
+                foreach ((object, MethodInfo, Type, bool) item in list)
+                {
+                    object? returnContent = item.Item2.Invoke(item.Item1, args);
+
+                    returnList.Add(returnContent);
+                }
+
+                Task.WaitAll([.. awaitReturnList]);
+
+                foreach (dynamic item in awaitReturnList)
+                {
+                    returnList.Add(item.Result);
                 }
             }
             catch (Exception e)
