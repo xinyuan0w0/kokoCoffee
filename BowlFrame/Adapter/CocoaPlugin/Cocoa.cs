@@ -298,9 +298,8 @@ namespace BowlFrame.Adapter.CocoaPlugin
 
                 plugin = assembly.CreateInstance(targetType.FullName ?? throw new NullReferenceException()) as ICocoaPlugin;
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                Log.Warn(e);
                 throw;
             }
 
@@ -340,7 +339,6 @@ namespace BowlFrame.Adapter.CocoaPlugin
             }
             catch (Exception e)
             {
-                Log.Warn(e);
                 throw new InitPluginError(e);
             }
 
