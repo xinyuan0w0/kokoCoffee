@@ -45,6 +45,8 @@ namespace BowlFrame.Adapter.CocoaPlugin.Tools
                 { "TimeAsk", DateTime.UtcNow.AddHours(MessageOption.TimeZone).Hour switch { int i when i < 5 => "{Early_Morning}", int i when (i < 8) => "{Morning}", int i when (i < 11) => "{A.M.}", int i when (i < 13) => "{Noon}", int i when (i < 17) => "{P.M.}", int i when (i < 18) => "{Evening}", int i when (i < 24) => "{Night}", _ => "", } },
                 { "WeekDay", ((int)DateTime.Now.DayOfWeek).ToString() }
             };
+
+            LoadMsgFromJson(JObject.Parse(File.ReadAllText(Path.Combine(filePath, $"{fileName}.{lang}"))));
         }
 
         public void AddPlaceholder(string key, string value) => _placeholders.Add(key, value);
