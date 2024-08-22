@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Reflection;
+using static BowlFrame.Tools.Logger;
 
 namespace BowlFrame.Adapter.CocoaPlugin.Event
 {
@@ -63,10 +64,14 @@ namespace BowlFrame.Adapter.CocoaPlugin.Event
 
             string? flag = cocoaEvent.RegisterEvent(@object, methodInfo);
 
-            if (flag is null)
+            if (flag is null || !objectDict.TryAdd(methodInfo.GetHashCode(), flag))
+            {
+                Log.Debug("注册事件 {0}({1}.{2}) 失败", eventName, @object.GetType().FullName, methodInfo.Name);
                 return false;
+            }
 
-            return objectDict.TryAdd(methodInfo.GetHashCode(), flag);
+            Log.Debug("注册事件 {0}({1}.{2}) 成功", eventName, @object.GetType().FullName, methodInfo.Name);
+            return true;
         }
 
         public bool UnregisterEvent(string eventName, object @object, MethodInfo methodInfo)
