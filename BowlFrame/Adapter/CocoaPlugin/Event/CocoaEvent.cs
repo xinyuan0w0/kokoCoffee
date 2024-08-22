@@ -5,17 +5,32 @@ using static BowlFrame.Tools.Logger;
 
 namespace BowlFrame.Adapter.CocoaPlugin.Event
 {
-    internal class CocoaEvent(Type @delegate)
+    internal class CocoaEvent
     {
         //绑定列表
-        private readonly ConcurrentDictionary<string, (object, MethodInfo, Type, bool)> _bindList = [];
+        private readonly ConcurrentDictionary<string, (object, MethodInfo, bool)> _bindList = [];
+
+        //委托
+        private readonly Type _delegate;
+
+        private readonly ParameterInfo[] _paramType;
+
+        private readonly Type _returnType;
+
+        public CocoaEvent(Type @delegate)
+        {
+            _delegate = @delegate.BaseType == typeof(MulticastDelegate) ? @delegate : throw new NotSupportedException();
+            MethodInfo delegateMethod = _delegate.GetMethod("Invoke") ?? throw new NullReferenceException();
+
+            _paramType = delegateMethod.GetParameters();
+
+            _returnType = delegateMethod.ReturnType;
+        }
+
         ~CocoaEvent()
         {
             _bindList.Clear();
         }
-
-        //委托
-        private readonly Type @delegate = @delegate.BaseType == typeof(MulticastDelegate) ? @delegate : throw new NotSupportedException();
 
         /// <summary>
         /// 注册事件
@@ -27,30 +42,27 @@ namespace BowlFrame.Adapter.CocoaPlugin.Event
         {
             try
             {
-                MethodInfo delegateMethod = _delegate.GetMethod("Invoke") ?? throw new NullReferenceException();
-
                 ParameterInfo[] targetParameters = methodInfo.GetParameters();
-                ParameterInfo[] delegateParameters = delegateMethod.GetParameters();
 
-                if (targetParameters.Length == delegateParameters.Length)
+                if (targetParameters.Length == _paramType.Length)
                 {
                     for (int i = 0; i < targetParameters.Length; i++)
-                        if (targetParameters[i].ParameterType != delegateParameters[i].ParameterType)
+                        if (targetParameters[i].ParameterType != _paramType[i].ParameterType)
                             return null;
 
                     bool? isAsync = null;
 
-                    if (methodInfo.ReturnType == delegateMethod.ReturnType)
+                    if (methodInfo.ReturnType == _returnType)
                         isAsync = false;
-                    else if (delegateMethod.ReturnType == typeof(void) && methodInfo.ReturnType == typeof(Task))
+                    else if (_returnType == typeof(void) && methodInfo.ReturnType == typeof(Task))
                         isAsync = true;
-                    else if (methodInfo.ReturnType is { IsGenericType: true } && methodInfo.ReturnType.GetGenericTypeDefinition() == typeof(Task<>) && methodInfo.ReturnType.GenericTypeArguments[0] == delegateMethod.ReturnType)
+                    else if (methodInfo.ReturnType is { IsGenericType: true } && methodInfo.ReturnType.GetGenericTypeDefinition() == typeof(Task<>) && methodInfo.ReturnType.GenericTypeArguments[0] == _returnType)
                         isAsync = true;
 
                     if (isAsync is not null)
                     {
                         string flag = Nanoid.Generate(size: 8);
-                        if (_bindList.TryAdd(flag, (@object, methodInfo, delegateMethod.ReturnType, (bool)isAsync)))
+                        if (_bindList.TryAdd(flag, (@object, methodInfo, (bool)isAsync)))
                             return flag;
                     }
                 }
@@ -93,17 +105,17 @@ namespace BowlFrame.Adapter.CocoaPlugin.Event
             returns = null;
 
             //同步执行列表
-            (object, MethodInfo, Type, bool)[] list = _bindList.Select(a => a.Value).Where(b => !b.Item4).ToArray();
+            (object, MethodInfo, bool)[] list = _bindList.Select(a => a.Value).Where(b => !b.Item3).ToArray();
             //异步执行列表
-            (object, MethodInfo, Type, bool)[] asyncList = _bindList.Select(a => a.Value).Where(b => b.Item4).ToArray();
+            (object, MethodInfo, bool)[] asyncList = _bindList.Select(a => a.Value).Where(b => b.Item3).ToArray();
             //返回内容列表
             List<object?> returnList = [];
             //返回内容列表
-            List<Task> awaitReturnList = [];
+            List<Task> awaitList = [];
 
             try
             {
-                foreach ((object, MethodInfo, Type, bool) item in asyncList)
+                foreach ((object, MethodInfo, bool) item in asyncList)
                 {
                     object? returnContent = item.Item2.Invoke(item.Item1, args);
 
@@ -112,19 +124,19 @@ namespace BowlFrame.Adapter.CocoaPlugin.Event
 
                     Task task = (Task)returnContent;
 
-                    awaitReturnList.Add(task);
+                    awaitList.Add(task);
                 }
 
-                foreach ((object, MethodInfo, Type, bool) item in list)
+                foreach ((object, MethodInfo, bool) item in list)
                 {
                     object? returnContent = item.Item2.Invoke(item.Item1, args);
 
                     returnList.Add(returnContent);
                 }
 
-                Task.WaitAll([.. awaitReturnList]);
+                Task.WaitAll([.. awaitList]);
 
-                foreach (dynamic item in awaitReturnList)
+                foreach (dynamic item in awaitList)
                 {
                     returnList.Add(item.Result);
                 }
