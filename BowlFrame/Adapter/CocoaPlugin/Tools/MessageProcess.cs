@@ -154,9 +154,9 @@ namespace BowlFrame.Adapter.CocoaPlugin.Tools
             if (content == null)
                 return "";
 
-            int head, foot = 0;
+            int head, foot;
             string placeholder;
-            foot = content.IndexOf('}', foot + 1);
+            foot = content.IndexOf('}');
             while (foot != -1)
             {
                 head = content.LastIndexOf('{', foot - 1);
@@ -165,11 +165,14 @@ namespace BowlFrame.Adapter.CocoaPlugin.Tools
                 {
                     content = content.Remove(head, foot - head + 1);
                     content = content.Insert(head, value);
-                    foot = head + value.Length;
+                    foot = head + value.Length - 1;
+                }
+                else {
+                    foot++;
                 }
                 if (foot + 1 > content.Length)
                     break;
-                foot = content.IndexOf('}', foot + 1);
+                foot = content.IndexOf('}', foot);
             }
 
             return content;
