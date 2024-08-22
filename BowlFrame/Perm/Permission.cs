@@ -401,7 +401,7 @@ namespace BowlFrame.Perm
                 if (!await query.AnyAsync())
                     return [];
 
-                return await query.Select(x => x.ToPermissionInfo()).ToArrayAsync();
+                return (await query.ToListAsync()).Select(x => x.ToPermissionInfo()).ToArray();
             }
             catch (Exception e)
             {
