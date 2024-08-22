@@ -110,7 +110,7 @@ namespace BowlFrame.Adapter.CocoaPlugin.Tools
 
         public string GetRandomMessages(string name)
         {
-            if (MsgExist(name))
+            if (!MsgExist(name))
                 return "";
             Random random = new();
             List<string> strings = _messages[name];
@@ -119,7 +119,7 @@ namespace BowlFrame.Adapter.CocoaPlugin.Tools
 
         public string GetMessages(string name, int index)
         {
-            if (MsgExist(name))
+            if (!MsgExist(name))
                 return "";
             List<string> strings = _messages[name];
             return strings[index];
@@ -127,7 +127,7 @@ namespace BowlFrame.Adapter.CocoaPlugin.Tools
 
         public IList<string> GetMessagesAll(string name)
         {
-            if (MsgExist(name))
+            if (!MsgExist(name))
                 return [];
             return _messages[name];
         }
