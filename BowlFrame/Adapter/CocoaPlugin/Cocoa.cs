@@ -53,8 +53,14 @@ namespace BowlFrame.Adapter.CocoaPlugin
             Log.Debug($"创建了 {_AdapterInfo.Name} 适配器");
 
             _pluginsPath = Path.Combine(PathConfig.PluginsPath, _AdapterInfo.ID);
+            if (!Directory.Exists(_pluginsPath))
+                Directory.CreateDirectory(_pluginsPath);
+            _pluginsPath = Path.Combine(_pluginsPath, AccountID);
 
             _configPath = Path.Combine(PathConfig.ConfigPath, _AdapterInfo.ID);
+            if (!Directory.Exists(_configPath))
+                Directory.CreateDirectory(_configPath);
+            _configPath = Path.Combine(_configPath, AccountID);
 
             if (!Directory.Exists(Path.Combine(_configPath, "Messages")))
                 Directory.CreateDirectory(Path.Combine(_configPath, "Messages"));
