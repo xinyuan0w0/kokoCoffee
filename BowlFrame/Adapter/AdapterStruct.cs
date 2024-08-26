@@ -45,6 +45,11 @@
         /// 数据库记录平台ID
         /// </summary>
         public string ID { get; }
+
+        /// <summary>
+        /// 实例ID
+        /// </summary>
+        public string? ConnectID { get; }
     }
 
     /// <summary>

@@ -35,6 +35,13 @@
         }
       },
       "Channel": {
+        "Switch": {
+          "Global": true,
+          "List": {
+          }
+        }
+      },
+      "Guild": {
         "Register": {
           "Status": 1,
           "Timestamp": "{Number_Timestamp}"
@@ -44,13 +51,6 @@
           "BanTime": 0,
           "EndTime": -1
         },
-        "Switch": {
-          "Global": true,
-          "List": {
-          }
-        }
-      },
-      "Guild": {
         "Switch": {
           "Global": false,
           "List": {

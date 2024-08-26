@@ -26,10 +26,21 @@
         public string? Content { get; set; }
     }
 
-    public class CocoaPlatform(string id) : IPlatform
+    public struct CocoaPluginPath
+    {
+        public string ConfigPath { get; set; }
+
+        public string TempPath { get; set; }
+
+        public string DataPath { get; set; }
+    }
+
+    public class CocoaPlatform(string id, string? connectID) : IPlatform
     {
         public AdapterInfo AdapterInfo => Cocoa._AdapterInfo;
 
         public string ID => id;
+
+        public string? ConnectID => connectID;
     }
 }

@@ -3,6 +3,7 @@ using BowlFrame.Adapter.TencentQQAdapter.Target;
 using BowlFrame.Database.TableStruct;
 using BowlFrame.Message;
 using BowlFrame.Perm;
+using System.Runtime.InteropServices;
 
 namespace BowlFrame.Adapter.TencentQQAdapter.Event.Message
 {
@@ -12,14 +13,16 @@ namespace BowlFrame.Adapter.TencentQQAdapter.Event.Message
 
         private readonly GROUP_AT_MESSAGE_CREATE _message;
 
-        private readonly Permission _permission = new() { Platform = _platform };
+        private readonly Permission _permission;
 
-        private static readonly IPlatform _platform = new TencentQQ_Offical_Common();
+        private readonly IPlatform _platform;
 
-        public GroupMessage(TencentQQ tencentQQ, GROUP_AT_MESSAGE_CREATE message) : base(_platform)
+        public GroupMessage(TencentQQ tencentQQ, GROUP_AT_MESSAGE_CREATE message) : base(tencentQQ.Platform[0])
         {
             //_tencentQQ = tencentQQ;
             _message = message;
+            _platform = tencentQQ.Platform[0];
+            _permission = new() { Platform = _platform };
             Messages = Tools.MsgHelper.GetMessages(tencentQQ, message.Data).Result;
 
             string uuid;

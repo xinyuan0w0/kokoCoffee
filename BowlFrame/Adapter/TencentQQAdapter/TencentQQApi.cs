@@ -15,7 +15,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
     {
         private readonly TencentQQ tencentQQ = tencentQQ;
         private readonly BowlFrame.Target.ITarget target = target;
-        private readonly Permission permission = new() { Platform = isChannel ? new TencentQQ_Offical_Guild() : new TencentQQ_Offical_Common() };
+        private readonly Permission permission = new() { Platform = isChannel ? tencentQQ.Platform[1] : tencentQQ.Platform[0] };
 
         private readonly JsonSerializerSettings jsonSerializerSettings = new()
         {

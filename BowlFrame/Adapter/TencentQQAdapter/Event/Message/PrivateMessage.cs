@@ -12,14 +12,16 @@ namespace BowlFrame.Adapter.TencentQQAdapter.Event.Message
 
         private readonly C2C_MESSAGE_CREATE _message;
 
-        private readonly Permission _permission = new() { Platform = _platform };
+        private readonly Permission _permission;
 
-        private static readonly IPlatform _platform = new TencentQQ_Offical_Common();
+        private readonly IPlatform _platform;
 
-        public PrivateMessage(TencentQQ tencentQQ, C2C_MESSAGE_CREATE message) : base(_platform)
+        public PrivateMessage(TencentQQ tencentQQ, C2C_MESSAGE_CREATE message) : base(tencentQQ.Platform[0])
         {
             //_tencentQQ = tencentQQ;
             _message = message;
+            _platform = tencentQQ.Platform[0];
+            _permission = new() { Platform = _platform };
             Messages = Tools.MsgHelper.GetMessages(tencentQQ, message.Data).Result;
 
             //用户

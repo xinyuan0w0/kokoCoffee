@@ -7,16 +7,14 @@ namespace BowlFrame.Adapter.OneBotV11Adapter.Tools
 {
     internal static class MsgHelper
     {
-        //平台
-        private readonly static IPlatform _platform = new TencentQQ_Common();
-
         //TODO: 拆！！！
         public static async Task<Messages> GetMessages(OneBotV11 oneBotV11, MessageBase message)
         {
+            IPlatform platform = oneBotV11.Platform;
             Messages messages = new();
             Permission permission = new()
             {
-                Platform = _platform,
+                Platform = platform,
             };
             foreach (Struct.Message msg in message.Messages)
             {
@@ -89,8 +87,8 @@ namespace BowlFrame.Adapter.OneBotV11Adapter.Tools
                                 Value = new At
                                 {
                                     ID = (string?)msg.Data["qq"] ?? throw new NullReferenceException(),
-                                    Platform = _platform,
-                                    UUID = (await permission.FindTarget((string?)msg.Data["qq"] ?? throw new NullReferenceException(), _platform))?.UUID
+                                    Platform = platform,
+                                    UUID = (await permission.FindTarget((string?)msg.Data["qq"] ?? throw new NullReferenceException(), platform))?.UUID
                                 },
                             });
                         break;

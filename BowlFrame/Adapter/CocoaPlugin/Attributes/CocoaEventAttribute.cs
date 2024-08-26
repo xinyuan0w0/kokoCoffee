@@ -1,4 +1,10 @@
-﻿namespace BowlFrame.Adapter.CocoaPlugin
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BowlFrame.Adapter.CocoaPlugin.Attributes
 {
     [AttributeUsage(AttributeTargets.Method)]
     public class CocoaEventAttribute : Attribute
@@ -22,17 +28,5 @@
         public bool MetaEvent { get; init; }
 
         public bool Broadcast { get; init; }
-    }
-
-    [AttributeUsage(AttributeTargets.Method)]
-    public class CocoaFuncAttribute(string funcName) : Attribute
-    {
-        public string FuncName { get; init; } = funcName;
-    }
-
-    [AttributeUsage(AttributeTargets.Method)]
-    public class CocoaBindEventAttribute(string @event) : Attribute
-    {
-        public string Event { get; init; } = @event;
     }
 }
