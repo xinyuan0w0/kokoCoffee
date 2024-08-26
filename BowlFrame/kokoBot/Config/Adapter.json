@@ -1,1 +1,37 @@
-﻿[]
+﻿[
+  {
+    "BowlFrame.Adapter.CocoaPlugin.Cocoa": {
+      "Account": "PluginManager-1"
+    }
+  },
+  {
+    "BowlFrame.Adapter.TencentQQAdapter.TencentQQ": {
+      "Account": "3889000963",
+      "AppID": "102073087",
+      "Token": "nD4MtYNdrBwAFAO3kCVNNoPGPAgAwPFG",
+      "AppSecret": "lU1JMAj280d4HG0X",
+      "Sandbox": false,
+      "Intents": 1107301379
+    }
+  },
+  {
+    "BowlFrame.Adapter.TencentQQAdapter.TencentQQ": {
+      "Account": "2854201184",
+      "AppID": "101999752",
+      "Token": "O0znEUIHXBSqkKyaeW5lzRjaGQrEVcFP",
+      "AppSecret": "17bc249340ec331211e7b80d0dd52024",
+      "Sandbox": true,
+      "Intents": 1073745920
+    }
+  },
+  {
+    "BowlFrame.Adapter.OneBotV11Adapter.OneBotV11": {
+      "Account": "2854201184",
+      "AccessToken": "1Ol2wFPqmSRImvUmsFeBFjeF69lITHIs",
+      "ConnectInfo": {
+        "WebSocket": "ws://192.168.88.100:8088",
+        "Http": "http://192.168.88.100:5700"
+      }
+    }
+  }
+]

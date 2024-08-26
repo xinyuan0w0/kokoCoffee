@@ -1,4 +1,5 @@
-﻿using BowlFrame.Adapter.CocoaPlugin.Event;
+﻿using BowlFrame.Adapter.CocoaPlugin.Attributes;
+using BowlFrame.Adapter.CocoaPlugin.Event;
 using BowlFrame.Adapter.CocoaPlugin.Event.Manager;
 using BowlFrame.Adapter.CocoaPlugin.Exceptions;
 using BowlFrame.Config;
@@ -19,11 +20,13 @@ namespace BowlFrame.Adapter.CocoaPlugin
         //插件列表
         private readonly ConcurrentDictionary<string, (CocoaPluginConfig, ICocoaPlugin)> _plugins = new();
 
+        private ConcurrentDictionary<string, (bool, bool?)> _pluginsEnableList = new();
+
         private readonly CocoaPluginFuncManager pluginFuncManager;
 
         private readonly CocoaGlobalEvent cocoaEvent = new();
 
-        public readonly EventManager EventManager = new();
+        public readonly CocoaEventManager EventManager = new();
 
         public new static readonly AdapterInfo _AdapterInfo = new()
         {
@@ -49,9 +52,14 @@ namespace BowlFrame.Adapter.CocoaPlugin
 
             Log.Debug($"创建了 {_AdapterInfo.Name} 适配器");
 
-            _pluginsPath = Path.Combine(PathConfig.PluginsPath, "Cocoa");
+            _pluginsPath = Path.Combine(PathConfig.PluginsPath, _AdapterInfo.ID);
 
-            Platform = new CocoaPlatform(_account.Account);
+            _configPath = Path.Combine(PathConfig.ConfigPath, _AdapterInfo.ID);
+
+            if (!Directory.Exists(Path.Combine(_configPath, "Messages")))
+                Directory.CreateDirectory(Path.Combine(_configPath, "Messages"));
+
+            Platform = new CocoaPlatform(_account.Account, connectID);
 
             pluginFuncManager = new(this, _plugins);
 
@@ -64,6 +72,8 @@ namespace BowlFrame.Adapter.CocoaPlugin
         }
 
         private readonly string _pluginsPath;
+
+        private readonly string _configPath;
 
         private bool _isStarted;
         public override bool IsStarted => _isStarted;
@@ -80,7 +90,7 @@ namespace BowlFrame.Adapter.CocoaPlugin
             throw new NotImplementedException();
         }
 
-        public override async Task<bool> Start()
+        public override Task<bool> Start()
         {
             //检查路径
             if (!Path.Exists(_pluginsPath))
@@ -140,13 +150,39 @@ namespace BowlFrame.Adapter.CocoaPlugin
 
             _isStarted = true;
 
-            return true;
+            //启用插件
+            if (File.Exists(Path.Combine(_configPath, "EnableList.json")))
+                _pluginsEnableList = JsonConvert.DeserializeObject<ConcurrentDictionary<string, (bool, bool?)>>(File.ReadAllText(Path.Combine(_configPath, "EnableList.json"))) ?? [];
+
+            foreach (string pluginID in _plugins.Keys)
+            {
+                if (_pluginsEnableList.TryGetValue(pluginID, out (bool, bool?) value) && value.Item2 == false)
+                {
+                    _pluginsEnableList.TryUpdate(pluginID, (false, value.Item2), value);
+                }
+                else
+                {
+                    try
+                    {
+                        if (EnablePlugin(pluginID) == true)
+                            _pluginsEnableList.AddOrUpdate(pluginID, (a) => (true, null), (a, b) => (true, b.Item2));
+                        else
+                            _pluginsEnableList.AddOrUpdate(pluginID, (a) => (false, null), (a, b) => (false, b.Item2));
+                    }
+                    catch (Exception)
+                    {
+                        _pluginsEnableList.AddOrUpdate(pluginID, (a) => (false, null), (a, b) => (false, b.Item2));
+                    }
+                }
+            }
+
+            return Task.FromResult(true);
         }
 
-        public override async Task<bool> Stop()
+        public override Task<bool> Stop()
         {
             if (!_isStarted)
-                return false;
+                return Task.FromResult(false);
 
             AdapterManager.BroadcastEvent -= ReciveEvent;
 
@@ -154,7 +190,7 @@ namespace BowlFrame.Adapter.CocoaPlugin
             {
                 try
                 {
-                    DisablePlugin(key);
+                    UnregisterPlugin(key);
                 }
                 catch (Exception e)
                 {
@@ -166,7 +202,7 @@ namespace BowlFrame.Adapter.CocoaPlugin
 
             _isStarted = false;
 
-            return true;
+            return Task.FromResult(true);
         }
 
         public override void Dispose()
@@ -175,7 +211,7 @@ namespace BowlFrame.Adapter.CocoaPlugin
             {
                 try
                 {
-                    DisablePlugin(key);
+                    UnregisterPlugin(key);
                 }
                 catch (Exception e)
                 {
@@ -262,9 +298,8 @@ namespace BowlFrame.Adapter.CocoaPlugin
 
                 plugin = assembly.CreateInstance(targetType.FullName ?? throw new NullReferenceException()) as ICocoaPlugin;
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                Log.Warn(e);
                 throw;
             }
 
@@ -277,12 +312,16 @@ namespace BowlFrame.Adapter.CocoaPlugin
             if (_plugins.TryGetValue(config.ID, out _))
                 throw new PluginAlreadyExits(config);
 
-            if (!Directory.Exists(Path.Combine(PathConfig.ConfigPath, $"{config.ID}")))
-                Directory.CreateDirectory(Path.Combine(PathConfig.ConfigPath, $"{config.ID}"));
-
             try
             {
-                plugin.Init();
+                CocoaPluginPath cocoaPluginpath = new()
+                {
+                    ConfigPath = Path.Combine(PathConfig.ConfigPath, config.ID),
+                    DataPath = Path.Combine(PathConfig.DataPath, config.ID),
+                    TempPath = Path.Combine(PathConfig.TempPath, config.ID)
+                };
+
+                plugin.Init(cocoaPluginpath, this);
 
                 //遍历程序集方法
                 foreach (MethodInfo methodInfo in plugin.GetType().Assembly.GetTypes().SelectMany(x => x.GetMethods()))
@@ -291,7 +330,7 @@ namespace BowlFrame.Adapter.CocoaPlugin
                             RegisterEventWithAttribute(eventAttribute, plugin, methodInfo);
                         else if (attribute is CocoaFuncAttribute funcAttribute)
                         {
-                            CocoaPluginFuncConfig cocoaPluginFuncConfig = JsonConvert.DeserializeObject<CocoaPluginFuncConfig>(File.ReadAllText(Path.Combine(PathConfig.ConfigPath, config.ID, funcAttribute.FuncName, "config.json")));
+                            CocoaPluginFuncConfig cocoaPluginFuncConfig = JsonConvert.DeserializeObject<CocoaPluginFuncConfig>(File.ReadAllText(Path.GetFullPath(funcAttribute.FuncConfigPath ?? Path.Combine(PathConfig.ConfigPath, config.ID, funcAttribute.FuncName, "Config.json"))));
                             CocoaPluginFunc cocoaPluginFunc = new(config.ID, cocoaPluginFuncConfig, methodInfo);
                             pluginFuncManager.RegisterFunc(funcAttribute.FuncName, cocoaPluginFunc);
                         }
@@ -300,13 +339,69 @@ namespace BowlFrame.Adapter.CocoaPlugin
             }
             catch (Exception e)
             {
-                Log.Warn(e);
                 throw new InitPluginError(e);
             }
 
             if (!_plugins.TryAdd(config.ID, (config, plugin)))
                 throw new Exception("添加插件至列表失败，可能是同时载入插件");
         }
+
+        public bool? EnablePlugin(string pluginID)
+        {
+            if (!_plugins.TryGetValue(pluginID, out (CocoaPluginConfig, ICocoaPlugin) value))
+                return null;
+
+            if (_pluginsEnableList.TryGetValue(pluginID, out (bool, bool?) value_2) && value_2.Item1)
+                return false;
+
+            ICocoaPlugin cocoaPlugin = value.Item2;
+
+            try
+            {
+                if (!cocoaPlugin.Enable())
+                {
+                    _pluginsEnableList.AddOrUpdate(pluginID, (a) => (false, null), (a, b) => (false, b.Item2));
+                    return false;
+                }
+
+                _pluginsEnableList.AddOrUpdate(pluginID, (a) => (true, null), (a, b) => (true, b.Item2));
+            }
+            catch (Exception)
+            {
+                _pluginsEnableList.AddOrUpdate(pluginID, (a) => (false, null), (a, b) => (false, b.Item2));
+                return false;
+            }
+
+            return true;
+        }
+
+        public bool? DisablePlugin(string pluginID)
+        {
+            if (!_plugins.TryGetValue(pluginID, out (CocoaPluginConfig, ICocoaPlugin) value))
+                return null;
+
+            if (_pluginsEnableList.TryGetValue(pluginID, out (bool, bool?) value_2) && !value_2.Item1)
+                return false;
+
+            ICocoaPlugin cocoaPlugin = value.Item2;
+
+            try
+            {
+                cocoaPlugin.Disable();
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+            finally
+            {
+                _pluginsEnableList.AddOrUpdate(pluginID, (a) => (false, null), (a, b) => (false, b.Item2));
+            }
+
+            return true;
+        }
+
+        public void SetPluginStatus(string pluginID, bool status) => _pluginsEnableList.AddOrUpdate(pluginID, (a) => (true, status), (a, b) => (b.Item1, status));
 
         private void RegisterEventWithAttribute(CocoaEventAttribute attribute, ICocoaPlugin plugin, MethodInfo methodInfo)
         {
@@ -329,7 +424,7 @@ namespace BowlFrame.Adapter.CocoaPlugin
             }
         }
 
-        public void DisablePlugin(string pluginID)
+        public void UnregisterPlugin(string pluginID)
         {
             if (!_plugins.TryGetValue(pluginID, out (CocoaPluginConfig, ICocoaPlugin) plugin))
                 throw new NotFoundPlugin(pluginID);
@@ -371,5 +466,11 @@ namespace BowlFrame.Adapter.CocoaPlugin
                 }
             }
         }
+
+        public IReadOnlyDictionary<string, (CocoaPluginConfig, ICocoaPlugin)> GetPluginList() => _plugins;
+
+        public IReadOnlyDictionary<string, CocoaPluginFunc> GetFuncList() => pluginFuncManager.FuncList;
+
+        public IReadOnlyDictionary<string, (bool, bool?)> GetEnableList() => _pluginsEnableList;
     }
 }

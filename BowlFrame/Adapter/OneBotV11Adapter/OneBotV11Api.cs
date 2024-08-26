@@ -22,7 +22,7 @@ namespace BowlFrame.Adapter.OneBotV11Adapter
     {
         private readonly OneBotV11 oneBotV11;
         private readonly BowlFrame.Target.ITarget target;
-        private readonly Permission permission = new() { Platform = new TencentQQ_Common() };
+        private readonly Permission permission;
 
         //private readonly JsonSerializerSettings jsonSerializerSettings = new()
         //{
@@ -31,6 +31,8 @@ namespace BowlFrame.Adapter.OneBotV11Adapter
 
         public OneBotV11Api(OneBotV11 oneBotV11, BowlFrame.Target.ITarget target)
         {
+            permission = new() { Platform = oneBotV11.Platform };
+
             if (target is not Group && target is not User)
                 throw new NotSupportedException();
             this.oneBotV11 = oneBotV11;

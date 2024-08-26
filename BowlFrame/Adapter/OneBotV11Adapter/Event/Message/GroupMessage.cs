@@ -13,14 +13,18 @@ namespace BowlFrame.Adapter.OneBotV11Adapter.Event.Message
     public class GroupMessage : BowlFrame.Event.Message.GroupMessage
     {
         //平台识别
-        private static readonly IPlatform _platform = new TencentQQ_Common();
+        private readonly IPlatform _platform;
 
         private readonly Struct.GroupMessage _message;
 
-        private readonly Permission _permission = new() { Platform = _platform };
+        private readonly Permission _permission;
 
-        public GroupMessage(OneBotV11 oneBotV11, Struct.GroupMessage message) : base(_platform)
+        public GroupMessage(OneBotV11 oneBotV11, Struct.GroupMessage message) : base(oneBotV11.Platform)
         {
+            _platform = oneBotV11.Platform;
+
+            _permission = new() { Platform = _platform };
+
             _message = message;
 
             Messages = Tools.MsgHelper.GetMessages(oneBotV11, message).Result;

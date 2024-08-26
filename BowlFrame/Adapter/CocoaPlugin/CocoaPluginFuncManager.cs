@@ -20,6 +20,8 @@ namespace BowlFrame.Adapter.CocoaPlugin
 
         private readonly Cocoa cocoa = cocoa;
 
+        public IReadOnlyDictionary<string, CocoaPluginFunc> FuncList => _funcList;
+
         public CocoaPluginFunc? this[string index]
         {
             get
@@ -59,13 +61,12 @@ namespace BowlFrame.Adapter.CocoaPlugin
                 return;
 
             //移出列表
-
             if (_funcList.TryRemove(funcID, out _))
             {
                 Log.Debug("注销功能 {0} 成功", funcID);
                 return;
             }
-            Log.Warn("注销功能 {0} 失败同时注销多个功能", funcID);
+            Log.Warn("注销功能 {0} 失败，可能同时注销多个功能", funcID);
         }
 
         public void UnregisterPlugin(string pluginID)
@@ -84,7 +85,7 @@ namespace BowlFrame.Adapter.CocoaPlugin
             if (message.Messages is not null)
                 foreach (MessageBlock messageBlock in message.Messages.MessageBlocks)
                 {
-                    if (messageBlock.MetaType != MetaType.Normal)
+                    if (messageBlock.MetaType != MetaType.Normal || messageBlock.Name == "RawText")
                         continue;
                     if (messageBlock.Name == "Text")
                         sb.Append(((string?)messageBlock.Value ?? "Null")
@@ -149,7 +150,7 @@ namespace BowlFrame.Adapter.CocoaPlugin
 
                 //广播其他功能插件判断是否拦截
 
-                cocoa.EventManager.Invoke("CheckMatchMessage", [plugins[func.Value.PluginID].Item1, func.Value.FuncConfig, message], out object?[]? bools);
+                cocoa.EventManager.Invoke("CheckMatchMessage", [plugins[func.Value.PluginID].Item1, func.Key, func.Value.FuncConfig, message], out object?[]? bools);
 
                 bool flag_2 = false;
 
