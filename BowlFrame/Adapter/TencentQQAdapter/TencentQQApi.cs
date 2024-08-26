@@ -24,6 +24,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 
         private int count = 0;
 
+        //TODO: 拆！！！
         public async Task<bool?> SendMessage(Messages messages, string? msgid = null)
         {
             //判断是否为支持的对象
@@ -151,6 +152,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             }
         }
 
+        //TODO: switch嵌套switch？！拆！！！
         public async Task<bool?> GuildSendMessage(Messages messages, string? msgid = null)
         {
             //判断是否为支持的对象

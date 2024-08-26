@@ -73,6 +73,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             GC.SuppressFinalize(this);
         }
 
+        //TODO: 拆！！！！！！！！
         internal async void ReceiveMsg(WSClient client, byte[] bytes, WebSocketReceiveResult receiveResult)
         {
             if (receiveResult.MessageType == WebSocketMessageType.Text)

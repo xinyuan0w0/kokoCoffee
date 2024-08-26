@@ -7,6 +7,7 @@ namespace BowlFrame.Adapter.OneBotV11Adapter.Tools
 {
     internal static class MsgHelper
     {
+        //TODO: 拆！！！
         public static async Task<Messages> GetMessages(OneBotV11 oneBotV11, MessageBase message)
         {
             IPlatform platform = oneBotV11.Platform;
