@@ -153,6 +153,7 @@ namespace BowlFrame.Adapter.OneBotV11Adapter
 
         public async Task<HttpResponseMessage> HttpSend(string text, string? path = null, CancellationToken cancellationToken = default) => await _httpClient.PostAsync(path, new StringContent(text, Encoding.UTF8, "application/json"), cancellationToken);
 
+        //TOOD: 拆！
         internal void ReceiveMsg(WSClient client, byte[] bytes, WebSocketReceiveResult receiveResult)
         {
             try
