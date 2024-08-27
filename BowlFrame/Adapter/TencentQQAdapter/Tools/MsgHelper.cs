@@ -6,6 +6,7 @@ using BowlFrame.Perm;
 using Newtonsoft.Json.Linq;
 using System.Buffers;
 using static BowlFrame.Tools.Logger;
+using static BowlFrame.Message.Struct.MsgBlock;
 
 namespace BowlFrame.Adapter.TencentQQAdapter.Tools
 {
