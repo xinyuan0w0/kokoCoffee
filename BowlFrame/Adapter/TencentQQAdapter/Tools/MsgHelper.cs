@@ -1,7 +1,7 @@
 ﻿using BowlFrame.Adapter.TencentQQAdapter.Struct;
 using BowlFrame.Database.TableStruct;
 using BowlFrame.Message;
-using BowlFrame.Message.Struct;
+using BowlFrame.Message.MsgBlocks;
 using BowlFrame.Perm;
 using Newtonsoft.Json.Linq;
 using System.Buffers;

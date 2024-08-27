@@ -1,6 +1,6 @@
 ﻿using BowlFrame.Adapter.OneBotV11Adapter.Struct;
 using BowlFrame.Message;
-using BowlFrame.Message.Struct;
+using BowlFrame.Message.MsgBlocks;
 using BowlFrame.Perm;
 
 namespace BowlFrame.Adapter.OneBotV11Adapter.Tools
