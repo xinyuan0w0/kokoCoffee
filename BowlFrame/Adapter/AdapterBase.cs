@@ -2,20 +2,7 @@
 {
     public abstract class AdapterBase : IAdapter
     {
-        public static readonly AdapterInfo _AdapterInfo = new()
-        {
-            Name = "BowlFrame",
-            ID = "cn.kokobot",
-            Platform = "BowlFrame",
-            Description = "内部使用",
-            Method = new()
-            {
-                Interaction = true,
-                Process = true
-            }
-        };
-
-        public AdapterInfo AdapterInfo { get => _AdapterInfo; }
+        public abstract AdapterInfo AdapterInfo { get; }
 
         public abstract bool IsStarted { get; }
 
