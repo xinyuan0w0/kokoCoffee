@@ -15,5 +15,16 @@
             /// </summary>
             public bool HaveMulit { get; set; }
         }
+
+        public static MessageBlock CreateMessageBlock(string name, object? value = null, MetaType metaType = MetaType.Normal, bool haveMulit = true)
+        {
+            return new MessageBlock
+            {
+                HaveMulit = haveMulit,
+                MetaType = metaType,
+                Name = name,
+                Value = value,
+            };
+        }
     }
 }
