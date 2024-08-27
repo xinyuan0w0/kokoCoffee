@@ -2,7 +2,7 @@
 using BowlFrame.Adapter.TencentQQAdapter.Tools;
 using BowlFrame.Exceptions.Permission;
 using BowlFrame.Message;
-using BowlFrame.Message.Struct;
+using BowlFrame.Message.MsgBlocks;
 using BowlFrame.Perm;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BowlFrame.Message.Struct
+namespace BowlFrame.Message.MsgBlocks
 {
     public struct Filelink
     {
