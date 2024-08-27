@@ -2,6 +2,7 @@
 using BowlFrame.Message;
 using BowlFrame.Message.MsgBlocks;
 using BowlFrame.Perm;
+using static BowlFrame.Message.Struct.MsgBlock;
 
 namespace BowlFrame.Adapter.OneBotV11Adapter.Tools
 {

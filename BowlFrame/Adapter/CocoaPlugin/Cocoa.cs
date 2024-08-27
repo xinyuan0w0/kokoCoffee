@@ -12,6 +12,7 @@ using System.Collections.Concurrent;
 using System.Reflection;
 using static BowlFrame.Adapter.CocoaPlugin.CocoaGlobalEvent;
 using static BowlFrame.Tools.Logger;
+using static BowlFrame.Message.Struct.MsgBlock;
 
 namespace BowlFrame.Adapter.CocoaPlugin
 {
