@@ -28,7 +28,7 @@ namespace BowlFrame.Adapter.CocoaPlugin
 
         public readonly CocoaEventManager EventManager = new();
 
-        public new static readonly AdapterInfo _AdapterInfo = new()
+        public static readonly AdapterInfo _AdapterInfo = new()
         {
             Name = "Cocoa",
             ID = "cn.kokobot.cocoa",
@@ -39,6 +39,8 @@ namespace BowlFrame.Adapter.CocoaPlugin
                 Process = true,
             }
         };
+
+        public override AdapterInfo AdapterInfo => _AdapterInfo;
 
         public Cocoa(JObject args)
         {

@@ -11,7 +11,7 @@ namespace BowlFrame.Adapter.OneBotV11Adapter
 {
     public class OneBotV11 : AdapterBase
     {
-        public new static readonly AdapterInfo _AdapterInfo = new()
+        public static readonly AdapterInfo _AdapterInfo = new()
         {
             Name = "OneBotV11",
             ID = "cn.kokobot.onebotv11",
@@ -22,6 +22,8 @@ namespace BowlFrame.Adapter.OneBotV11Adapter
                 Interaction = true
             }
         };
+
+        public override AdapterInfo AdapterInfo => _AdapterInfo;
 
         private readonly OneBotV11Account _account;
 

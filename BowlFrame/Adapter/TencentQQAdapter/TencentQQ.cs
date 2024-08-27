@@ -14,7 +14,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 {
     public class TencentQQ : AdapterBase
     {
-        public new static readonly AdapterInfo _AdapterInfo = new()
+        public static readonly AdapterInfo _AdapterInfo = new()
         {
             Name = "TencentQQ_Offical",
             ID = "cn.kokobot.tencentqqapi",
@@ -25,6 +25,8 @@ namespace BowlFrame.Adapter.TencentQQAdapter
                 Interaction = true
             }
         };
+
+        public override AdapterInfo AdapterInfo => _AdapterInfo;
 
         public readonly Uri BaseUrl;
         private readonly System.Timers.Timer _accessTokenTimer = new();
