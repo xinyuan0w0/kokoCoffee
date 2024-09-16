@@ -48,7 +48,7 @@ namespace BowlFrame.Adapter.OneBotV11Adapter
             };
             _account = args.ToObject<OneBotV11Account>(jsonSerializer);
 
-            Platform = new TencentQQ_Common(connectID);
+            Platform = GetPlatfrom();
 
             Log.Debug($"创建了 {_AdapterInfo.Name} 适配器");
 
