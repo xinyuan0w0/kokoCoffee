@@ -26,4 +26,13 @@ namespace BowlFrame.Adapter
         /// </summary>
         public string? ConnectID { get; init; } = null;
     }
+
+    internal class AutoPlatformTarget(AdapterInfo adapterInfo, string id, string? connectID) : IPlatform
+    {
+        public AdapterInfo AdapterInfo { get; } = adapterInfo;
+
+        public string ID { get; } = id;
+
+        public string? ConnectID { get; } = connectID;
+    }
 }
