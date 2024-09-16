@@ -26,6 +26,15 @@
 
         public abstract Task<bool> Stop();
 
+        private IPlatform? _platform;
+
+        protected IPlatform GetPlatfrom()
+        {
+            _platform ??= new AutoPlatformTarget(AdapterInfo, AccountID, connectID);
+
+            return _platform;
+        }
+
         protected virtual void OnConnected(string connectID, AdapterInfo adapterInfo) => ConnectedEvent?.Invoke(connectID, adapterInfo);
 
         protected virtual void OnDisconnect(string connectID, AdapterInfo adapterInfo, Exception? exception = null) => DisconnectEvent?.Invoke(connectID, adapterInfo, exception);
