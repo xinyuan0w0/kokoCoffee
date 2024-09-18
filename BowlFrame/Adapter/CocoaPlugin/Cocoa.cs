@@ -65,6 +65,11 @@ namespace BowlFrame.Adapter.CocoaPlugin
                 Directory.CreateDirectory(_configPath);
             _configPath = Path.Combine(_configPath, AccountID);
 
+            _dataPath = Path.Combine(PathConfig.DataPath, _AdapterInfo.ID);
+            if (!Directory.Exists(_dataPath))
+                Directory.CreateDirectory(_dataPath);
+            _dataPath = Path.Combine(_dataPath, AccountID);
+
             if (!Directory.Exists(Path.Combine(_configPath, "Messages")))
                 Directory.CreateDirectory(Path.Combine(_configPath, "Messages"));
 
@@ -81,6 +86,8 @@ namespace BowlFrame.Adapter.CocoaPlugin
         private readonly string _pluginsPath;
 
         private readonly string _configPath;
+
+        private readonly string _dataPath;
 
         private bool _isStarted;
         public override bool IsStarted => _isStarted;
@@ -325,8 +332,8 @@ namespace BowlFrame.Adapter.CocoaPlugin
             {
                 CocoaPluginPath cocoaPluginpath = new()
                 {
-                    ConfigPath = Path.Combine(PathConfig.ConfigPath, config.ID),
-                    DataPath = Path.Combine(PathConfig.DataPath, config.ID),
+                    ConfigPath = Path.Combine(_configPath, config.ID),
+                    DataPath = Path.Combine(_dataPath, config.ID),
                     TempPath = Path.Combine(PathConfig.TempPath, config.ID)
                 };
 
