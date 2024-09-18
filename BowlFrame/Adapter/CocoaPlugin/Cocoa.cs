@@ -68,8 +68,6 @@ namespace BowlFrame.Adapter.CocoaPlugin
             if (!Directory.Exists(Path.Combine(_configPath, "Messages")))
                 Directory.CreateDirectory(Path.Combine(_configPath, "Messages"));
 
-            Platform = GetPlatfrom();
-
             pluginFuncManager = new(this, _plugins);
 
             CheckMatchMessage.BindEventManager(EventManager);
@@ -87,7 +85,9 @@ namespace BowlFrame.Adapter.CocoaPlugin
         private bool _isStarted;
         public override bool IsStarted => _isStarted;
 
-        internal IPlatform Platform { get; }
+        private IPlatform? _platform;
+
+        public IPlatform Platform { get { _platform ??= GetPlatfrom(); return _platform; } }
 
         private readonly CocoaAccount _account;
 
