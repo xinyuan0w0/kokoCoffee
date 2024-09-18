@@ -37,7 +37,9 @@ namespace BowlFrame.Adapter.OneBotV11Adapter
 
         public override string AccountID => _account.Account;
 
-        public IPlatform Platform { get; }
+        private IPlatform? _platform;
+
+        public IPlatform Platform { get { _platform ??= GetPlatfrom(); return _platform; } }
 
         public OneBotV11(JObject args)
         {
@@ -47,8 +49,6 @@ namespace BowlFrame.Adapter.OneBotV11Adapter
                 MissingMemberHandling = MissingMemberHandling.Error
             };
             _account = args.ToObject<OneBotV11Account>(jsonSerializer);
-
-            Platform = GetPlatfrom();
 
             Log.Debug($"创建了 {_AdapterInfo.Name} 适配器");
 
