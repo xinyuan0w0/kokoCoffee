@@ -14,7 +14,7 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 {
     public class TencentQQ : AdapterBase
     {
-        public new static readonly AdapterInfo _AdapterInfo = new()
+        public static readonly AdapterInfo _AdapterInfo = new()
         {
             Name = "TencentQQ_Offical",
             ID = "cn.kokobot.tencentqqapi",
@@ -25,6 +25,8 @@ namespace BowlFrame.Adapter.TencentQQAdapter
                 Interaction = true
             }
         };
+
+        public override AdapterInfo AdapterInfo => _AdapterInfo;
 
         public readonly Uri BaseUrl;
         private readonly System.Timers.Timer _accessTokenTimer = new();
@@ -44,7 +46,6 @@ namespace BowlFrame.Adapter.TencentQQAdapter
             };
             account = args.ToObject<TencentQQAccount>(jsonSerializer);
 
-            Platform = [new TencentQQ_Offical_Common(connectID), new TencentQQ_Offical_Guild(connectID)];
             Log.Debug($"创建了 {_AdapterInfo.Name} 适配器");
 
             //大概率是被遗弃的内容,但是还是保留了
@@ -69,7 +70,17 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 
         internal event ReflushAppAccessTokenHandle? ReflushAppAccessTokenEvent;
 
-        public IPlatform[] Platform { get; }
+        private IPlatform[]? _platform;
+
+        public IPlatform[] Platform
+        {
+            get
+            {
+                _platform ??= [new TencentQQ_Offical_Common(connectID), new TencentQQ_Offical_Guild(connectID)];
+                return _platform;
+            }
+        }
+
         public override string AccountID => account.AppID;
         public string? ID { get; private set; }
         public override bool IsStarted { get => isConnected; }

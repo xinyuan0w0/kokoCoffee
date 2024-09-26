@@ -2,12 +2,13 @@
 using BowlFrame.Adapter.TencentQQAdapter.Tools;
 using BowlFrame.Exceptions.Permission;
 using BowlFrame.Message;
-using BowlFrame.Message.Struct;
+using BowlFrame.Message.MsgBlocks;
 using BowlFrame.Perm;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Net.Http.Json;
 using System.Text;
+using static BowlFrame.Message.Struct.MsgBlock;
 
 namespace BowlFrame.Adapter.TencentQQAdapter
 {
@@ -24,19 +25,35 @@ namespace BowlFrame.Adapter.TencentQQAdapter
 
         private int count = 0;
 
-        //TODO: 拆！！！
         public async Task<bool?> SendMessage(Messages messages, string? msgid = null)
         {
             //判断是否为支持的对象
             if (target is not Group && target is not User)
                 throw new NotSupportedException(target.GetType().Name);
 
-            List<JObject> contents = [];
-            StringBuilder text = new();
+            var contents = new List<JObject>();
+            var textContent = await BuildTextContent(messages);
 
-            foreach (MessageBlock messageBlock in messages.MessageBlocks)
+            if (!string.IsNullOrEmpty(textContent))
             {
-                JObject? content = null;
+                contents.Add(new JObject
+                {
+                    { "msg_type", 0 },
+                    { "content", textContent }
+                });
+            }
+
+            contents.AddRange(await BuildMediaContents(messages));
+
+            return await SendContents(contents, msgid);
+        }
+
+        private async Task<string> BuildTextContent(Messages messages)
+        {
+            var text = new StringBuilder();
+
+            foreach (var messageBlock in messages.MessageBlocks)
+            {
                 switch (messageBlock.MetaType)
                 {
                     case MetaType.Normal:
@@ -51,108 +68,90 @@ namespace BowlFrame.Adapter.TencentQQAdapter
                                 break;
 
                             case "At":
-                                At[]? ats = (At[]?)messageBlock.Value;
-
-                                if (ats is not null)
-                                    foreach (At at in ats)
-                                        if (target is User)
-                                            text.Append($"@{(await permission.GetPlatformID(at.UUID) ?? throw new NotFoundTargetPlatform(at.UUID)).ID} ");
-                                        else
-                                            text.Append($"<@{(await permission.GetPlatformID(at.UUID) ?? throw new NotFoundTargetPlatform(at.UUID)).ID}> ");
-
+                                var ats = (At[]?)messageBlock.Value;
+                                if (ats != null)
+                                {
+                                    foreach (var at in ats)
+                                    {
+                                        var platformId = await permission.GetPlatformID(at.UUID)
+                                                        ?? throw new NotFoundTargetPlatform(at.UUID);
+                                        text.Append(target is User
+                                            ? $"@{platformId.ID} "
+                                            : $"<@{platformId.ID}> ");
+                                    }
+                                }
                                 break;
 
                             case "AtAll":
                                 text.Append($"@everyone ");
                                 break;
-
-                            case "Voice":
-                                if (messageBlock.Value is null || (byte[])messageBlock.Value == Array.Empty<byte>())
-                                    break;
-                                content = JObject.FromObject(new
-                                {
-                                    msg_type = 7,
-                                    content = " ",
-                                    media = await UploadMedia.GetFiles(tencentQQ, (byte[])messageBlock.Value, 3, target),
-                                });
-                                break;
-
-                            case "Picture":
-                                if (messageBlock.Value is null || (byte[])messageBlock.Value == Array.Empty<byte>())
-                                    break;
-                                content = JObject.FromObject(new
-                                {
-                                    msg_type = 7,
-                                    content = " ",
-                                    media = await UploadMedia.GetFiles(tencentQQ, (byte[])messageBlock.Value, 1, target),
-                                });
-                                break;
-
-                            case "Vidio":
-                                if (messageBlock.Value is null || (byte[])messageBlock.Value == Array.Empty<byte>())
-                                    break;
-                                content = JObject.FromObject(new
-                                {
-                                    msg_type = 7,
-                                    content = " ",
-                                    media = await UploadMedia.GetFiles(tencentQQ, (byte[])messageBlock.Value, 2, target),
-                                });
-                                break;
-
-                            default:
-                                break;
                         }
                         break;
-
-                    case MetaType.Extra:
-                        //施工中
-                        break;
                 }
-
-                if (content is not null)
-                    contents.Add(content);
             }
 
-            if (text.Length != 0)
+            return text.ToString();
+        }
+
+        private async Task<IEnumerable<JObject>> BuildMediaContents(Messages messages)
+        {
+            var mediaContents = new List<JObject>();
+
+            foreach (var messageBlock in messages.MessageBlocks)
             {
-                contents.Insert(0, JObject.FromObject(new
+                if (messageBlock.MetaType != MetaType.Normal)
+                    continue;
+
+                if (messageBlock.Value is null || (byte[])messageBlock.Value == Array.Empty<byte>())
+                    continue;
+
+                short mediaType = messageBlock.Name switch
                 {
-                    msg_type = 0,
-                    content = text.ToString(),
-                }));
+                    "Voice" => 3,
+                    "Picture" => 1,
+                    "Vidio" => 2,
+                    _ => 0
+                };
+
+                if (mediaType > 0)
+                {
+                    mediaContents.Add(new JObject
+                    {
+                        { "msg_type", 7 },
+                        { "content", " " },
+                        { "media", JObject.FromObject(await UploadMedia.GetFiles(tencentQQ, (byte[])messageBlock.Value, mediaType, target)) }
+                    });
+                }
             }
 
-            foreach (JObject content in contents)
+            return mediaContents;
+        }
+
+        private async Task<bool?> SendContents(List<JObject> contents, string? msgid = null)
+        {
+            foreach (var content in contents)
             {
                 if (msgid is not null)
                     content.Add("msg_id", msgid);
 
                 content.Add("msg_seq", ++count);
 
-                bool? result = await _send(new StringContent(JsonConvert.SerializeObject(content), Encoding.UTF8, "application/json"));
-                if (result != true)
-                    return result;
-            }
-
-            return true;
-
-            async Task<bool?> _send(HttpContent content)
-            {
-                HttpRequestMessage requestMessage = new(HttpMethod.Post, new Uri(tencentQQ.BaseUrl, $"/v2/{(target is User ? "users" : "groups")}/{target.ID}/messages"))
+                StringContent requestContent = new(JsonConvert.SerializeObject(content), Encoding.UTF8, "application/json");
+                HttpRequestMessage requestMessage = new(HttpMethod.Post,
+                    new Uri(tencentQQ.BaseUrl, $"/v2/{(target is User ? "users" : "groups")}/{target.ID}/messages"))
                 {
-                    Content = content
+                    Content = requestContent
                 };
 
                 HttpResponseMessage? responseMessage = await tencentQQ.Send(requestMessage);
 
-                if (responseMessage is null)
+                if (responseMessage == null)
                     return null;
-
-                return true;
             }
+
+            return true;
         }
 
-        //TODO: switch嵌套switch？！拆！！！
         public async Task<bool?> GuildSendMessage(Messages messages, string? msgid = null)
         {
             //判断是否为支持的对象
@@ -160,163 +159,148 @@ namespace BowlFrame.Adapter.TencentQQAdapter
                 throw new NotSupportedException(target.GetType().Name);
 
             List<HttpContent> contents = [];
-            byte[]? firstpic = null;
-            StringBuilder text = new();
+            byte[]? firstPicture = null;
+            string textContent = await BuildGuildTextContent(messages);
 
             foreach (MessageBlock messageBlock in messages.MessageBlocks)
             {
-                HttpContent? content = null;
-                switch (messageBlock.MetaType)
+                if (messageBlock.MetaType != MetaType.Normal || messageBlock.Name != "Picture")
+                    continue;
+
+                byte[]? pictureData = (byte[]?)messageBlock.Value;
+
+                if (firstPicture == null)
+                    firstPicture = pictureData ?? [];
+                else if (pictureData != null && pictureData.Length > 0)
+                    contents.Add(CreatePictureContent(pictureData, msgid));
+            }
+
+            contents.Insert(0, CreateContent(textContent, firstPicture, msgid));
+
+            return await SendContents(contents);
+        }
+
+        private async Task<string> BuildGuildTextContent(Messages messages)
+        {
+            var text = new StringBuilder();
+
+            foreach (var messageBlock in messages.MessageBlocks)
+            {
+                if (messageBlock.MetaType != MetaType.Normal)
+                    continue;
+
+                switch (messageBlock.Name)
                 {
-                    case MetaType.Normal:
-                        switch (messageBlock.Name)
+                    case "Text":
+                        text.Append(messageBlock.Value as string);
+                        break;
+
+                    case "AtBot":
+                        text.Append($"@{tencentQQ.Nickname} ");
+                        break;
+
+                    case "At":
+                        var ats = (At[]?)messageBlock.Value;
+                        if (ats != null)
                         {
-                            case "Text":
-                                text.Append(messageBlock.Value as string);
-                                break;
-
-                            case "AtBot":
-                                text.Append($"@{tencentQQ.Nickname} ");
-                                break;
-
-                            case "At":
-                                At[]? ats = (At[]?)messageBlock.Value;
-
-                                if (ats is not null)
-                                    foreach (At at in ats)
-                                        if (target is User)
-                                            text.Append($"@{(await permission.GetPlatformID(at.UUID) ?? throw new NotFoundTargetPlatform(at.UUID)).ID} ");
-                                        else
-                                            text.Append($"<@{(await permission.GetPlatformID(at.UUID) ?? throw new NotFoundTargetPlatform(at.UUID)).ID}> ");
-
-                                break;
-
-                            case "AtAll":
-                                text.Append($"@everyone ");
-                                break;
-
-                            case "Voice":
-                                //不支持
-                                break;
-
-                            case "Picture":
-                                byte[]? pic = (byte[]?)messageBlock.Value;
-
-                                //第一张图随文本发送
-                                if (firstpic is null)
-                                {
-                                    //不随文本请置空第一张图
-                                    firstpic = pic ?? [];
-                                    break;
-                                }
-
-                                if (pic is null || pic == Array.Empty<byte>())
-                                    break;
-
-                                content = new MultipartFormDataContent
-                                {
-                                    { new ByteArrayContent(pic),"file_image",BowlFrame.Tools.Tools.GetMD5Hex(pic)+"."+BowlFrame.Tools.Tools.GetMimeType(pic).Item2 },
-                                };
-
-                                if (msgid is not null)
-                                    ((MultipartFormDataContent)content).Add(new StringContent(msgid), "msg_id");
-                                break;
-
-                            case "Vidio":
-                                //不支持
-                                break;
-
-                            default:
-                                break;
+                            foreach (var at in ats)
+                            {
+                                var platformId = await permission.GetPlatformID(at.UUID)
+                                                    ?? throw new NotFoundTargetPlatform(at.UUID);
+                                text.Append(target is User
+                                    ? $"@{platformId.ID} "
+                                    : $"<@{platformId.ID}> ");
+                            }
                         }
                         break;
 
-                    case MetaType.Extra:
-                        //施工中
+                    case "AtAll":
+                        text.Append($"@everyone ");
                         break;
                 }
-
-                //添加到列表中
-                if (content is not null)
-                    contents.Add(content);
             }
 
-            if (text.Length != 0)
+            return text.ToString();
+        }
+
+        private static HttpContent CreateContent(string text, byte[]? pictureData, string? msgid)
+        {
+            if (pictureData != null && pictureData.Length > 0)
             {
-                if (firstpic is null || firstpic == Array.Empty<byte>())
+                var content = new MultipartFormDataContent
                 {
-                    JsonContent jsonContent;
-                    jsonContent = JsonContent.Create(new
-                    {
-                        content = text.ToString(),
-                        msg_id = msgid,
-                    });
-                    contents.Insert(0, jsonContent);
-                }
-                else
-                {
-                    MultipartFormDataContent content = new()
-                    {
-                        { new StringContent(text.ToString()), "content" },
-                        { new ByteArrayContent(firstpic),"file_image",BowlFrame.Tools.Tools.GetMD5Hex(firstpic)+"."+BowlFrame.Tools.Tools.GetMimeType(firstpic).Item2 },
-                    };
+                    { new StringContent(text), "content" },
+                    { new ByteArrayContent(pictureData), "file_image",
+                        $"{BowlFrame.Tools.Tools.GetMD5Hex(pictureData)}.{BowlFrame.Tools.Tools.GetMimeType(pictureData).Item2}" }
+                };
 
-                    if (msgid is not null)
-                        content.Add(new StringContent(msgid), "msg_id");
-
-                    contents.Insert(0, content);
-                }
-            }
-            else if (firstpic is not null)
-            {
-                MultipartFormDataContent content = new()
-                    {
-                        { new ByteArrayContent(firstpic),"file_image",BowlFrame.Tools.Tools.GetMD5Hex(firstpic)+"."+BowlFrame.Tools.Tools.GetMimeType(firstpic).Item2 },
-                    };
-
-                if (msgid is not null)
+                if (msgid != null)
                     content.Add(new StringContent(msgid), "msg_id");
 
-                contents.Insert(0, content);
+                return content;
             }
-
-            foreach (HttpContent content in contents)
+            else
             {
-                bool? result = await _send(content);
-                if (result != true)
-                    return result;
+                return JsonContent.Create(new
+                {
+                    content = text,
+                    msg_id = msgid
+                });
+            }
+        }
+
+        private static MultipartFormDataContent CreatePictureContent(byte[] pictureData, string? msgid)
+        {
+            var content = new MultipartFormDataContent
+            {
+                { new ByteArrayContent(pictureData), "file_image",
+                    $"{BowlFrame.Tools.Tools.GetMD5Hex(pictureData)}.{BowlFrame.Tools.Tools.GetMimeType(pictureData).Item2}" }
+            };
+
+            if (msgid != null)
+                content.Add(new StringContent(msgid), "msg_id");
+
+            return content;
+        }
+
+        private async Task<bool?> SendContents(List<HttpContent> contents)
+        {
+            foreach (var content in contents)
+            {
+                var requestMessage = new HttpRequestMessage(HttpMethod.Post, GetRequestUri())
+                {
+                    Content = content
+                };
+
+                var responseMessage = await tencentQQ.Send(requestMessage);
+
+                if (responseMessage == null)
+                {
+                    return null;
+                }
             }
 
             return true;
+        }
 
-            async Task<bool?> _send(HttpContent content)
+        private Uri GetRequestUri()
+        {
+            if (target is GuildUser user)
             {
-                HttpRequestMessage requestMessage;
-
-                if (target is GuildUser user)
+                if (user.GuildID == null)
                 {
-                    if (user.GuildID is null)
-                        return false;
-
-                    requestMessage = new(HttpMethod.Post, new Uri(tencentQQ.BaseUrl, $"/dms/{user.GuildID}/messages"));
-                }
-                else if (target is Channel channel)
-                {
-                    requestMessage = new(HttpMethod.Post, new Uri(tencentQQ.BaseUrl, $"/channels/{channel.ID}/messages"));
-                }
-                else
-                {
-                    throw new NotSupportedException(target.GetType().Name);
+                    throw new InvalidOperationException("GuildUser's GuildID cannot be null.");
                 }
 
-                requestMessage.Content = content;
-
-                HttpResponseMessage? responseMessage = await tencentQQ.Send(requestMessage);
-
-                if (responseMessage is null)
-                    return null;
-
-                return true;
+                return new Uri(tencentQQ.BaseUrl, $"/dms/{user.GuildID}/messages");
+            }
+            else if (target is Channel channel)
+            {
+                return new Uri(tencentQQ.BaseUrl, $"/channels/{channel.ID}/messages");
+            }
+            else
+            {
+                throw new NotSupportedException(target.GetType().Name);
             }
         }
 

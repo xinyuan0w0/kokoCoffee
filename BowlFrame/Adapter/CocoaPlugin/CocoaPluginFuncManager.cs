@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using static BowlFrame.Tools.Logger;
+using static BowlFrame.Message.Struct.MsgBlock;
 
 namespace BowlFrame.Adapter.CocoaPlugin
 {

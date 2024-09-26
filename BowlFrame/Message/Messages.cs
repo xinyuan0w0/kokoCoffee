@@ -1,4 +1,6 @@
-﻿namespace BowlFrame.Message
+﻿using static BowlFrame.Message.Struct.MsgBlock;
+
+namespace BowlFrame.Message
 {
     public class Messages
     {

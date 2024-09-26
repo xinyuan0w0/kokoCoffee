@@ -12,7 +12,7 @@ namespace BowlFrame.Config
             PluginsPath = System.IO.Path.Combine(Path, "Plugins");
             TempPath = System.IO.Path.Combine(Path, "Temp");
 
-            List<string> paths = new List<string> { Path, ConfigPath, DataPath, PluginsPath, TempPath };
+            List<string> paths = [Path, ConfigPath, DataPath, PluginsPath, TempPath];
 
             foreach (string dir in paths)
             {

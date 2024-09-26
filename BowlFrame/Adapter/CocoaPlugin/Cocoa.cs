@@ -12,6 +12,7 @@ using System.Collections.Concurrent;
 using System.Reflection;
 using static BowlFrame.Adapter.CocoaPlugin.CocoaGlobalEvent;
 using static BowlFrame.Tools.Logger;
+using static BowlFrame.Message.Struct.MsgBlock;
 
 namespace BowlFrame.Adapter.CocoaPlugin
 {
@@ -28,7 +29,7 @@ namespace BowlFrame.Adapter.CocoaPlugin
 
         public readonly CocoaEventManager EventManager = new();
 
-        public new static readonly AdapterInfo _AdapterInfo = new()
+        public static readonly AdapterInfo _AdapterInfo = new()
         {
             Name = "Cocoa",
             ID = "cn.kokobot.cocoa",
@@ -39,6 +40,8 @@ namespace BowlFrame.Adapter.CocoaPlugin
                 Process = true,
             }
         };
+
+        public override AdapterInfo AdapterInfo => _AdapterInfo;
 
         public Cocoa(JObject args)
         {
@@ -62,10 +65,13 @@ namespace BowlFrame.Adapter.CocoaPlugin
                 Directory.CreateDirectory(_configPath);
             _configPath = Path.Combine(_configPath, AccountID);
 
+            _dataPath = Path.Combine(PathConfig.DataPath, _AdapterInfo.ID);
+            if (!Directory.Exists(_dataPath))
+                Directory.CreateDirectory(_dataPath);
+            _dataPath = Path.Combine(_dataPath, AccountID);
+
             if (!Directory.Exists(Path.Combine(_configPath, "Messages")))
                 Directory.CreateDirectory(Path.Combine(_configPath, "Messages"));
-
-            Platform = new CocoaPlatform(_account.Account, connectID);
 
             pluginFuncManager = new(this, _plugins);
 
@@ -81,10 +87,14 @@ namespace BowlFrame.Adapter.CocoaPlugin
 
         private readonly string _configPath;
 
+        private readonly string _dataPath;
+
         private bool _isStarted;
         public override bool IsStarted => _isStarted;
 
-        internal IPlatform Platform { get; }
+        private IPlatform? _platform;
+
+        public IPlatform Platform { get { _platform ??= GetPlatfrom(); return _platform; } }
 
         private readonly CocoaAccount _account;
 
@@ -103,54 +113,7 @@ namespace BowlFrame.Adapter.CocoaPlugin
                 //创建路径
                 Directory.CreateDirectory(_pluginsPath);
 
-            //枚举文件
-            IEnumerable<string> plugins = Directory.EnumerateFiles(_pluginsPath, "*.dll");
-
-            //滞留插件
-            List<string> delayPlugin = [];
-
-            foreach (string plugin in plugins)
-                try
-                {
-                    LoadPlugin(plugin);
-                }
-                catch (NotFoundDependPlugin)
-                {
-                    delayPlugin.Add(plugin);
-                }
-                catch (Exception e)
-                {
-                    Log.Warn(e);
-                }
-
-            bool newPlugin = false;
-            do
-            {
-                //再次滞留插件
-                List<string> delayPlugin_2 = [];
-
-                foreach (string plugin in delayPlugin)
-                    try
-                    {
-                        LoadPlugin(plugin);
-                        newPlugin = true;
-                    }
-                    catch (NotFoundDependPlugin e)
-                    {
-                        if (newPlugin)
-                            delayPlugin_2.Add(plugin);
-                        else
-                            Log.Warn(e);
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Warn(e);
-                    }
-
-                delayPlugin = delayPlugin_2;
-            } while (delayPlugin.Count != 0);
-
-            Log.Info("载入了 {0} 个插件", _plugins.Count);
+            LoadPluginsFromFile(_pluginsPath);
 
             AdapterManager.BroadcastEvent += ReciveEvent;
 
@@ -229,6 +192,68 @@ namespace BowlFrame.Adapter.CocoaPlugin
 
             base.Dispose();
             GC.SuppressFinalize(this);
+        }
+
+        private void LoadPluginsFromFile(string pluginsPath)
+        {
+            List<string> pluginFiles = Directory.EnumerateFiles(pluginsPath, "*.dll").ToList();
+            int loadedPlugins = 0;
+            List<string> unloadedPlugins = [.. pluginFiles];
+
+            while (unloadedPlugins.Count > 0)
+            {
+                // 直接加载插件
+                List<string> successfullyLoaded = unloadedPlugins
+                    .Where(plugin => TryLoadPlugin(plugin, out _))
+                    .ToList();
+
+                loadedPlugins += successfullyLoaded.Count;
+                unloadedPlugins = unloadedPlugins.Except(successfullyLoaded).ToList();
+
+                // 重复加载插件直至没有能够再载入的插件
+                while (unloadedPlugins.Count != 0)
+                {
+                    int loadPlugins = 0;
+                    List<string> temp_unloadedPlugins = [];
+                    foreach (string plugin in unloadedPlugins)
+                    {
+                        TryLoadPlugin(plugin, out var exception);
+
+                        if (exception is NotFoundDependPlugin)
+                            continue;
+                        else if (exception is not null)
+                            temp_unloadedPlugins.Add(plugin);
+
+                        loadPlugins++;
+                    }
+
+                    if (loadPlugins == 0) break;
+                    unloadedPlugins = unloadedPlugins.Except(temp_unloadedPlugins).ToList();
+                }
+            }
+
+            Log.Info("成功加载 {0} 个插件.{1}", loadedPlugins, unloadedPlugins.Count > 0 ? $" 加载失败 {unloadedPlugins.Count} 个插件." : "");
+        }
+
+        private bool TryLoadPlugin(string pluginPath, out Exception? exception)
+        {
+            try
+            {
+                LoadPlugin(pluginPath);
+                exception = null;
+                return true;
+            }
+            catch (NotFoundDependPlugin ex)
+            {
+                exception = ex;
+                return false;
+            }
+            catch (Exception ex)
+            {
+                exception = ex;
+                Log.Warn(ex);
+                return false;
+            }
         }
 
         private void ReciveEvent(IEvent @event, AdapterInfo adapterInfo)
@@ -322,8 +347,8 @@ namespace BowlFrame.Adapter.CocoaPlugin
             {
                 CocoaPluginPath cocoaPluginpath = new()
                 {
-                    ConfigPath = Path.Combine(PathConfig.ConfigPath, config.ID),
-                    DataPath = Path.Combine(PathConfig.DataPath, config.ID),
+                    ConfigPath = Path.Combine(_configPath, config.ID),
+                    DataPath = Path.Combine(_dataPath, config.ID),
                     TempPath = Path.Combine(PathConfig.TempPath, config.ID)
                 };
 
@@ -336,7 +361,7 @@ namespace BowlFrame.Adapter.CocoaPlugin
                             RegisterEventWithAttribute(eventAttribute, plugin, methodInfo);
                         else if (attribute is CocoaFuncAttribute funcAttribute)
                         {
-                            CocoaPluginFuncConfig cocoaPluginFuncConfig = JsonConvert.DeserializeObject<CocoaPluginFuncConfig>(File.ReadAllText(Path.GetFullPath(funcAttribute.FuncConfigPath ?? Path.Combine(PathConfig.ConfigPath, config.ID, funcAttribute.FuncName, "Config.json"))));
+                            CocoaPluginFuncConfig cocoaPluginFuncConfig = JsonConvert.DeserializeObject<CocoaPluginFuncConfig>(File.ReadAllText(Path.GetFullPath(funcAttribute.FuncConfigPath ?? Path.Combine(_configPath, config.ID, funcAttribute.FuncName, "Config.json"))));
                             CocoaPluginFunc cocoaPluginFunc = new(config.ID, cocoaPluginFuncConfig, methodInfo);
                             pluginFuncManager.RegisterFunc(funcAttribute.FuncName, cocoaPluginFunc);
                         }
@@ -463,8 +488,7 @@ namespace BowlFrame.Adapter.CocoaPlugin
                 FieldInfo? field = type.GetField(eventInfo.Name, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public | BindingFlags.Static);
                 if (field is null)
                     continue;
-                Delegate? del = field.GetValue(cocoaPlugin) as Delegate;
-                if (del is null)
+                if (field.GetValue(cocoaPlugin) is not Delegate del)
                     continue;
                 foreach (Delegate subDel in del.GetInvocationList())
                 {

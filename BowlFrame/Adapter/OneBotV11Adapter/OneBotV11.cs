@@ -11,7 +11,7 @@ namespace BowlFrame.Adapter.OneBotV11Adapter
 {
     public class OneBotV11 : AdapterBase
     {
-        public new static readonly AdapterInfo _AdapterInfo = new()
+        public static readonly AdapterInfo _AdapterInfo = new()
         {
             Name = "OneBotV11",
             ID = "cn.kokobot.onebotv11",
@@ -22,6 +22,8 @@ namespace BowlFrame.Adapter.OneBotV11Adapter
                 Interaction = true
             }
         };
+
+        public override AdapterInfo AdapterInfo => _AdapterInfo;
 
         private readonly OneBotV11Account _account;
 
@@ -35,7 +37,9 @@ namespace BowlFrame.Adapter.OneBotV11Adapter
 
         public override string AccountID => _account.Account;
 
-        public IPlatform Platform { get; }
+        private IPlatform? _platform;
+
+        public IPlatform Platform { get { _platform ??= GetPlatfrom(); return _platform; } }
 
         public OneBotV11(JObject args)
         {
@@ -45,8 +49,6 @@ namespace BowlFrame.Adapter.OneBotV11Adapter
                 MissingMemberHandling = MissingMemberHandling.Error
             };
             _account = args.ToObject<OneBotV11Account>(jsonSerializer);
-
-            Platform = new TencentQQ_Common(connectID);
 
             Log.Debug($"创建了 {_AdapterInfo.Name} 适配器");
 

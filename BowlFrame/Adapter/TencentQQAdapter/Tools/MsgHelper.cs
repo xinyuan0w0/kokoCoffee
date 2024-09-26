@@ -1,11 +1,12 @@
 ﻿using BowlFrame.Adapter.TencentQQAdapter.Struct;
 using BowlFrame.Database.TableStruct;
 using BowlFrame.Message;
-using BowlFrame.Message.Struct;
+using BowlFrame.Message.MsgBlocks;
 using BowlFrame.Perm;
 using Newtonsoft.Json.Linq;
 using System.Buffers;
 using static BowlFrame.Tools.Logger;
+using static BowlFrame.Message.Struct.MsgBlock;
 
 namespace BowlFrame.Adapter.TencentQQAdapter.Tools
 {
