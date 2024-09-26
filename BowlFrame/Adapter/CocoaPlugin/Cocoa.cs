@@ -113,54 +113,7 @@ namespace BowlFrame.Adapter.CocoaPlugin
                 //创建路径
                 Directory.CreateDirectory(_pluginsPath);
 
-            //枚举文件
-            IEnumerable<string> plugins = Directory.EnumerateFiles(_pluginsPath, "*.dll");
-
-            //滞留插件
-            List<string> delayPlugin = [];
-
-            foreach (string plugin in plugins)
-                try
-                {
-                    LoadPlugin(plugin);
-                }
-                catch (NotFoundDependPlugin)
-                {
-                    delayPlugin.Add(plugin);
-                }
-                catch (Exception e)
-                {
-                    Log.Warn(e);
-                }
-
-            bool newPlugin = false;
-            do
-            {
-                //再次滞留插件
-                List<string> delayPlugin_2 = [];
-
-                foreach (string plugin in delayPlugin)
-                    try
-                    {
-                        LoadPlugin(plugin);
-                        newPlugin = true;
-                    }
-                    catch (NotFoundDependPlugin e)
-                    {
-                        if (newPlugin)
-                            delayPlugin_2.Add(plugin);
-                        else
-                            Log.Warn(e);
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Warn(e);
-                    }
-
-                delayPlugin = delayPlugin_2;
-            } while (delayPlugin.Count != 0);
-
-            Log.Info("载入了 {0} 个插件", _plugins.Count);
+            LoadPluginsFromFile(_pluginsPath);
 
             AdapterManager.BroadcastEvent += ReciveEvent;
 
@@ -239,6 +192,68 @@ namespace BowlFrame.Adapter.CocoaPlugin
 
             base.Dispose();
             GC.SuppressFinalize(this);
+        }
+
+        private void LoadPluginsFromFile(string pluginsPath)
+        {
+            List<string> pluginFiles = Directory.EnumerateFiles(pluginsPath, "*.dll").ToList();
+            int loadedPlugins = 0;
+            List<string> unloadedPlugins = [.. pluginFiles];
+
+            while (unloadedPlugins.Count > 0)
+            {
+                // 直接加载插件
+                List<string> successfullyLoaded = unloadedPlugins
+                    .Where(plugin => TryLoadPlugin(plugin, out _))
+                    .ToList();
+
+                loadedPlugins += successfullyLoaded.Count;
+                unloadedPlugins = unloadedPlugins.Except(successfullyLoaded).ToList();
+
+                // 重复加载插件直至没有能够再载入的插件
+                while (unloadedPlugins.Count != 0)
+                {
+                    int loadPlugins = 0;
+                    List<string> temp_unloadedPlugins = [];
+                    foreach (string plugin in unloadedPlugins)
+                    {
+                        TryLoadPlugin(plugin, out var exception);
+
+                        if (exception is NotFoundDependPlugin)
+                            continue;
+                        else if (exception is not null)
+                            temp_unloadedPlugins.Add(plugin);
+
+                        loadPlugins++;
+                    }
+
+                    if (loadPlugins == 0) break;
+                    unloadedPlugins = unloadedPlugins.Except(temp_unloadedPlugins).ToList();
+                }
+            }
+
+            Log.Info("成功加载 {0} 个插件.{1}", loadedPlugins, unloadedPlugins.Count > 0 ? $" 加载失败 {unloadedPlugins.Count} 个插件." : "");
+        }
+
+        private bool TryLoadPlugin(string pluginPath, out Exception? exception)
+        {
+            try
+            {
+                LoadPlugin(pluginPath);
+                exception = null;
+                return true;
+            }
+            catch (NotFoundDependPlugin ex)
+            {
+                exception = ex;
+                return false;
+            }
+            catch (Exception ex)
+            {
+                exception = ex;
+                Log.Warn(ex);
+                return false;
+            }
         }
 
         private void ReciveEvent(IEvent @event, AdapterInfo adapterInfo)
